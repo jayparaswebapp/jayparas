@@ -1,0 +1,41 @@
+{
+  "app": {
+    "name": "Jay Paras",
+    "tagline": "Job-work management"
+  },
+  "locale": {
+    "switchTo": "Switch language",
+    "english": "English",
+    "gujarati": "ગુજરાતી"
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "Mobile number and 6-digit PIN",
+    "mobileLabel": "Mobile number",
+    "mobilePlaceholder": "10-digit mobile number",
+    "pinLabel": "PIN",
+    "pinPlaceholder": "6-digit PIN",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "errors": {
+      "invalidMobile": "Enter a 10-digit Indian mobile number",
+      "invalidPin": "PIN must be exactly 6 digits",
+      "invalidCredentials": "Mobile or PIN is incorrect",
+      "userNotFound": "No active user with this mobile",
+      "rateLimited": "Too many failed attempts. Try again in 15 minutes.",
+      "unknown": "Something went wrong. Please try again."
+    }
+  },
+  "dashboard": {
+    "greeting": "Hello, {name}",
+    "roleLabel": "Role",
+    "signOut": "Sign out",
+    "comingSoon": "Master data, jobs and receipts will appear here in the next sessions."
+  },
+  "roles": {
+    "super_admin": "Super-admin",
+    "supervisor": "Supervisor",
+    "centre_manager": "Centre manager",
+    "accountant": "Accountant"
+  }
+}

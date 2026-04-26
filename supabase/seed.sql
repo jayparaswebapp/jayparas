@@ -1,0 +1,5 @@
+-- Local-dev convenience only. The actual super-admin is seeded by
+-- scripts/seed-super-admin.ts which uses the Supabase Auth admin API
+-- (auth.users cannot be created from a plain INSERT).
+--
+-- This file is intentionally empty for now; WS-B will add location + settings seeds.

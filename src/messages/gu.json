@@ -1,0 +1,41 @@
+{
+  "app": {
+    "name": "જય પારસ",
+    "tagline": "જોબ-વર્ક મેનેજમેન્ટ"
+  },
+  "locale": {
+    "switchTo": "ભાષા બદલો",
+    "english": "English",
+    "gujarati": "ગુજરાતી"
+  },
+  "login": {
+    "title": "લોગિન કરો",
+    "subtitle": "મોબાઇલ નંબર અને 6 અંકનો PIN",
+    "mobileLabel": "મોબાઇલ નંબર",
+    "mobilePlaceholder": "10 અંકનો મોબાઇલ નંબર",
+    "pinLabel": "PIN",
+    "pinPlaceholder": "6 અંકનો PIN",
+    "submit": "લોગિન કરો",
+    "submitting": "લોગિન થઈ રહ્યું છે…",
+    "errors": {
+      "invalidMobile": "10 અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો",
+      "invalidPin": "PIN બરાબર 6 અંકનો હોવો જોઈએ",
+      "invalidCredentials": "મોબાઇલ અથવા PIN ખોટો છે",
+      "userNotFound": "આ મોબાઇલ સાથે કોઈ સક્રિય યુઝર નથી",
+      "rateLimited": "ઘણી વખત ખોટું દાખલ થયું. 15 મિનિટ પછી ફરીથી પ્રયત્ન કરો.",
+      "unknown": "કઈક ખોટું થયું. ફરી પ્રયત્ન કરો."
+    }
+  },
+  "dashboard": {
+    "greeting": "નમસ્તે, {name}",
+    "roleLabel": "ભૂમિકા",
+    "signOut": "લોગ આઉટ",
+    "comingSoon": "માસ્ટર ડેટા, જોબ અને રિસીપ્ટ આગામી સેશનમાં અહીં દેખાશે."
+  },
+  "roles": {
+    "super_admin": "સુપર-એડમિન",
+    "supervisor": "સુપરવાઈઝર",
+    "centre_manager": "સેન્ટર મેનેજર",
+    "accountant": "એકાઉન્ટન્ટ"
+  }
+}
