@@ -1,6 +1,6 @@
-# Jay Paras OS
+# Jai Paras OS
 
-Job-work management system for Jay Paras (Valsad-based rakhi manufacturer using six village-based women's groups as contract labour).
+Job-work management system for Jai Paras (Valsad-based rakhi manufacturer using six village-based women's groups as contract labour).
 
 ## Stack
 

@@ -4,6 +4,57 @@ Lightweight ADRs. One entry per decision. Newest at top.
 
 ---
 
+## ADR-008 — Brand name correction: "Jay Paras" → "Jai Paras"
+
+**Date:** 2026-04-28
+**Status:** Accepted
+
+### Context
+
+The legal name and brand name of the business is "Jai Paras". Prior to this decision, the OS used "Jay Paras" throughout — a transliteration variant of the same Gujarati name (જય). The variant was established in initial setup (WS-A, WS-B) based on early conversation defaults, then later confirmed as incorrect by the founder. This ADR records the corrective action and what was deliberately left unchanged.
+
+### Decision
+
+All user-visible references to "Jay Paras" are replaced with "Jai Paras". Technical identifiers retain "jay paras" / "jayparas" / "JP-" / "jay_paras" forms for stability.
+
+### What changes (user-visible)
+
+- i18n message catalogs (`src/messages/en.json`; `gu.json` keeps the Gujarati form `જય પારસ`)
+- `README.md`
+- `docs/business-context.md`
+- `docs/data-model.md` title (not on the brief's explicit list; included because the title is plainly a user-visible brand string)
+- Root-layout page metadata (`src/app/layout.tsx`) — refactored from hard-coded literals to `generateMetadata()` reading `app.metaTitle` / `app.metaDescription` from the i18n catalogs, so future locale-aware metadata is automatic
+- Any future PDF / email / label templates (going forward)
+
+### What stays (technical / external)
+
+- Auth synthetic email domain `jayparas.internal` (changing risks lockout of existing users; not visible to users)
+- GitHub repo name `jayparaswebapp/jayparas`
+- Vercel project name and URL `jayparas.vercel.app`
+- Supabase project name
+- `package.json` `name: "jayparas-os"`
+- All database identifiers, code identifiers (incl. existing file/folder names like `src/lib/auth/synthetic-email.ts`), table names, RPC function names
+- SKU and job code prefix `JP-` (maps cleanly to "Jai Paras")
+- Historical ADR text (ADR-001 through ADR-007 — immutable records)
+- Historical migration files and historical session notes
+- The `AUTH_EMAIL_DOMAIN=jayparas.internal` env var
+
+### Gujarati spelling
+
+The Gujarati form `જય પારસ` is retained (rather than `જૈ પારસ`). `જય` is the standard and recognisable form for this name in Gujarati script and is pronounced "Jai". This matches how the business is locally referred to.
+
+### Local folder path — discrepancy with brief
+
+The brief's decision #6 said the local folder path `~/Desktop/jay-paras/` would stay unchanged. The folder had in fact already been renamed to `~/Desktop/jai-paras/` at some point before this ADR was written (no commit records the rename). This ADR records reality: the working directory is `~/Desktop/jai-paras/`. No further action on the folder path is needed.
+
+### Consequences
+
+- A small permanent inconsistency exists between user-visible name ("Jai Paras") and technical/external identifiers (`jayparas`, `jay-paras`, `JP-`). This is intentional and documented.
+- Future contributors and Claude Code sessions must use "Jai Paras" for any new user-visible strings, and must NOT rename technical identifiers.
+- If the business ever wants to renew external identifiers (new domain, new repo), that's a separate workstream with its own ADR.
+
+---
+
 ## ADR-007 — Storage path convention for design images
 
 **Date:** 2026-04-27

@@ -1,7 +1,9 @@
 {
   "app": {
-    "name": "Jay Paras",
-    "tagline": "Job-work management"
+    "name": "Jai Paras",
+    "tagline": "Job-work management",
+    "metaTitle": "Jai Paras OS",
+    "metaDescription": "Job-work management for Jai Paras"
   },
   "locale": {
     "switchTo": "Switch language",

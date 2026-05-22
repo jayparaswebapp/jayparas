@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import { Inter, Noto_Sans_Gujarati } from 'next/font/google';
 import './globals.css';
 
@@ -17,10 +17,13 @@ const gujarati = Noto_Sans_Gujarati({
   weight: ['400', '500', '600', '700'],
 });
 
-export const metadata: Metadata = {
-  title: 'Jay Paras OS',
-  description: 'Job-work management for Jay Paras',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('app');
+  return {
+    title: t('metaTitle'),
+    description: t('metaDescription'),
+  };
+}
 
 export const viewport: Viewport = {
   width: 'device-width',
