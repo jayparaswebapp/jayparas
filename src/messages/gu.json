@@ -8,6 +8,72 @@
     "english": "English",
     "gujarati": "ગુજરાતી"
   },
+  "common": {
+    "actions": {
+      "save": "સાચવો",
+      "saving": "સાચવી રહ્યું છે…",
+      "cancel": "રદ કરો",
+      "edit": "ફેરફાર કરો",
+      "create": "નવું બનાવો",
+      "delete": "ડિલીટ કરો",
+      "restore": "પુનઃસ્થાપિત કરો",
+      "deactivate": "નિષ્ક્રિય કરો",
+      "resetPin": "PIN રીસેટ કરો",
+      "back": "પાછા",
+      "showDeleted": "ડિલીટ થયેલા બતાવો",
+      "hideDeleted": "ડિલીટ થયેલા છુપાવો"
+    },
+    "status": {
+      "active": "સક્રિય",
+      "inactive": "નિષ્ક્રિય",
+      "deleted": "ડિલીટ થયેલ"
+    },
+    "fields": {
+      "reason": "કારણ",
+      "reasonPlaceholder": "આ ફેરફાર શા માટે કરી રહ્યા છો?",
+      "reasonHelp": "જરૂરી. ઑડિટ લોગમાં નોંધાશે."
+    },
+    "confirm": {
+      "softDeleteTitle": "ડિલીટ કન્ફર્મ કરો",
+      "softDeleteBody": "આ રેકોર્ડ છુપાઈ જશે. સુપર-એડમિન પછીથી પુનઃસ્થાપિત કરી શકે છે.",
+      "restoreTitle": "પુનઃસ્થાપન કન્ફર્મ કરો",
+      "restoreBody": "આ રેકોર્ડ ફરી સક્રિય થશે.",
+      "deactivateUserTitle": "નિષ્ક્રિય કન્ફર્મ કરો",
+      "deactivateUserBody": "આ યુઝરનું ઍક્સેસ તરત જ બંધ થશે.",
+      "resetPinTitle": "PIN રીસેટ કરો",
+      "resetPinBody": "નવો 6 અંકનો PIN દાખલ કરો. યુઝરે હવેથી નવા PIN થી લોગિન કરવું પડશે."
+    },
+    "toasts": {
+      "saved": "સચવાઈ ગયું",
+      "deleted": "ડિલીટ થયું",
+      "restored": "પુનઃસ્થાપિત થયું",
+      "pinReset": "PIN રીસેટ થયું"
+    },
+    "errors": {
+      "mobileAlreadyExists": "આ મોબાઇલ નંબર પહેલેથી બીજા સક્રિય રેકોર્ડ સાથે જોડાયેલો છે.",
+      "designNumberAlreadyExists": "આ ડિઝાઇન નંબર પહેલેથી બીજી સક્રિય ડિઝાઇન સાથે જોડાયેલો છે.",
+      "cannotModifySelf": "તમે તમારી પોતાની ભૂમિકા બદલી શકતા નથી, પોતાને નિષ્ક્રિય કરી શકતા નથી, કે પોતાનો PIN રીસેટ કરી શકતા નથી.",
+      "centreManagerRequiresLocation": "સેન્ટર મેનેજરને ઓછામાં ઓછી એક લોકેશન આપવી જરૂરી છે.",
+      "centreManagerLocationsExist": "આ સેન્ટર મેનેજરને હજુ લોકેશન સોંપાયેલી છે. ભૂમિકા બદલતા પહેલાં લોકેશન દૂર કરો.",
+      "settingLocked": "આ સેટિંગ લૉક છે — UI દ્વારા બદલી શકાતી નથી.",
+      "reasonRequired": "મહેરબાની કરીને કારણ દાખલ કરો.",
+      "permissionDenied": "આ કરવાની તમને પરવાનગી નથી.",
+      "sessionInvalid": "તમારું સેશન સમાપ્ત થયું છે. ફરી લોગિન કરો.",
+      "notFound": "આ રેકોર્ડ હવે અસ્તિત્વમાં નથી.",
+      "invalidInput": "દાખલ કરેલા કેટલાક મૂલ્યો યોગ્ય નથી.",
+      "unknownError": "કઈક ખોટું થયું. ફરી પ્રયત્ન કરો."
+    }
+  },
+  "nav": {
+    "dashboard": "ડેશબોર્ડ",
+    "masterData": "માસ્ટર ડેટા",
+    "locations": "લોકેશન",
+    "designs": "ડિઝાઇન",
+    "leadLadies": "ગ્રુપ લીડર",
+    "admin": "એડમિન",
+    "users": "યુઝર",
+    "settings": "સેટિંગ"
+  },
   "login": {
     "title": "લોગિન કરો",
     "subtitle": "મોબાઇલ નંબર અને 6 અંકનો PIN",
@@ -37,5 +103,165 @@
     "supervisor": "સુપરવાઈઝર",
     "centre_manager": "સેન્ટર મેનેજર",
     "accountant": "એકાઉન્ટન્ટ"
+  },
+  "masterData": {
+    "title": "માસ્ટર ડેટા",
+    "locations": {
+      "title": "લોકેશન",
+      "subtitle": "જોબ-વર્કનાં ગામો. સુપર-એડમિન સિવાય બધા માટે ફક્ત-વાંચન.",
+      "table": {
+        "nameEn": "નામ (અંગ્રેજી)",
+        "nameGu": "નામ (ગુજરાતી)",
+        "status": "સ્થિતિ",
+        "actions": "ક્રિયા"
+      },
+      "edit": {
+        "title": "લોકેશનમાં ફેરફાર કરો",
+        "nameEnLabel": "નામ (અંગ્રેજી)",
+        "nameGuLabel": "નામ (ગુજરાતી)",
+        "isActiveLabel": "સક્રિય"
+      },
+      "errors": {
+        "nameEnRequired": "અંગ્રેજી નામ જરૂરી છે",
+        "nameGuRequired": "ગુજરાતી નામ જરૂરી છે"
+      }
+    },
+    "designs": {
+      "title": "ડિઝાઇન",
+      "subtitle": "રાખડી ડિઝાઇન કૅટેલૉગ.",
+      "newButton": "નવી ડિઝાઇન",
+      "table": {
+        "image": "ઇમેજ",
+        "designNumber": "ડિઝાઇન નં.",
+        "name": "નામ",
+        "rate": "દર / ગુસ",
+        "status": "સ્થિતિ",
+        "actions": "ક્રિયા"
+      },
+      "form": {
+        "createTitle": "નવી ડિઝાઇન",
+        "editTitle": "ડિઝાઇનમાં ફેરફાર કરો",
+        "designNumberLabel": "ડિઝાઇન નંબર",
+        "designNumberPlaceholder": "દા.ત. 1325",
+        "nameEnLabel": "નામ (અંગ્રેજી, વૈકલ્પિક)",
+        "nameGuLabel": "નામ (ગુજરાતી, વૈકલ્પિક)",
+        "rateLabel": "દર પ્રતિ ગુસ (₹)",
+        "ratePlaceholder": "દા.ત. 120.00",
+        "imageLabel": "સંદર્ભ ઇમેજ (વૈકલ્પિક)",
+        "imageHint": "JPEG, PNG અથવા WebP. વધુમાં વધુ 2 MB.",
+        "imageReplace": "ઇમેજ બદલો",
+        "imageRemove": "ઇમેજ દૂર કરો",
+        "isActiveLabel": "સક્રિય"
+      },
+      "errors": {
+        "designNumberRequired": "ડિઝાઇન નંબર જરૂરી છે",
+        "rateRequired": "દર પ્રતિ ગુસ જરૂરી છે અને 0 થી મોટો હોવો જોઈએ",
+        "imageTooLarge": "ઇમેજ 2 MB થી મોટી છે",
+        "imageWrongType": "ઇમેજ JPEG, PNG અથવા WebP હોવી જોઈએ"
+      }
+    },
+    "leadLadies": {
+      "title": "ગ્રુપ લીડર",
+      "subtitle": "દરેક ગામની ગ્રુપ લીડરો.",
+      "newButton": "નવી ગ્રુપ લીડર",
+      "table": {
+        "name": "નામ",
+        "mobile": "મોબાઇલ",
+        "locations": "લોકેશન",
+        "status": "સ્થિતિ",
+        "actions": "ક્રિયા"
+      },
+      "form": {
+        "createTitle": "નવી ગ્રુપ લીડર",
+        "editTitle": "ગ્રુપ લીડરમાં ફેરફાર કરો",
+        "fullNameLabel": "પૂરું નામ",
+        "mobileLabel": "મોબાઇલ નંબર",
+        "mobilePlaceholder": "10 અંકનો મોબાઇલ નંબર",
+        "notesLabel": "નોંધ (વૈકલ્પિક)",
+        "locationsLabel": "લોકેશન",
+        "locationsHint": "આ ગ્રુપ લીડર જે ગામોમાં સેવા આપે છે તે પસંદ કરો.",
+        "isActiveLabel": "સક્રિય"
+      },
+      "errors": {
+        "fullNameRequired": "પૂરું નામ જરૂરી છે",
+        "invalidMobile": "10 અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો",
+        "locationsRequired": "ઓછામાં ઓછી એક લોકેશન પસંદ કરો"
+      }
+    }
+  },
+  "admin": {
+    "title": "એડમિન",
+    "users": {
+      "title": "યુઝર",
+      "subtitle": "જે સ્ટાફ લોગિન કરી શકે છે.",
+      "newButton": "નવો યુઝર",
+      "table": {
+        "name": "નામ",
+        "mobile": "મોબાઇલ",
+        "role": "ભૂમિકા",
+        "locations": "લોકેશન",
+        "status": "સ્થિતિ",
+        "actions": "ક્રિયા"
+      },
+      "form": {
+        "createTitle": "નવો યુઝર",
+        "editTitle": "યુઝરમાં ફેરફાર કરો",
+        "fullNameLabel": "પૂરું નામ",
+        "mobileLabel": "મોબાઇલ નંબર",
+        "mobilePlaceholder": "10 અંકનો મોબાઇલ નંબર",
+        "roleLabel": "ભૂમિકા",
+        "pinLabel": "પ્રારંભિક PIN (6 અંક)",
+        "pinHint": "યુઝર આ PIN થી લોગિન કરી શકશે. સુપર-એડમિન પછીથી રીસેટ કરી શકે છે.",
+        "locationsLabel": "સોંપાયેલી લોકેશન",
+        "locationsHint": "સેન્ટર મેનેજર માટે જરૂરી. ઓછામાં ઓછી એક પસંદ કરો.",
+        "isActiveLabel": "સક્રિય"
+      },
+      "resetPin": {
+        "title": "PIN રીસેટ કરો",
+        "newPinLabel": "નવો 6 અંકનો PIN",
+        "confirmPinLabel": "PIN ફરી દાખલ કરો",
+        "submit": "PIN રીસેટ કરો"
+      },
+      "errors": {
+        "fullNameRequired": "પૂરું નામ જરૂરી છે",
+        "invalidMobile": "10 અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો",
+        "invalidPin": "PIN બરાબર 6 અંકનો હોવો જોઈએ",
+        "pinMismatch": "બંને PIN એક સરખા નથી",
+        "roleRequired": "ભૂમિકા પસંદ કરો",
+        "centreManagerLocationsRequired": "સેન્ટર મેનેજર માટે ઓછામાં ઓછી એક લોકેશન જરૂરી છે"
+      }
+    },
+    "settings": {
+      "title": "સેટિંગ",
+      "subtitle": "બિઝનેસ સ્થિરાંકો. ફેરફારો ભવિષ્યના જોબ માટે જ લાગુ થશે — જૂના જોબ તેમના ઇશ્યુ સમયના મૂલ્યો સાથે જ રહેશે.",
+      "fields": {
+        "weight_loss_tolerance_pct": {
+          "label": "વજન-ઘટાડો સહિષ્ણુતા (%)",
+          "help": "આ ટકાવારીથી વધુ વજન-ઘટાડાવાળા જોબને સૉફ્ટ-ફ્લેગ કરે છે."
+        },
+        "dozen_multiplier": {
+          "label": "ડઝન મલ્ટિપ્લાયર",
+          "help": "મજૂરીની ગણતરીમાં ડઝન જથ્થા માટેનો ગુણક."
+        },
+        "sla_days": {
+          "label": "SLA દિવસ",
+          "help": "ઇશ્યુ થયાથી જોબની ડેડલાઇન (દિવસોમાં)."
+        },
+        "incentive_pct": {
+          "label": "પ્રોત્સાહન (%)",
+          "help": "ગ્રુપ લીડરનું વાર્ષિક પ્રોત્સાહન કુલ મજૂરીના ટકા તરીકે."
+        },
+        "season_start_month": {
+          "label": "સીઝન શરૂ થવાનો મહિનો",
+          "help": "રાખડી સીઝન શરૂ થવાનો કૅલેન્ડર મહિનો.",
+          "lockedTooltip": "આ સેટિંગ લૉક છે કારણ કે તેને બદલવાથી જૂની પ્રોત્સાહન ગણતરી અયોગ્ય થાય. જરૂર પડે તો ફક્ત SQL દ્વારા જ બદલવું.",
+          "lockedDisplay": "ઓગસ્ટ (લૉક)"
+        }
+      },
+      "noChanges": "સાચવવા માટે કોઈ ફેરફાર નથી",
+      "errors": {
+        "outOfRange": "મૂલ્ય મર્યાદા બહાર છે"
+      }
+    }
   }
 }

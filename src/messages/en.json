@@ -8,6 +8,72 @@
     "english": "English",
     "gujarati": "ગુજરાતી"
   },
+  "common": {
+    "actions": {
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "create": "Create",
+      "delete": "Delete",
+      "restore": "Restore",
+      "deactivate": "Deactivate",
+      "resetPin": "Reset PIN",
+      "back": "Back",
+      "showDeleted": "Show deleted",
+      "hideDeleted": "Hide deleted"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "deleted": "Deleted"
+    },
+    "fields": {
+      "reason": "Reason",
+      "reasonPlaceholder": "Why are you making this change?",
+      "reasonHelp": "Required. Captured in the audit log."
+    },
+    "confirm": {
+      "softDeleteTitle": "Confirm delete",
+      "softDeleteBody": "This will hide the record. Super-admin can restore later.",
+      "restoreTitle": "Confirm restore",
+      "restoreBody": "This will make the record active again.",
+      "deactivateUserTitle": "Confirm deactivate",
+      "deactivateUserBody": "The user will lose access immediately.",
+      "resetPinTitle": "Reset PIN",
+      "resetPinBody": "Enter a new 6-digit PIN. The user will need to use the new PIN to sign in."
+    },
+    "toasts": {
+      "saved": "Saved",
+      "deleted": "Deleted",
+      "restored": "Restored",
+      "pinReset": "PIN reset"
+    },
+    "errors": {
+      "mobileAlreadyExists": "Another active record uses this mobile number.",
+      "designNumberAlreadyExists": "Another active design uses this number.",
+      "cannotModifySelf": "You cannot change your own role, deactivate yourself, or reset your own PIN.",
+      "centreManagerRequiresLocation": "Centre managers must cover at least one location.",
+      "centreManagerLocationsExist": "This centre manager still has locations assigned. Remove them before changing the role.",
+      "settingLocked": "This setting is locked and cannot be changed from the UI.",
+      "reasonRequired": "Please enter a reason.",
+      "permissionDenied": "You don't have permission to do that.",
+      "sessionInvalid": "Your session has expired. Please sign in again.",
+      "notFound": "That record no longer exists.",
+      "invalidInput": "Some of the values you entered are not valid.",
+      "unknownError": "Something went wrong. Please try again."
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "masterData": "Master data",
+    "locations": "Locations",
+    "designs": "Designs",
+    "leadLadies": "Lead ladies",
+    "admin": "Admin",
+    "users": "Users",
+    "settings": "Settings"
+  },
   "login": {
     "title": "Sign in",
     "subtitle": "Mobile number and 6-digit PIN",
@@ -37,5 +103,165 @@
     "supervisor": "Supervisor",
     "centre_manager": "Centre manager",
     "accountant": "Accountant"
+  },
+  "masterData": {
+    "title": "Master data",
+    "locations": {
+      "title": "Locations",
+      "subtitle": "Job-work villages. Read-only for everyone except super-admin.",
+      "table": {
+        "nameEn": "Name (English)",
+        "nameGu": "Name (Gujarati)",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "edit": {
+        "title": "Edit location",
+        "nameEnLabel": "Name (English)",
+        "nameGuLabel": "Name (Gujarati)",
+        "isActiveLabel": "Active"
+      },
+      "errors": {
+        "nameEnRequired": "English name is required",
+        "nameGuRequired": "Gujarati name is required"
+      }
+    },
+    "designs": {
+      "title": "Designs",
+      "subtitle": "Rakhi design catalogue.",
+      "newButton": "New design",
+      "table": {
+        "image": "Image",
+        "designNumber": "Design #",
+        "name": "Name",
+        "rate": "Rate / guss",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "form": {
+        "createTitle": "New design",
+        "editTitle": "Edit design",
+        "designNumberLabel": "Design number",
+        "designNumberPlaceholder": "e.g. 1325",
+        "nameEnLabel": "Name (English, optional)",
+        "nameGuLabel": "Name (Gujarati, optional)",
+        "rateLabel": "Rate per guss (₹)",
+        "ratePlaceholder": "e.g. 120.00",
+        "imageLabel": "Reference image (optional)",
+        "imageHint": "JPEG, PNG or WebP. Max 2 MB.",
+        "imageReplace": "Replace image",
+        "imageRemove": "Remove image",
+        "isActiveLabel": "Active"
+      },
+      "errors": {
+        "designNumberRequired": "Design number is required",
+        "rateRequired": "Rate per guss is required and must be greater than 0",
+        "imageTooLarge": "Image is larger than 2 MB",
+        "imageWrongType": "Image must be JPEG, PNG or WebP"
+      }
+    },
+    "leadLadies": {
+      "title": "Lead ladies",
+      "subtitle": "Group leaders for each village.",
+      "newButton": "New lead lady",
+      "table": {
+        "name": "Name",
+        "mobile": "Mobile",
+        "locations": "Locations",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "form": {
+        "createTitle": "New lead lady",
+        "editTitle": "Edit lead lady",
+        "fullNameLabel": "Full name",
+        "mobileLabel": "Mobile number",
+        "mobilePlaceholder": "10-digit mobile number",
+        "notesLabel": "Notes (optional)",
+        "locationsLabel": "Locations",
+        "locationsHint": "Pick one or more villages this lead lady serves.",
+        "isActiveLabel": "Active"
+      },
+      "errors": {
+        "fullNameRequired": "Full name is required",
+        "invalidMobile": "Enter a 10-digit Indian mobile number",
+        "locationsRequired": "Pick at least one location"
+      }
+    }
+  },
+  "admin": {
+    "title": "Admin",
+    "users": {
+      "title": "Users",
+      "subtitle": "Internal staff who can sign in.",
+      "newButton": "New user",
+      "table": {
+        "name": "Name",
+        "mobile": "Mobile",
+        "role": "Role",
+        "locations": "Locations",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "form": {
+        "createTitle": "New user",
+        "editTitle": "Edit user",
+        "fullNameLabel": "Full name",
+        "mobileLabel": "Mobile number",
+        "mobilePlaceholder": "10-digit mobile number",
+        "roleLabel": "Role",
+        "pinLabel": "Initial PIN (6 digits)",
+        "pinHint": "The user can sign in with this PIN. Super-admin can reset later.",
+        "locationsLabel": "Assigned locations",
+        "locationsHint": "Required for centre managers. Pick at least one.",
+        "isActiveLabel": "Active"
+      },
+      "resetPin": {
+        "title": "Reset PIN",
+        "newPinLabel": "New 6-digit PIN",
+        "confirmPinLabel": "Confirm PIN",
+        "submit": "Reset PIN"
+      },
+      "errors": {
+        "fullNameRequired": "Full name is required",
+        "invalidMobile": "Enter a 10-digit Indian mobile number",
+        "invalidPin": "PIN must be exactly 6 digits",
+        "pinMismatch": "The two PINs don't match",
+        "roleRequired": "Pick a role",
+        "centreManagerLocationsRequired": "Centre managers need at least one location"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Business constants. Changes apply to future jobs only — historical jobs stay locked to the values they were issued under.",
+      "fields": {
+        "weight_loss_tolerance_pct": {
+          "label": "Weight loss tolerance (%)",
+          "help": "Soft-flag jobs whose weight loss exceeds this percentage."
+        },
+        "dozen_multiplier": {
+          "label": "Dozen multiplier",
+          "help": "Multiplier for dozen quantity in labour calculation."
+        },
+        "sla_days": {
+          "label": "SLA days",
+          "help": "Job-work deadline in days from issue."
+        },
+        "incentive_pct": {
+          "label": "Incentive (%)",
+          "help": "Lead lady annual incentive as % of total labour."
+        },
+        "season_start_month": {
+          "label": "Season start month",
+          "help": "Calendar month the rakhi season starts.",
+          "lockedTooltip": "This setting is locked because changing it would invalidate historical incentive calculations. Edit via SQL only if absolutely necessary.",
+          "lockedDisplay": "August (locked)"
+        }
+      },
+      "noChanges": "No changes to save",
+      "errors": {
+        "outOfRange": "Value is out of range"
+      }
+    }
   }
 }
