@@ -18,22 +18,22 @@ Only the tables needed for the first shippable slice: **create a sellable pack (
 
 A SKU is one sellable pack, not a design. The same design in two pack sizes is two SKUs. A mix pack is a plain named SKU with no recorded recipe (deferred to v2).
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | uuid | PK, default `gen_random_uuid()` |
-| `sku_code` | text | Unique (where not deleted). App-generated, never user-typed. |
-| `pack_type` | text | `check (pack_type in ('single','mix'))` |
-| `design_no` | text | Single packs only, e.g. `1325`. NULL for mix. |
-| `mix_code` | text | Mix packs only, short token e.g. `FEST`. NULL for single. |
-| `design_name` | text | Display name, both types, e.g. `Lotus gold` / `Festive mix`. NOT NULL. |
-| `pack_size` | integer | `check (pack_size > 0)`, e.g. 3 / 6 / 12. |
-| `price` | numeric(10,2) | Wholesale price per pack. `check (price >= 0)`. Editable later; NOT printed on label. |
-| `photo_path` | text | Supabase Storage object path. Nullable. |
-| `is_active` | boolean | Default `true`. Discontinued SKUs set `false` (still scannable/historic). |
-| `created_by` | uuid | FK → `app_users(id)`. |
-| `created_at` | timestamptz | Default `now()`. |
-| `updated_at` | timestamptz | Maintained by trigger or app. |
-| `deleted_at` | timestamptz | Soft delete. Nullable. |
+| Column        | Type          | Notes                                                                                 |
+| ------------- | ------------- | ------------------------------------------------------------------------------------- |
+| `id`          | uuid          | PK, default `gen_random_uuid()`                                                       |
+| `sku_code`    | text          | Unique (where not deleted). App-generated, never user-typed.                          |
+| `pack_type`   | text          | `check (pack_type in ('single','mix'))`                                               |
+| `design_no`   | text          | Single packs only, e.g. `1325`. NULL for mix.                                         |
+| `mix_code`    | text          | Mix packs only, short token e.g. `FEST`. NULL for single.                             |
+| `design_name` | text          | Display name, both types, e.g. `Lotus gold` / `Festive mix`. NOT NULL.                |
+| `pack_size`   | integer       | `check (pack_size > 0)`, e.g. 3 / 6 / 12.                                             |
+| `price`       | numeric(10,2) | Wholesale price per pack. `check (price >= 0)`. Editable later; NOT printed on label. |
+| `photo_path`  | text          | Supabase Storage object path. Nullable.                                               |
+| `is_active`   | boolean       | Default `true`. Discontinued SKUs set `false` (still scannable/historic).             |
+| `created_by`  | uuid          | FK → `app_users(id)`.                                                                 |
+| `created_at`  | timestamptz   | Default `now()`.                                                                      |
+| `updated_at`  | timestamptz   | Maintained by trigger or app.                                                         |
+| `deleted_at`  | timestamptz   | Soft delete. Nullable.                                                                |
 
 ### Constraints
 
@@ -64,7 +64,7 @@ create unique index skus_code_uq
 ### SKU code generation (app-side, deterministic)
 
 Single: `JP-${design_no}-${String(pack_size).padStart(2,'0')}` → `JP-1325-06`
-Mix:    `JP-MIX-${mix_code}-${pack_size}` → `JP-MIX-FEST-12`
+Mix: `JP-MIX-${mix_code}-${pack_size}` → `JP-MIX-FEST-12`
 
 Generated once at create time, stored in `sku_code`. Because design/pack identity is baked into both the code and the printed label, `design_no`, `mix_code`, `pack_type`, and `pack_size` are **locked after creation** (see edit rules). To "change" them, deactivate this SKU and create a new one.
 
@@ -112,12 +112,12 @@ JP-1325-06
 
 ## 5. Permissions (RLS) — sensible v1 default
 
-| Role | SKUs |
-|---|---|
-| super_admin | create / edit / deactivate / view / print |
-| supervisor | create / edit / view / print |
-| center_manager | view / print |
-| accountant | view / print |
+| Role           | SKUs                                      |
+| -------------- | ----------------------------------------- |
+| super_admin    | create / edit / deactivate / view / print |
+| supervisor     | create / edit / view / print              |
+| center_manager | view / print                              |
+| accountant     | view / print                              |
 
 Adjustable — flagged for confirmation, not blocking. Enforce via Supabase RLS policies keyed off the existing `app_users.role`.
 
