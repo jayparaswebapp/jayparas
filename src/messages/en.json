@@ -72,6 +72,10 @@
     "locations": "Locations",
     "designs": "Designs",
     "leadLadies": "Lead ladies",
+    "skus": "SKUs",
+    "skusLibrary": "Library",
+    "skusNew": "New SKU",
+    "skusPrint": "Print labels",
     "admin": "Admin",
     "users": "Users",
     "settings": "Settings"
@@ -98,7 +102,16 @@
     "greeting": "Hello, {name}",
     "roleLabel": "Role",
     "signOut": "Sign out",
-    "comingSoon": "Master data, jobs and receipts will appear here in the next sessions."
+    "comingSoon": "Jobs and receipts will appear here in the next sessions.",
+    "shortcuts": {
+      "title": "Go to",
+      "skus": "SKUs",
+      "skusHint": "Create, browse and print QR labels.",
+      "masterData": "Master data",
+      "masterDataHint": "Locations, designs, lead ladies.",
+      "admin": "Admin",
+      "adminHint": "Users and settings."
+    }
   },
   "roles": {
     "super_admin": "Super-admin",
@@ -264,6 +277,94 @@
       "errors": {
         "outOfRange": "Value is out of range"
       }
+    }
+  },
+  "skus": {
+    "library": {
+      "title": "SKUs",
+      "subtitle": "Sellable packs. Each row is one design at one pack size.",
+      "newButton": "New SKU",
+      "printButton": "Print labels",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Design number, mix code, or name",
+      "includeInactive": "Include inactive",
+      "empty": "No SKUs yet.",
+      "noMatches": "No SKUs match the search.",
+      "card": {
+        "designLabel": "Design",
+        "mixLabel": "Mix"
+      }
+    },
+    "form": {
+      "createTitle": "New SKU",
+      "editTitle": "Edit SKU",
+      "packTypeLabel": "Pack",
+      "packTypeHint": "Select a pack size, or Mix for a multi-design pack.",
+      "packTypeMix": "Mix",
+      "designNumberLabel": "Design number",
+      "designNumberPlaceholder": "e.g. 1325",
+      "mixCodeLabel": "Mix short code",
+      "mixCodePlaceholder": "e.g. FEST",
+      "designNameLabel": "Design name",
+      "designNamePlaceholder": "e.g. Lotus gold",
+      "priceLabel": "Price (₹)",
+      "pricePlaceholder": "e.g. 240",
+      "priceHint": "Wholesale price per pack. Never printed on the label.",
+      "photoLabel": "Photo (optional)",
+      "photoHint": "JPEG, PNG or WebP. Auto-resized to 1024px.",
+      "photoTakeOrUpload": "Add photo",
+      "photoReplace": "Replace photo",
+      "photoRemove": "Remove photo",
+      "previewLabel": "Preview",
+      "previewEmpty": "Fill the fields above to see the SKU code and QR.",
+      "skuCodeLabel": "SKU code",
+      "isActiveLabel": "Active",
+      "lockedHint": "Locked after create — already-printed labels reference these values."
+    },
+    "detail": {
+      "title": "SKU detail",
+      "printLabel": "Print label",
+      "printSheet": "Print sheet",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "metaCreated": "Created",
+      "metaUpdated": "Last updated",
+      "lockedSection": "Locked fields",
+      "editableSection": "Editable fields",
+      "deactivateConfirm": "Deactivating this SKU hides it from the default library view. Existing printed labels keep scanning. Reactivate later if needed.",
+      "reactivateConfirm": "This will return the SKU to the active list."
+    },
+    "print": {
+      "title": "Print labels",
+      "subtitle": "Pick the SKUs you want, then print from your browser to the sticker sheet.",
+      "selectAll": "Select all",
+      "clear": "Clear selection",
+      "selectedCount": "{count} selected",
+      "selectedNone": "Select one or more SKUs to print.",
+      "openSheet": "Open print sheet",
+      "sheetTitle": "Label sheet",
+      "perSheet": "{count} per sheet",
+      "back": "Back",
+      "printNow": "Print now",
+      "empty": "No printable SKUs."
+    },
+    "label": {
+      "brand": "Jai Paras",
+      "designLine": "Design: {number} — {name}",
+      "mixLine": "Mix: {code} — {name}",
+      "packLine": "Pack: {size} pcs"
+    },
+    "errors": {
+      "designNumberRequired": "Design number is required",
+      "mixCodeRequired": "Mix short code is required",
+      "designNameRequired": "Design name is required",
+      "packSizeRequired": "Pick a pack size",
+      "priceRequired": "Price is required and must be 0 or more",
+      "photoTooLarge": "Photo is larger than 4 MB",
+      "photoWrongType": "Photo must be JPEG, PNG or WebP",
+      "duplicate": "A SKU with this design and pack already exists.",
+      "duplicateOpenLink": "Open existing SKU"
     }
   }
 }

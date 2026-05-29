@@ -1,0 +1,51 @@
+/**
+ * Thermal roll geometry — kept in this single constants file so swapping
+ * stock (or moving to a different printer / paper) is a one-line change.
+ *
+ * v1 hardware: 25 × 15 mm continuous-roll thermal labels, 2-up. Each printed
+ * row is one pair of labels separated by a 2 mm gap; the roll feeds vertically
+ * with a 1 mm gap between rows.
+ *
+ * @media print uses `@page { size: 54mm auto }` so the browser hands the
+ * printer a fixed-width, variable-height page (matching the roll), and rows
+ * flow continuously without a forced page break.
+ */
+
+export interface LabelRollGrid {
+  format: 'roll';
+  /** Per-label physical dimensions. */
+  labelWidth: string;
+  labelHeight: string;
+  /** Number of labels per row (2-up). */
+  columns: number;
+  /** Horizontal gap between the two columns. */
+  gapX: string;
+  /** Vertical gap between successive rows on the roll. */
+  gapY: string;
+  /** Total page width (roll width) — labels + gap + side margins. */
+  pageWidth: string;
+}
+
+export const ROLL_2UP_25x15: LabelRollGrid = {
+  format: 'roll',
+  labelWidth: '25mm',
+  labelHeight: '15mm',
+  columns: 2,
+  gapX: '2mm',
+  gapY: '1mm',
+  // 25 + 2 (gap) + 25 + 2 (combined side margin) = 54mm
+  pageWidth: '54mm',
+};
+
+export const DEFAULT_LABEL_GRID = ROLL_2UP_25x15;
+
+/**
+ * Font sizes for the printed label (Variant C — Bigger, picked by the user).
+ * Stored here so the label component reads from one source.
+ */
+export const LABEL_FONT = {
+  name: { sizePt: 8, weight: 700 },
+  rate: { sizePt: 8, weight: 400 },
+  unit: { sizePt: 7, weight: 700 },
+  qrSize: '9mm',
+} as const;

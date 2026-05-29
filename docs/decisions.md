@@ -4,6 +4,42 @@ Lightweight ADRs. One entry per decision. Newest at top.
 
 ---
 
+## ADR-009 — v1 inventory: SKU model, label symbology, photo bucket, label content
+
+**Date:** 2026-05-28
+**Status:** Accepted
+
+### Context
+
+WS-E1 ships the first inventory slice: create-SKU + library + label printing. The data-model addendum (`docs/data-model-inventory.md`) covers the schema; this ADR captures the live decisions made during the session, including two that override the addendum.
+
+### Decisions
+
+1. **SKU = pack, not design.** A SKU is one sellable pack (e.g. design 1325 in a pack of 6). The same design at two pack sizes is two SKUs. Mix packs are plain named SKUs with no recipe (deferred to v2).
+2. **Locked-after-create fields.** `pack_type`, `design_no`, `mix_code`, `pack_size`, `sku_code` are immutable after the row exists. Editing them would invalidate already-printed QR labels stuck on physical stock. To "change" them, deactivate this SKU and create a new one. Enforced at the RPC layer (`update_sku` only takes the editable columns).
+3. **Deactivation is super_admin only.** `set_sku_active` RPC is super_admin only (matches the role matrix in `docs/data-model-inventory.md §5`). Supervisor can edit name/price/photo but cannot toggle `is_active`. `deleted_at` is reserved for super_admin SQL-level mistakes; the UI never offers hard / soft delete in v1.
+4. **`sku-photos` Storage bucket is public.** Rakhi product photos are low-sensitivity and the library grid fetches them via direct `getPublicUrl` (no signing round-trip). Path convention `<random_hex_2>/<random_hex_12>.<ext>` mirrors design-images (ADR-007); decoupled from `sku_id` so the photo can be uploaded client-side before the row exists. Can be tightened to private + signed URLs later without schema change.
+5. **Symbology overridden: QR, not Code 128.** The data-model addendum §3 said Code 128. v1 prints **square QR** instead — staff preference for visually-square, scan-from-any-angle codes on a tiny 25×15 mm label. The QR encodes the verbatim `sku_code` (e.g. `JP-1325-06`); the npm package is `qrcode` (~25 KB, SVG output).
+6. **Label content overridden: price IS printed.** The data-model addendum §4 said "never the price". v1 prints rate. The three left-side rows are: `<design_name> <design_no|mix_code>`, `₹<price>/-`, `<n> Doz` or `<n> Pcs`. QR on the right encodes `sku_code`. The `sku_code` itself is NOT printed as text; staff scan the QR for it.
+7. **Label geometry: 25 × 15 mm continuous-roll, 2-up.** Thermal label printer with a 54 mm wide roll. `@page { size: 54mm auto; margin: 0 }` so rows flow continuously. Constants live in one file (`src/lib/skus/label-grid.ts`) so swapping printers / paper stock is a one-line change. Fonts are name 8 pt bold / rate 8 pt / unit 7 pt bold (Variant C in the user-reviewed mockup); QR is 9 mm square.
+8. **Bulk print picker requires explicit per-SKU quantity.** No "select once = 1 label" default — staff type a quantity per SKU every time (typical workflow is "print N labels for this incoming stock batch"). Empty / zero quantity = SKU is excluded. Renders via `/skus/print/sheet?items=<id>:<qty>,...`.
+9. **Single-label "Print label" prints the full 2-up row.** Detail page → `/skus/[id]/print` redirects to `/skus/print/sheet?items=<id>:2`. Avoids wasting half a row on the continuous roll.
+10. **Library multi-select is deferred.** The library grid stays read-only; the print picker is the standalone `/skus/print` page. If staff want to print labels for SKUs they're already browsing, they navigate to the picker and search.
+11. **Design master deferred.** `design_no` is still a free-text field on `skus`. Promoting it to a `designs`-like master table (so labour rates can attach to it cleanly when stock-in lands) is left for the next WS-E session.
+
+### Deferred to later WS-E sessions
+
+`stock_movements` (immutable ledger), `sales` + `sale_items`, batches, bin/rack locations, mix-pack recipe table, price tiers, per-customer discounts, GST invoicing, returns, reporting, design master table promotion.
+
+### Trade-offs
+
+- **QR vs Code 128.** QR encodes the same `sku_code` string but reads at any angle, which suits a small square label area better than a tall barcode strip. Cost: one new dependency (`qrcode`); zero loss in scan compatibility (any modern phone scanner reads both).
+- **Public photo bucket.** Eliminates a signing round-trip per image, but exposes anyone-who-guesses-the-URL to the photo. Acceptable for v1 product photos; will tighten if photos ever carry trade information.
+- **Price on label.** Reverses the addendum's "never the price" rule. The trade-off the addendum was avoiding is needing to re-print every label when prices change; in practice for v1 the staff want the price visible at the point of sale and accept re-printing as part of stock-in. Documented here so the trade-off is explicit when prices next change.
+- **Locked-fields enforcement.** Locking at the RPC layer (not just the UI) means a future caller hitting the database direct still can't break the QR-printed contract. Cost: the `update_sku` parameter list doesn't include the locked columns, so adding a "fix typo on design_no" workflow later requires a new RPC.
+
+---
+
 ## ADR-008 — Brand name correction: "Jay Paras" → "Jai Paras"
 
 **Date:** 2026-04-28

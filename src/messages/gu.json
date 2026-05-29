@@ -72,6 +72,10 @@
     "locations": "લોકેશન",
     "designs": "ડિઝાઇન",
     "leadLadies": "ગ્રુપ લીડર",
+    "skus": "SKU",
+    "skusLibrary": "લાઇબ્રેરી",
+    "skusNew": "નવો SKU",
+    "skusPrint": "લેબલ પ્રિન્ટ",
     "admin": "એડમિન",
     "users": "યુઝર",
     "settings": "સેટિંગ"
@@ -98,7 +102,16 @@
     "greeting": "નમસ્તે, {name}",
     "roleLabel": "ભૂમિકા",
     "signOut": "લોગ આઉટ",
-    "comingSoon": "માસ્ટર ડેટા, જોબ અને રિસીપ્ટ આગામી સેશનમાં અહીં દેખાશે."
+    "comingSoon": "જોબ અને રિસીપ્ટ આગામી સેશનમાં અહીં દેખાશે.",
+    "shortcuts": {
+      "title": "જાઓ",
+      "skus": "SKU",
+      "skusHint": "નવો SKU બનાવો, જુઓ અને QR લેબલ પ્રિન્ટ કરો.",
+      "masterData": "માસ્ટર ડેટા",
+      "masterDataHint": "લોકેશન, ડિઝાઇન, ગ્રુપ લીડર.",
+      "admin": "એડમિન",
+      "adminHint": "યુઝર અને સેટિંગ."
+    }
   },
   "roles": {
     "super_admin": "સુપર-એડમિન",
@@ -264,6 +277,94 @@
       "errors": {
         "outOfRange": "મૂલ્ય મર્યાદા બહાર છે"
       }
+    }
+  },
+  "skus": {
+    "library": {
+      "title": "SKU",
+      "subtitle": "વેચાણ યોગ્ય પૅક. દરેક પંક્તિ એક ડિઝાઇનનો એક પૅક સાઇઝ છે.",
+      "newButton": "નવો SKU",
+      "printButton": "લેબલ પ્રિન્ટ",
+      "searchLabel": "શોધો",
+      "searchPlaceholder": "ડિઝાઇન નંબર, મિક્સ કોડ કે નામ",
+      "includeInactive": "નિષ્ક્રિય પણ બતાવો",
+      "empty": "હજુ કોઈ SKU નથી.",
+      "noMatches": "શોધ સાથે મેળ ખાતો કોઈ SKU નથી.",
+      "card": {
+        "designLabel": "ડિઝાઇન",
+        "mixLabel": "મિક્સ"
+      }
+    },
+    "form": {
+      "createTitle": "નવો SKU",
+      "editTitle": "SKU માં ફેરફાર કરો",
+      "packTypeLabel": "પૅક",
+      "packTypeHint": "પૅક સાઇઝ પસંદ કરો, અથવા મિક્સ-પૅક માટે મિક્સ પસંદ કરો.",
+      "packTypeMix": "મિક્સ",
+      "designNumberLabel": "ડિઝાઇન નંબર",
+      "designNumberPlaceholder": "દા.ત. 1325",
+      "mixCodeLabel": "મિક્સ ટૂંકો કોડ",
+      "mixCodePlaceholder": "દા.ત. FEST",
+      "designNameLabel": "ડિઝાઇનનું નામ",
+      "designNamePlaceholder": "દા.ત. Lotus gold",
+      "priceLabel": "ભાવ (₹)",
+      "pricePlaceholder": "દા.ત. 240",
+      "priceHint": "પૅક દીઠ હોલસેલ ભાવ. લેબલ પર છપાતો નથી.",
+      "photoLabel": "ફોટો (વૈકલ્પિક)",
+      "photoHint": "JPEG, PNG કે WebP. 1024px સુધી આપમેળે રિસાઇઝ થશે.",
+      "photoTakeOrUpload": "ફોટો ઉમેરો",
+      "photoReplace": "ફોટો બદલો",
+      "photoRemove": "ફોટો દૂર કરો",
+      "previewLabel": "પ્રિવ્યૂ",
+      "previewEmpty": "SKU કોડ અને QR જોવા માટે ઉપરના ખાનાં ભરો.",
+      "skuCodeLabel": "SKU કોડ",
+      "isActiveLabel": "સક્રિય",
+      "lockedHint": "બનાવ્યા પછી લૉક — છપાયેલા લેબલ આ મૂલ્યોનો સંદર્ભ આપે છે."
+    },
+    "detail": {
+      "title": "SKU વિગત",
+      "printLabel": "લેબલ પ્રિન્ટ",
+      "printSheet": "શીટ પ્રિન્ટ",
+      "edit": "ફેરફાર કરો",
+      "deactivate": "નિષ્ક્રિય કરો",
+      "reactivate": "ફરી સક્રિય કરો",
+      "metaCreated": "બનાવ્યું",
+      "metaUpdated": "છેલ્લો ફેરફાર",
+      "lockedSection": "લૉક ખાનાં",
+      "editableSection": "ફેરફાર યોગ્ય ખાનાં",
+      "deactivateConfirm": "નિષ્ક્રિય કરવાથી આ SKU મુખ્ય યાદીમાંથી છુપાશે. છપાયેલા લેબલ સ્કેન થતા રહેશે. જરૂર પડે તો પછી ફરી સક્રિય કરી શકાય.",
+      "reactivateConfirm": "આ SKU ફરી સક્રિય યાદીમાં દેખાશે."
+    },
+    "print": {
+      "title": "લેબલ પ્રિન્ટ",
+      "subtitle": "જે SKU પ્રિન્ટ કરવા હોય તે પસંદ કરો, પછી બ્રાઉઝરથી સ્ટિકર શીટ પર પ્રિન્ટ કરો.",
+      "selectAll": "બધા પસંદ કરો",
+      "clear": "પસંદગી ખાલી કરો",
+      "selectedCount": "{count} પસંદ",
+      "selectedNone": "પ્રિન્ટ માટે એક કે વધુ SKU પસંદ કરો.",
+      "openSheet": "પ્રિન્ટ શીટ ખોલો",
+      "sheetTitle": "લેબલ શીટ",
+      "perSheet": "શીટ દીઠ {count}",
+      "back": "પાછા",
+      "printNow": "હમણાં પ્રિન્ટ કરો",
+      "empty": "પ્રિન્ટ યોગ્ય કોઈ SKU નથી."
+    },
+    "label": {
+      "brand": "જય પારસ",
+      "designLine": "ડિઝાઇન: {number} — {name}",
+      "mixLine": "મિક્સ: {code} — {name}",
+      "packLine": "પૅક: {size} નંગ"
+    },
+    "errors": {
+      "designNumberRequired": "ડિઝાઇન નંબર જરૂરી છે",
+      "mixCodeRequired": "મિક્સ ટૂંકો કોડ જરૂરી છે",
+      "designNameRequired": "ડિઝાઇનનું નામ જરૂરી છે",
+      "packSizeRequired": "પૅક સાઇઝ પસંદ કરો",
+      "priceRequired": "ભાવ જરૂરી છે અને 0 કે વધુ હોવો જોઈએ",
+      "photoTooLarge": "ફોટો 4 MB થી મોટો છે",
+      "photoWrongType": "ફોટો JPEG, PNG કે WebP હોવો જોઈએ",
+      "duplicate": "આ ડિઝાઇન અને પૅક માટે SKU પહેલેથી છે.",
+      "duplicateOpenLink": "જૂનો SKU ખોલો"
     }
   }
 }
