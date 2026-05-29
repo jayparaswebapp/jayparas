@@ -19,7 +19,6 @@ export function LoginForm({ next }: { next?: string }) {
     formState: { errors },
     setFocus,
     trigger,
-    getValues,
   } = useForm<FormValues>({
     mode: 'onBlur',
     defaultValues: { mobile: '', pin: '' },
@@ -29,23 +28,17 @@ export function LoginForm({ next }: { next?: string }) {
     setFocus('mobile');
   }, [setFocus]);
 
-  const serverError =
-    state && state.ok === false ? t(`errors.${state.error}`) : null;
+  const serverError = state && state.ok === false ? t(`errors.${state.error}`) : null;
 
   return (
     <form
       action={formAction}
       onSubmit={async (e) => {
+        e.preventDefault();
+        const form = e.currentTarget;
         const valid = await trigger();
-        if (!valid) {
-          e.preventDefault();
-          return;
-        }
-        // Normalise: trim mobile/pin before submit.
-        const v = getValues();
-        const fd = new FormData(e.currentTarget);
-        fd.set('mobile', v.mobile.trim());
-        fd.set('pin', v.pin.trim());
+        if (!valid) return;
+        formAction(new FormData(form));
       }}
       className="space-y-4"
       noValidate
