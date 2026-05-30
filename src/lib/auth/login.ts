@@ -18,7 +18,7 @@ const LoginSchema = z.object({
     .string()
     .trim()
     .regex(/^\d{6}$/, 'invalidPin'),
-  next: z.string().optional(),
+  next: z.string().nullish(),
 });
 
 export type LoginErrorCode =
@@ -31,7 +31,10 @@ export type LoginErrorCode =
 
 export type LoginState = { ok: false; error: LoginErrorCode } | { ok: true };
 
-export async function loginAction(_prev: LoginState | null, formData: FormData): Promise<LoginState> {
+export async function loginAction(
+  _prev: LoginState | null,
+  formData: FormData,
+): Promise<LoginState> {
   const parsed = LoginSchema.safeParse({
     mobile: formData.get('mobile'),
     pin: formData.get('pin'),
@@ -40,7 +43,8 @@ export async function loginAction(_prev: LoginState | null, formData: FormData):
 
   if (!parsed.success) {
     const first = parsed.error.issues[0]?.message;
-    const code: LoginErrorCode = first === 'invalidMobile' || first === 'invalidPin' ? first : 'unknown';
+    const code: LoginErrorCode =
+      first === 'invalidMobile' || first === 'invalidPin' ? first : 'unknown';
     return { ok: false, error: code };
   }
 
