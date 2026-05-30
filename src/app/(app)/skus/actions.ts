@@ -9,7 +9,7 @@ import { rpcErrorKey, rpcErrorMessageKey } from '@/lib/rpc/errors';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { generateSkuCode } from '@/lib/skus/code';
 
-const PACK_SIZES = [3, 6, 12] as const;
+const PACK_SIZES = [1, 3, 4, 6, 12] as const;
 
 const CreateSchema = z
   .object({
@@ -25,7 +25,6 @@ const CreateSchema = z
       }),
     price: z.coerce.number().min(0, 'skus.errors.priceRequired'),
     photo_path: z.string().optional(),
-    reason: z.string().trim().optional(),
   })
   .superRefine((val, ctx) => {
     if (val.pack_type === 'single' && !val.design_no) {
@@ -52,8 +51,7 @@ export async function createSkuAction(
   _prev: CreateSkuResult | null,
   formData: FormData,
 ): Promise<CreateSkuResult> {
-  const user = await requireRole(['super_admin', 'supervisor']);
-  const isSuperAdmin = user.role === 'super_admin';
+  await requireRole(['super_admin', 'supervisor']);
 
   const parsed = CreateSchema.safeParse({
     pack_type: formData.get('pack_type'),
@@ -63,7 +61,6 @@ export async function createSkuAction(
     pack_size: formData.get('pack_size'),
     price: formData.get('price'),
     photo_path: formData.get('photo_path'),
-    reason: formData.get('reason'),
   });
 
   if (!parsed.success) {
@@ -71,10 +68,6 @@ export async function createSkuAction(
       ok: false,
       messageKey: parsed.error.issues[0]?.message ?? 'common.errors.invalidInput',
     };
-  }
-
-  if (isSuperAdmin && (!parsed.data.reason || parsed.data.reason.length === 0)) {
-    return { ok: false, messageKey: 'common.errors.reasonRequired' };
   }
 
   const sku_code =
@@ -100,7 +93,7 @@ export async function createSkuAction(
     p_pack_size: parsed.data.pack_size,
     p_price: parsed.data.price,
     p_photo_path: parsed.data.photo_path ?? '',
-    p_reason: parsed.data.reason ?? '',
+    p_reason: '',
   });
 
   if (error) {

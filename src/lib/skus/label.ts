@@ -10,9 +10,7 @@
  *   rate      → "₹132/-" for whole rupees, "₹132.50" when paise are present.
  *               The "/-" suffix matches the Indian rupee shorthand the user
  *               drew on the spec.
- *   unit      → "Doz" when pack_size is a whole-dozen multiple, otherwise
- *               "Pcs". Two suffixes only (no fractional "1/2 Doz"); per the
- *               user's lock-in. Pack 12 → "1 Doz", pack 6 → "6 Pcs", etc.
+ *   unit      → "1 Doz" for whole-dozen multiples, "N pcs" otherwise.
  */
 
 export interface SkuLabelInput {
@@ -42,5 +40,5 @@ export function labelUnit(pack_size: number): string {
     const dozens = pack_size / 12;
     return `${dozens} Doz`;
   }
-  return `${pack_size} Pcs`;
+  return `${pack_size} pcs`;
 }
