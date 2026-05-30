@@ -10,23 +10,23 @@ import {
   validateSkuPhotoFile,
   getSkuPhotoPublicUrl,
 } from '@/lib/storage/sku-photos';
-import { AuditReasonField } from '@/components/audit-reason-field';
 import { ServerError, SubmitButton } from '@/components/form-status';
 import { QrCode } from '@/components/qr-code';
 import { generateSkuCode } from '@/lib/skus/code';
 import { createSkuAction, type CreateSkuResult } from './actions';
 
 type PackType = 'single' | 'mix';
-const SIZES: Array<3 | 6 | 12> = [3, 6, 12];
+type PackSize = 1 | 3 | 4 | 6 | 12;
+const SIZES: PackSize[] = [1, 3, 4, 6, 12];
 
-export function SkuCreateForm({ isSuperAdmin }: { isSuperAdmin: boolean }) {
+export function SkuCreateForm() {
   const t = useTranslations('skus.form');
   const tErrors = useTranslations('skus.errors');
   const tCommon = useTranslations('common.actions');
   const [state, formAction] = useFormState<CreateSkuResult | null, FormData>(createSkuAction, null);
 
   const [packType, setPackType] = useState<PackType | null>(null);
-  const [packSize, setPackSize] = useState<3 | 6 | 12 | null>(null);
+  const [packSize, setPackSize] = useState<PackSize | null>(null);
   const [designNo, setDesignNo] = useState('');
   const [mixCode, setMixCode] = useState('');
   const [designName, setDesignName] = useState('');
@@ -37,7 +37,7 @@ export function SkuCreateForm({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const [uploading, setUploading] = useState(false);
   const [, startTransition] = useTransition();
 
-  function chooseSingle(size: 3 | 6 | 12) {
+  function chooseSingle(size: PackSize) {
     setPackType('single');
     setPackSize(size);
     setMixCode('');
@@ -293,8 +293,6 @@ export function SkuCreateForm({ isSuperAdmin }: { isSuperAdmin: boolean }) {
           <p className="text-sm text-neutral-500">{t('previewEmpty')}</p>
         )}
       </div>
-
-      <AuditReasonField required={isSuperAdmin} />
 
       {state && state.ok === false ? (
         <div className="space-y-2">

@@ -55,9 +55,10 @@ assert.equal(labelRate(132.05), '₹132.05', 'sub-rupee paise preserved');
 
 assert.equal(labelUnit(12), '1 Doz', 'pack 12 → 1 Doz');
 assert.equal(labelUnit(24), '2 Doz', 'pack 24 → 2 Doz');
-assert.equal(labelUnit(6), '6 Pcs', 'pack 6 → 6 Pcs (not 1/2 Doz)');
-assert.equal(labelUnit(3), '3 Pcs', 'pack 3 → 3 Pcs');
-assert.equal(labelUnit(5), '5 Pcs', 'non-standard pack falls through to Pcs');
+assert.equal(labelUnit(1), '1 pcs', 'pack 1 → 1 pcs');
+assert.equal(labelUnit(3), '3 pcs', 'pack 3 → 3 pcs');
+assert.equal(labelUnit(4), '4 pcs', 'pack 4 → 4 pcs');
+assert.equal(labelUnit(6), '6 pcs', 'pack 6 → 6 pcs (not 1/2 Doz)');
 
 // eslint-disable-next-line no-console
 console.log('All SKU label-line tests passed.');
