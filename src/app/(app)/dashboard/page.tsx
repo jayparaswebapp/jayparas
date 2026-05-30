@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/server';
 import { Header } from '@/components/header';
@@ -11,23 +10,55 @@ export default async function DashboardPage() {
   const supabase = createClient();
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  if (userError || !user) {
+    return (
+      <DebugCard
+        title="No authenticated user on /dashboard"
+        details={{
+          userError: userError?.message ?? null,
+          user: user ?? null,
+        }}
+      />
+    );
+  }
 
-  const { data: appUser } = await supabase
+  const { data: appUser, error: appUserError } = await supabase
     .from('app_users')
     .select('full_name, role')
     .eq('auth_user_id', user.id)
     .is('deleted_at', null)
     .maybeSingle();
 
-  if (!appUser) {
-    // Auth user exists but no app_users row — sign them out cleanly.
-    await supabase.auth.signOut();
-    redirect('/login');
+  if (appUserError || !appUser) {
+    return (
+      <DebugCard
+        title="app_users row missing or unreadable"
+        details={{
+          auth_user_id: user.id,
+          email: user.email,
+          appUserError: appUserError?.message ?? null,
+          appUser,
+        }}
+      />
+    );
   }
 
   return <DashboardView name={appUser.full_name} role={appUser.role} />;
+}
+
+function DebugCard({ title, details }: { title: string; details: Record<string, unknown> }) {
+  return (
+    <main className="min-h-screen bg-neutral-50 px-4 py-8">
+      <div className="mx-auto max-w-screen-md space-y-4">
+        <h1 className="text-xl font-semibold text-neutral-900">{title}</h1>
+        <pre className="overflow-auto rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
+          {JSON.stringify(details, null, 2)}
+        </pre>
+      </div>
+    </main>
+  );
 }
 
 function DashboardView({ name, role }: { name: string; role: string }) {
