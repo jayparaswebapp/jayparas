@@ -122,7 +122,7 @@ export function SkuCreateForm() {
                     : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
                 ].join(' ')}
               >
-                {n}
+                {n === 12 ? '1 Doz' : n}
               </button>
             );
           })}
@@ -161,7 +161,7 @@ export function SkuCreateForm() {
                       : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
                   ].join(' ')}
                 >
-                  {n}
+                  {n === 12 ? '1 Doz' : n}
                 </button>
               );
             })}
