@@ -10,6 +10,7 @@ import {
   validateSkuPhotoFile,
   getSkuPhotoPublicUrl,
 } from '@/lib/storage/sku-photos';
+import { AuditReasonField } from '@/components/audit-reason-field';
 import { ServerError, SubmitButton } from '@/components/form-status';
 import { QrCode } from '@/components/qr-code';
 import { generateSkuCode } from '@/lib/skus/code';
@@ -19,7 +20,7 @@ type PackType = 'single' | 'mix';
 type PackSize = 1 | 3 | 4 | 6 | 12;
 const SIZES: PackSize[] = [1, 3, 4, 6, 12];
 
-export function SkuCreateForm() {
+export function SkuCreateForm({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const t = useTranslations('skus.form');
   const tErrors = useTranslations('skus.errors');
   const tCommon = useTranslations('common.actions');
@@ -293,6 +294,8 @@ export function SkuCreateForm() {
           <p className="text-sm text-neutral-500">{t('previewEmpty')}</p>
         )}
       </div>
+
+      <AuditReasonField required={isSuperAdmin} />
 
       {state && state.ok === false ? (
         <div className="space-y-2">

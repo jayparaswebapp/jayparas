@@ -6,16 +6,16 @@ import { SkuCreateForm } from '../sku-create-form';
 export const dynamic = 'force-dynamic';
 
 export default async function NewSkuPage() {
-  await requireRole(['super_admin', 'supervisor']);
-  return <NewSkuView />;
+  const user = await requireRole(['super_admin', 'supervisor']);
+  return <NewSkuView isSuperAdmin={user.role === 'super_admin'} />;
 }
 
-function NewSkuView() {
+function NewSkuView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
   const t = useTranslations('skus.form');
   return (
     <>
       <PageHeader title={t('createTitle')} />
-      <SkuCreateForm />
+      <SkuCreateForm isSuperAdmin={isSuperAdmin} />
     </>
   );
 }
