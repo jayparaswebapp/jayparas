@@ -7,9 +7,9 @@ import { labelItemName, labelRate, labelUnit, type SkuLabelInput } from '@/lib/s
  * page (single label preview), the single-print page (one row = 2 copies),
  * and the bulk sheet (rows of 2-up labels).
  *
- * Layout: three text rows on the left (item name / rate / unit) and a
- * square QR on the right. Font sizes locked in `LABEL_FONT` (Variant C
- * picked by the user). Borders are off by default for print (the sticker
+ * Layout: design name spans the full label width on top; below that, rate
+ * and unit stack on the left and a square QR sits on the right. Font sizes
+ * locked in `LABEL_FONT`. Borders are off by default for print (the sticker
  * cell on the roll is the boundary); we render a light border on-screen so
  * the preview is visible against a white background.
  */
@@ -30,8 +30,7 @@ export function SkuLabel({
         width: DEFAULT_LABEL_GRID.labelWidth,
         height: DEFAULT_LABEL_GRID.labelHeight,
         display: 'flex',
-        alignItems: 'stretch',
-        justifyContent: 'space-between',
+        flexDirection: 'column',
         padding: '1mm',
         boxSizing: 'border-box',
         background: 'white',
@@ -41,54 +40,65 @@ export function SkuLabel({
     >
       <div
         style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          flex: 1,
-          minWidth: 0,
-          paddingRight: '0.5mm',
+          fontSize: `${LABEL_FONT.name.sizePt}pt`,
+          fontWeight: LABEL_FONT.name.weight,
+          lineHeight: 1.05,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          width: '100%',
         }}
       >
-        <div
-          style={{
-            fontSize: `${LABEL_FONT.name.sizePt}pt`,
-            fontWeight: LABEL_FONT.name.weight,
-            lineHeight: 1.05,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {name}
-        </div>
-        <div
-          style={{
-            fontSize: `${LABEL_FONT.rate.sizePt}pt`,
-            fontWeight: LABEL_FONT.rate.weight,
-            lineHeight: 1.05,
-          }}
-        >
-          {rate}
-        </div>
-        <div
-          style={{
-            fontSize: `${LABEL_FONT.unit.sizePt}pt`,
-            fontWeight: LABEL_FONT.unit.weight,
-            lineHeight: 1.05,
-          }}
-        >
-          {unit}
-        </div>
+        {name}
       </div>
       <div
         style={{
-          width: LABEL_FONT.qrSize,
-          height: LABEL_FONT.qrSize,
-          alignSelf: 'center',
-          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          flex: 1,
+          minHeight: 0,
+          marginTop: '0.5mm',
         }}
       >
-        <QrCode value={sku.sku_code} size={LABEL_FONT.qrSize} margin={0} />
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-end',
+            flex: 1,
+            minWidth: 0,
+            paddingRight: '0.5mm',
+          }}
+        >
+          <div
+            style={{
+              fontSize: `${LABEL_FONT.rate.sizePt}pt`,
+              fontWeight: LABEL_FONT.rate.weight,
+              lineHeight: 1.05,
+            }}
+          >
+            {rate}
+          </div>
+          <div
+            style={{
+              fontSize: `${LABEL_FONT.unit.sizePt}pt`,
+              fontWeight: LABEL_FONT.unit.weight,
+              lineHeight: 1.05,
+            }}
+          >
+            {unit}
+          </div>
+        </div>
+        <div
+          style={{
+            width: LABEL_FONT.qrSize,
+            height: LABEL_FONT.qrSize,
+            flexShrink: 0,
+          }}
+        >
+          <QrCode value={sku.sku_code} size={LABEL_FONT.qrSize} margin={0} />
+        </div>
       </div>
     </div>
   );
