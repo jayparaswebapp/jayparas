@@ -74,11 +74,13 @@ export async function createSkuAction(
     parsed.data.pack_type === 'single'
       ? generateSkuCode({
           pack_type: 'single',
+          design_name: parsed.data.design_name,
           design_no: parsed.data.design_no!,
           pack_size: parsed.data.pack_size,
         })
       : generateSkuCode({
           pack_type: 'mix',
+          design_name: parsed.data.design_name,
           mix_code: parsed.data.mix_code!,
           pack_size: parsed.data.pack_size,
         });
