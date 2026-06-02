@@ -65,10 +65,19 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
         </div>
       </div>
 
-      {/* The actual label sheet. Same DOM used for both screen preview and print. */}
+      {/* The actual label sheet. Same DOM used for both screen preview and print.
+          Horizontal padding is the physical side margin from label-grid;
+          vertical padding stays zero so the first label starts at the roll's
+          leading edge. */}
       <div
-        className="print-sheet-root mx-auto rounded-md border border-dashed border-neutral-300 bg-white p-2 print:m-0 print:rounded-none print:border-0 print:p-0"
-        style={{ width: DEFAULT_LABEL_GRID.pageWidth }}
+        className="print-sheet-root mx-auto rounded-md border border-dashed border-neutral-300 bg-white print:m-0 print:rounded-none print:border-0"
+        style={{
+          width: DEFAULT_LABEL_GRID.pageWidth,
+          paddingLeft: DEFAULT_LABEL_GRID.marginX,
+          paddingRight: DEFAULT_LABEL_GRID.marginX,
+          paddingTop: 0,
+          paddingBottom: 0,
+        }}
       >
         {rows.map((row, rowIdx) => (
           <div

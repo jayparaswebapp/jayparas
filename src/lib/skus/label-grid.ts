@@ -22,7 +22,9 @@ export interface LabelRollGrid {
   gapX: string;
   /** Vertical gap between successive rows on the roll. */
   gapY: string;
-  /** Total page width (roll width) — labels + gap + side margins. */
+  /** Side margin (applied symmetrically as left and right padding). */
+  marginX: string;
+  /** Total page width (roll width) — marginX + labels + gapX + marginX. */
   pageWidth: string;
 }
 
@@ -31,10 +33,11 @@ export const ROLL_2UP_25x15: LabelRollGrid = {
   labelWidth: '25mm',
   labelHeight: '15mm',
   columns: 2,
-  gapX: '2mm',
+  gapX: '3mm',
   gapY: '1mm',
-  // 25 + 2 (gap) + 25 + 2 (combined side margin) = 54mm
-  pageWidth: '54mm',
+  marginX: '2mm',
+  // 2 (left) + 25 + 3 (gap) + 25 + 2 (right) = 57mm
+  pageWidth: '57mm',
 };
 
 export const DEFAULT_LABEL_GRID = ROLL_2UP_25x15;
