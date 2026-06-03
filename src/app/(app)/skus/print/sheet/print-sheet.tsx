@@ -90,7 +90,7 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
             }}
           >
             {row.map((item) => (
-              <SkuLabel key={item.key} sku={item.sku} showBorder />
+              <SkuLabel key={item.key} sku={item.sku} />
             ))}
           </div>
         ))}

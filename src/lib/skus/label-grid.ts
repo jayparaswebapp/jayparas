@@ -30,13 +30,19 @@ export interface LabelRollGrid {
 
 export const ROLL_2UP_25x15: LabelRollGrid = {
   format: 'roll',
-  labelWidth: '25mm',
-  labelHeight: '15mm',
+  // Printed cell is 23 × 13 mm — 1 mm inset on every side of the physical
+  // 25 × 15 mm sticker so a slight head misalignment doesn't run ink onto
+  // the backing paper.
+  labelWidth: '23mm',
+  labelHeight: '13mm',
   columns: 2,
-  gapX: '3mm',
-  gapY: '1mm',
-  marginX: '2mm',
-  // 2 (left) + 25 + 3 (gap) + 25 + 2 (right) = 57mm
+  // 1 mm safe + 3 mm physical roll gap + 1 mm safe = 5 mm between printed
+  // cells; 1 mm safe + 1 mm physical row gap + 1 mm safe = 3 mm vertically.
+  gapX: '5mm',
+  gapY: '3mm',
+  // 2 mm physical roll edge + 1 mm safe inside the first sticker.
+  marginX: '3mm',
+  // 3 (left) + 23 + 5 (gap) + 23 + 3 (right) = 57 mm physical roll width.
   pageWidth: '57mm',
 };
 
@@ -50,5 +56,5 @@ export const LABEL_FONT = {
   name: { sizePt: 8, weight: 700 },
   rate: { sizePt: 8, weight: 400 },
   unit: { sizePt: 7, weight: 700 },
-  qrSize: '9mm',
+  qrSize: '7mm',
 } as const;
