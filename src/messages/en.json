@@ -90,11 +90,23 @@
     },
     "barcode": {
       "title": "Barcode Management",
-      "hint": "Generate, print and scan barcodes for packets and SKUs."
+      "hint": "Generate, print and scan barcodes for packets and SKUs.",
+      "skusTitle": "SKUs",
+      "skusHint": "Create, browse and print QR labels.",
+      "printTitle": "Print labels",
+      "printHint": "Pick SKUs and send to the sticker sheet."
     },
     "billing": {
       "title": "Billing",
-      "hint": "Customer invoices, dispatch and ledger."
+      "hint": "Customer invoices, dispatch and ledger.",
+      "customersTitle": "Customers",
+      "customersHint": "Buyer master with GSTIN, address and mobile.",
+      "invoicesTitle": "Invoices",
+      "invoicesHint": "Sales invoices with line items and tax.",
+      "paymentsTitle": "Payments received",
+      "paymentsHint": "Match incoming payments to invoices.",
+      "returnsTitle": "Sales returns",
+      "returnsHint": "Credit notes for returned goods."
     },
     "purchase": {
       "title": "Purchase Department",

@@ -112,15 +112,6 @@ function DashboardView({ name, role }: { name: string; role: string }) {
         <ul className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <li>
             <Link
-              href="/skus"
-              className="hover:border-brand-300 block rounded-lg border border-neutral-200 bg-white p-4 transition hover:bg-brand-50/30"
-            >
-              <div className="text-base font-semibold text-neutral-900">{tShortcuts('skus')}</div>
-              <div className="mt-0.5 text-sm text-neutral-600">{tShortcuts('skusHint')}</div>
-            </Link>
-          </li>
-          <li>
-            <Link
               href="/master-data/locations"
               className="hover:border-brand-300 block rounded-lg border border-neutral-200 bg-white p-4 transition hover:bg-brand-50/30"
             >
