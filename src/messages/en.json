@@ -1,7 +1,6 @@
 {
   "app": {
     "name": "Jai Paras",
-    "tagline": "Job-work management",
     "metaTitle": "Jai Paras OS",
     "metaDescription": "Job-work management for Jai Paras"
   },
@@ -67,6 +66,7 @@
     }
   },
   "nav": {
+    "home": "Home",
     "dashboard": "Dashboard",
     "masterData": "Master data",
     "locations": "Locations",
@@ -79,6 +79,39 @@
     "admin": "Admin",
     "users": "Users",
     "settings": "Settings"
+  },
+  "departments": {
+    "sectionTitle": "Departments",
+    "setupTitle": "Setup & tools",
+    "comingSoon": "This department is being scaffolded. Work can start here in parallel with other teams.",
+    "jobWork": {
+      "title": "Job Work Management",
+      "hint": "Issue raw-material packets, track SLA, receive finished rakhis."
+    },
+    "barcode": {
+      "title": "Barcode Management",
+      "hint": "Generate, print and scan barcodes for packets and SKUs."
+    },
+    "billing": {
+      "title": "Billing",
+      "hint": "Customer invoices, dispatch and ledger."
+    },
+    "purchase": {
+      "title": "Purchase Department",
+      "hint": "Raw material, suppliers and purchase orders."
+    },
+    "accounting": {
+      "title": "Financial Accounting",
+      "hint": "Ledger, GST, P&L and balance sheet."
+    },
+    "reminders": {
+      "title": "Payment Reminders",
+      "hint": "Receivables, follow-ups and dunning."
+    },
+    "payroll": {
+      "title": "Payroll Management",
+      "hint": "Staff salaries and lead-lady commissions."
+    }
   },
   "login": {
     "title": "Sign in",
@@ -102,9 +135,7 @@
     "greeting": "Hello, {name}",
     "roleLabel": "Role",
     "signOut": "Sign out",
-    "comingSoon": "Jobs and receipts will appear here in the next sessions.",
     "shortcuts": {
-      "title": "Go to",
       "skus": "SKUs",
       "skusHint": "Create, browse and print QR labels.",
       "masterData": "Master data",

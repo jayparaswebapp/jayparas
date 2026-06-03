@@ -6,6 +6,16 @@ import { signOutAction } from '@/lib/auth/login';
 
 export const dynamic = 'force-dynamic';
 
+const DEPARTMENTS = [
+  { key: 'jobWork', href: '/job-work' },
+  { key: 'barcode', href: '/barcodes' },
+  { key: 'billing', href: '/billing' },
+  { key: 'purchase', href: '/purchases' },
+  { key: 'accounting', href: '/accounting' },
+  { key: 'reminders', href: '/reminders' },
+  { key: 'payroll', href: '/payroll' },
+] as const;
+
 export default async function DashboardPage() {
   const supabase = createClient();
   const {
@@ -63,6 +73,7 @@ function DebugCard({ title, details }: { title: string; details: Record<string, 
 
 function DashboardView({ name, role }: { name: string; role: string }) {
   const t = useTranslations('dashboard');
+  const tDept = useTranslations('departments');
   const tShortcuts = useTranslations('dashboard.shortcuts');
   const tRoles = useTranslations('roles');
   const canSeeAdmin = role === 'super_admin';
@@ -77,7 +88,26 @@ function DashboardView({ name, role }: { name: string; role: string }) {
         </div>
 
         <h2 className="mt-8 text-sm font-medium uppercase tracking-wide text-neutral-500">
-          {tShortcuts('title')}
+          {tDept('sectionTitle')}
+        </h2>
+        <ul className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {DEPARTMENTS.map((dept) => (
+            <li key={dept.key}>
+              <Link
+                href={dept.href}
+                className="hover:border-brand-300 block rounded-lg border border-neutral-200 bg-white p-4 transition hover:bg-brand-50/30"
+              >
+                <div className="text-base font-semibold text-neutral-900">
+                  {tDept(`${dept.key}.title`)}
+                </div>
+                <div className="mt-0.5 text-sm text-neutral-600">{tDept(`${dept.key}.hint`)}</div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        <h2 className="mt-10 text-sm font-medium uppercase tracking-wide text-neutral-500">
+          {tDept('setupTitle')}
         </h2>
         <ul className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <li>
@@ -115,9 +145,7 @@ function DashboardView({ name, role }: { name: string; role: string }) {
           ) : null}
         </ul>
 
-        <p className="mt-6 text-sm text-neutral-600">{t('comingSoon')}</p>
-
-        <form action={signOutAction} className="mt-8">
+        <form action={signOutAction} className="mt-10">
           <button type="submit" className="btn-ghost border border-neutral-300">
             {t('signOut')}
           </button>
