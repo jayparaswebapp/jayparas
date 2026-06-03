@@ -41,7 +41,7 @@ export const ROLL_2UP_25x15: LabelRollGrid = {
   // gap straddles the physical 3 mm sticker gap and a 2 mm safe inset on
   // either adjacent cell.
   gapX: '7mm',
-  gapY: '3mm',
+  gapY: '2mm',
   // Matches the user's measured physical edge margin on the roll.
   marginX: '2mm',
   // 2 (left) + 23 + 7 (gap) + 23 + 2 (right) = 57 mm physical roll width.
