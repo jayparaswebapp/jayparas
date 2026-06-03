@@ -24,22 +24,35 @@ function chunkRows<T>(items: T[], columns: number): T[][] {
   return rows;
 }
 
+function mmValue(css: string): number {
+  return parseFloat(css.replace('mm', ''));
+}
+
 export function PrintSheet({ items }: { items: SheetItem[] }) {
   const t = useTranslations('skus.print');
   const rows = chunkRows(items, DEFAULT_LABEL_GRID.columns);
+
+  // Pin the @page height to the exact content height so the browser /
+  // print driver doesn't fall back to a default sheet (A4 etc.) and feed
+  // dozens of blank stickers past the last printed row.
+  const labelHmm = mmValue(DEFAULT_LABEL_GRID.labelHeight);
+  const gapYmm = mmValue(DEFAULT_LABEL_GRID.gapY);
+  const pageHeightMm = rows.length * labelHmm + Math.max(0, rows.length - 1) * gapYmm;
 
   return (
     <div className="print-sheet-page">
       {/* Page-scoped print CSS, plain <style>. Lives inline so the sheet is
           self-contained and we can reset all parent layout chrome (Header +
-          SubNav, both rendered as <header>/<nav>) when the user hits Print. */}
+          SubNav, both rendered as <header>/<nav>) when the user hits Print.
+          The page height is computed from row count so the printer stops at
+          the last label instead of feeding to a default sheet height. */}
       <style>{`
-        @page { size: ${DEFAULT_LABEL_GRID.pageWidth} auto; margin: 0; }
+        @page { size: ${DEFAULT_LABEL_GRID.pageWidth} ${pageHeightMm}mm; margin: 0; }
         @media print {
           html, body { margin: 0; padding: 0; background: white; }
           header, nav, .no-print { display: none !important; }
           main { max-width: none !important; padding: 0 !important; margin: 0 !important; }
-          .print-sheet-root { margin: 0 !important; padding: 0 !important; border: 0 !important; }
+          .print-sheet-root { margin: 0 !important; border: 0 !important; }
           .print-row { page-break-inside: avoid; break-inside: avoid; }
         }
       `}</style>

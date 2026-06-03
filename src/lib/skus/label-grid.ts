@@ -56,5 +56,5 @@ export const LABEL_FONT = {
   name: { sizePt: 8, weight: 700 },
   rate: { sizePt: 8, weight: 400 },
   unit: { sizePt: 7, weight: 700 },
-  qrSize: '7mm',
+  qrSize: '8mm',
 } as const;

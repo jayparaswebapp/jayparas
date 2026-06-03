@@ -31,7 +31,7 @@ export function SkuLabel({
         height: DEFAULT_LABEL_GRID.labelHeight,
         display: 'flex',
         flexDirection: 'column',
-        padding: '1mm',
+        padding: '0.5mm',
         boxSizing: 'border-box',
         background: 'white',
         color: '#000',
