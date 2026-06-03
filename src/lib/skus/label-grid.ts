@@ -30,19 +30,21 @@ export interface LabelRollGrid {
 
 export const ROLL_2UP_25x15: LabelRollGrid = {
   format: 'roll',
-  // Printed cell is 23 × 13 mm — 1 mm inset on every side of the physical
-  // 25 × 15 mm sticker so a slight head misalignment doesn't run ink onto
-  // the backing paper.
+  // Printed cell is 23 × 13 mm — fits inside the 25 × 15 mm sticker with
+  // safe margin between the cell and the sticker edge handled by the page
+  // margin / column gap rather than by per-cell padding.
   labelWidth: '23mm',
   labelHeight: '13mm',
   columns: 2,
-  // 1 mm safe + 3 mm physical roll gap + 1 mm safe = 5 mm between printed
-  // cells; 1 mm safe + 1 mm physical row gap + 1 mm safe = 3 mm vertically.
-  gapX: '5mm',
+  // The two printed cells (23 mm + 23 mm) plus the side margins
+  // (2 mm + 2 mm) leave 7 mm for the inter-cell gap on a 57 mm roll. The
+  // gap straddles the physical 3 mm sticker gap and a 2 mm safe inset on
+  // either adjacent cell.
+  gapX: '7mm',
   gapY: '3mm',
-  // 2 mm physical roll edge + 1 mm safe inside the first sticker.
-  marginX: '3mm',
-  // 3 (left) + 23 + 5 (gap) + 23 + 3 (right) = 57 mm physical roll width.
+  // Matches the user's measured physical edge margin on the roll.
+  marginX: '2mm',
+  // 2 (left) + 23 + 7 (gap) + 23 + 2 (right) = 57 mm physical roll width.
   pageWidth: '57mm',
 };
 
