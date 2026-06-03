@@ -45,14 +45,19 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
           self-contained and we can reset all parent layout chrome (Header +
           SubNav, both rendered as <header>/<nav>) when the user hits Print.
           The page height is computed from row count so the printer stops at
-          the last label instead of feeding to a default sheet height. */}
+          the last label instead of feeding to a default sheet height. We
+          also flatten every min-h-screen ancestor — otherwise even with the
+          @page rule, the layout's "fill the viewport" rules force the
+          document to the browser's default page height and the printer
+          feeds the entire default sheet. */}
       <style>{`
         @page { size: ${DEFAULT_LABEL_GRID.pageWidth} ${pageHeightMm}mm; margin: 0; }
         @media print {
-          html, body { margin: 0; padding: 0; background: white; }
+          html, body { margin: 0 !important; padding: 0 !important; background: white; width: ${DEFAULT_LABEL_GRID.pageWidth} !important; height: ${pageHeightMm}mm !important; min-height: 0 !important; max-height: ${pageHeightMm}mm !important; overflow: hidden !important; }
           header, nav, .no-print { display: none !important; }
-          main { max-width: none !important; padding: 0 !important; margin: 0 !important; }
-          .print-sheet-root { margin: 0 !important; border: 0 !important; }
+          *, *::before, *::after { min-height: 0 !important; }
+          main { max-width: none !important; padding: 0 !important; margin: 0 !important; min-height: 0 !important; height: ${pageHeightMm}mm !important; flex: none !important; }
+          .print-sheet-root { margin: 0 !important; border: 0 !important; min-height: 0 !important; height: ${pageHeightMm}mm !important; }
           .print-row { page-break-inside: avoid; break-inside: avoid; }
         }
       `}</style>
