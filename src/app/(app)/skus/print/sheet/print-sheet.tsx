@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { SkuLabel } from '@/components/sku-label';
 import { DEFAULT_LABEL_GRID } from '@/lib/skus/label-grid';
@@ -28,74 +29,83 @@ function mmValue(css: string): number {
   return parseFloat(css.replace('mm', ''));
 }
 
+/**
+ * Build an isolated iframe with only the printed labels + @page rule, then
+ * print it. Bypasses the parent React tree, Tailwind base styles, and every
+ * layout ancestor that contributes height to the live document. Chrome can
+ * only paginate what's in the iframe document, so the sheet count matches
+ * the row count exactly.
+ */
+function printIsolated(rowsHtml: string, pageWidth: string, rowPitchMm: number) {
+  const iframe = document.createElement('iframe');
+  iframe.setAttribute('aria-hidden', 'true');
+  iframe.style.cssText =
+    'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument;
+  if (!doc) {
+    document.body.removeChild(iframe);
+    return;
+  }
+
+  doc.open();
+  doc.write(`<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  @page { size: ${pageWidth} ${rowPitchMm}mm; margin: 0; }
+  html, body { margin: 0; padding: 0; background: white; width: ${pageWidth}; }
+  .print-row { display: flex; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; }
+  .print-row:last-child { page-break-after: auto; break-after: auto; }
+</style>
+</head>
+<body>${rowsHtml}</body>
+</html>`);
+  doc.close();
+
+  const finish = () => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } finally {
+      // Give the print dialog a moment to grab the document before we
+      // detach the iframe. 1 s is enough on all browsers tested.
+      window.setTimeout(() => {
+        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      }, 1000);
+    }
+  };
+
+  // Wait for the SVG QR images inside the rows to be fully attached before
+  // printing. Two RAFs is the standard belt-and-braces for "DOM mounted +
+  // one paint cycle".
+  iframe.contentWindow?.requestAnimationFrame(() => {
+    iframe.contentWindow?.requestAnimationFrame(finish);
+  });
+}
+
 export function PrintSheet({ items }: { items: SheetItem[] }) {
   const t = useTranslations('skus.print');
   const rows = chunkRows(items, DEFAULT_LABEL_GRID.columns);
+  const printRootRef = useRef<HTMLDivElement>(null);
 
-  // Per-row page so the printer's gap sensor (Labels With Gaps mode) can
-  // do its job: each printed page = one label cycle = labelHeight + gapY.
-  // For the TSC TE244 default stock (15 mm label + 2 mm gap = 17 mm),
-  // this lines up perfectly. page-break-after on every row forces Chrome
-  // to emit exactly rows.length pages instead of guessing from layout
-  // height.
   const labelHmm = mmValue(DEFAULT_LABEL_GRID.labelHeight);
   const gapYmm = mmValue(DEFAULT_LABEL_GRID.gapY);
   const rowPitchMm = labelHmm + gapYmm;
-  const totalHeightMm = rows.length * rowPitchMm;
+
+  const handlePrint = () => {
+    const root = printRootRef.current;
+    if (!root) return;
+    printIsolated(root.innerHTML, DEFAULT_LABEL_GRID.pageWidth, rowPitchMm);
+  };
 
   return (
     <div className="print-sheet-page">
-      {/* Page-scoped print CSS, plain <style>. Lives inline so the sheet is
-          self-contained. The print sheet route renders bare (no header / nav
-          wrapper, see skus/layout.tsx), so we only have html, body, and the
-          print-sheet-page itself to constrain. */}
-      <style>{`
-        @page { size: ${DEFAULT_LABEL_GRID.pageWidth} ${rowPitchMm}mm; margin: 0; }
-        @media print {
-          html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            background: white !important;
-            width: ${DEFAULT_LABEL_GRID.pageWidth} !important;
-            height: ${totalHeightMm}mm !important;
-            min-height: 0 !important;
-            max-height: ${totalHeightMm}mm !important;
-            overflow: hidden !important;
-          }
-          .no-print { display: none !important; }
-          .print-sheet-page {
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: ${DEFAULT_LABEL_GRID.pageWidth} !important;
-            height: ${totalHeightMm}mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-          .print-sheet-root {
-            margin: 0 !important;
-            padding: 0 !important;
-            border: 0 !important;
-            min-height: 0 !important;
-            height: ${totalHeightMm}mm !important;
-          }
-          .print-row {
-            page-break-after: always;
-            break-after: page;
-            page-break-inside: avoid;
-            break-inside: avoid;
-            height: ${labelHmm}mm !important;
-            margin-bottom: 0 !important;
-          }
-          .print-row:last-child {
-            page-break-after: auto;
-            break-after: auto;
-          }
-        }
-      `}</style>
-
-      {/* On-screen toolbar — hidden from print via .no-print. */}
-      <div className="no-print sticky top-0 z-10 -mx-4 mb-4 border-b border-neutral-200 bg-white px-4 py-3">
+      {/* On-screen toolbar. The Print button copies the rendered rows into
+          an isolated iframe — see printIsolated() — and prints that. */}
+      <div className="sticky top-0 z-10 -mx-4 mb-4 border-b border-neutral-200 bg-white px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <div className="text-sm text-neutral-700">
             {t('sheetTitle')} · {items.length} labels
@@ -104,23 +114,19 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
             <Link href="/skus/print" className="btn-ghost border border-neutral-300 text-sm">
               {t('back')}
             </Link>
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="btn-primary !w-auto px-4"
-            >
+            <button type="button" onClick={handlePrint} className="btn-primary !w-auto px-4">
               {t('printNow')}
             </button>
           </div>
         </div>
       </div>
 
-      {/* The actual label sheet. Same DOM used for both screen preview and print.
-          Horizontal padding is the physical side margin from label-grid;
-          vertical padding stays zero so the first label starts at the roll's
-          leading edge. */}
+      {/* The on-screen preview. Same DOM that gets captured for the iframe
+          print — every SkuLabel uses inline styles so the iframe doesn't
+          need any external CSS to render correctly. */}
       <div
-        className="print-sheet-root mx-auto rounded-md border border-dashed border-neutral-300 bg-white print:m-0 print:rounded-none print:border-0"
+        ref={printRootRef}
+        className="mx-auto rounded-md border border-dashed border-neutral-300 bg-white"
         style={{
           width: DEFAULT_LABEL_GRID.pageWidth,
           paddingLeft: DEFAULT_LABEL_GRID.marginX,
