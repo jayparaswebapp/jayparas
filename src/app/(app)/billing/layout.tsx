@@ -11,6 +11,7 @@ export default function BillingLayout({ children }: { children: ReactNode }) {
       <SubNav
         items={[
           { href: '/billing/customers', label: t('customersTitle') },
+          { href: '/billing/groups', label: t('groupsTitle') },
           { href: '/billing/invoices', label: t('invoicesTitle') },
           { href: '/billing/payments', label: t('paymentsTitle') },
           { href: '/billing/returns', label: t('returnsTitle') },

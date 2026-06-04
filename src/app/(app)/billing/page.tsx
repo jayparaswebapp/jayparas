@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 
 const SECTIONS = [
   { key: 'customers', href: '/billing/customers' },
+  { key: 'groups', href: '/billing/groups' },
   { key: 'invoices', href: '/billing/invoices' },
   { key: 'payments', href: '/billing/payments' },
   { key: 'returns', href: '/billing/returns' },

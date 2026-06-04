@@ -54,6 +54,7 @@
       "mobileAlreadyExists": "આ મોબાઇલ નંબર પહેલેથી બીજા સક્રિય રેકોર્ડ સાથે જોડાયેલો છે.",
       "designNumberAlreadyExists": "આ ડિઝાઇન નંબર પહેલેથી બીજી સક્રિય ડિઝાઇન સાથે જોડાયેલો છે.",
       "gstinAlreadyExists": "આ GSTIN પહેલેથી બીજા સક્રિય ગ્રાહક સાથે જોડાયેલો છે.",
+      "groupNameAlreadyExists": "આ શહેરમાં આ નામનું ગ્રુપ પહેલેથી છે.",
       "cannotModifySelf": "તમે તમારી પોતાની ભૂમિકા બદલી શકતા નથી, પોતાને નિષ્ક્રિય કરી શકતા નથી, કે પોતાનો PIN રીસેટ કરી શકતા નથી.",
       "centreManagerRequiresLocation": "સેન્ટર મેનેજરને ઓછામાં ઓછી એક લોકેશન આપવી જરૂરી છે.",
       "centreManagerLocationsExist": "આ સેન્ટર મેનેજરને હજુ લોકેશન સોંપાયેલી છે. ભૂમિકા બદલતા પહેલાં લોકેશન દૂર કરો.",
@@ -102,6 +103,8 @@
       "hint": "ગ્રાહક ઇન્વોઇસ, ડિસ્પૅચ અને લેજર.",
       "customersTitle": "ગ્રાહકો",
       "customersHint": "ગ્રાહકનું માસ્ટર — GSTIN, સરનામું, મોબાઇલ.",
+      "groupsTitle": "ગ્રાહક ગ્રુપ",
+      "groupsHint": "ડિલિવરી રૂટ માટે શહેરની અંદર બકેટ.",
       "invoicesTitle": "ઇન્વોઇસ",
       "invoicesHint": "વેચાણ ઇન્વોઇસ — લાઇન આઇટમ અને ટૅક્સ સાથે.",
       "paymentsTitle": "મળેલા પેમેન્ટ",
@@ -170,6 +173,10 @@
       "newButton": "નવો ગ્રાહક",
       "searchLabel": "શોધો",
       "searchPlaceholder": "નામ, બિઝનેસ, મોબાઇલ કે GSTIN",
+      "filterByGroupLabel": "ગ્રુપ",
+      "filterByGroupAll": "બધા ગ્રુપ",
+      "filterByGroupNone": "ગ્રુપ વગરના",
+      "groupChipLabel": "ગ્રુપ",
       "empty": "હજુ કોઈ ગ્રાહક નથી.",
       "noMatches": "શોધ સાથે મેળ ખાતો કોઈ ગ્રાહક નથી.",
       "form": {
@@ -191,6 +198,9 @@
         "stateLabel": "રાજ્ય",
         "pincodeLabel": "પિનકોડ",
         "pincodePlaceholder": "6 અંકનો પિનકોડ",
+        "groupLabel": "રૂટ ગ્રુપ (વૈકલ્પિક)",
+        "groupPlaceholder": "— કોઈ નહીં —",
+        "groupHint": "એક જ ગ્રુપના ગ્રાહકો એક જ રોડ પર છે — ડિલિવરી રન માં સાથે કવર થઈ શકે.",
         "notesLabel": "નોંધ (વૈકલ્પિક)",
         "isActiveLabel": "સક્રિય"
       },
@@ -201,6 +211,30 @@
         "invalidGstin": "GSTIN 15 અક્ષરનો હોવો જોઈએ (દા.ત. 24ABCDE1234F1Z5)",
         "invalidPan": "PAN 10 અક્ષરનો હોવો જોઈએ (દા.ત. ABCDE1234F)",
         "invalidPincode": "પિનકોડ 6 અંકનો હોવો જોઈએ"
+      }
+    },
+    "groups": {
+      "title": "ગ્રાહક ગ્રુપ",
+      "subtitle": "શહેરની અંદર રૂટ બકેટ. એક જ ગ્રુપના ગ્રાહકો એક જ રોડ પર છે — ડિલિવરી રન માં સાથે કવર થઈ શકે.",
+      "newButton": "નવો ગ્રુપ",
+      "searchLabel": "શોધો",
+      "searchPlaceholder": "ગ્રુપ કે શહેર",
+      "empty": "હજુ કોઈ ગ્રુપ નથી.",
+      "noMatches": "શોધ સાથે મેળ ખાતો કોઈ ગ્રુપ નથી.",
+      "customersInGroup": "{count} ગ્રાહકો",
+      "form": {
+        "createTitle": "નવો ગ્રુપ",
+        "editTitle": "ગ્રુપમાં ફેરફાર કરો",
+        "nameLabel": "ગ્રુપનું નામ",
+        "namePlaceholder": "દા.ત. સ્ટેશન રોડ",
+        "cityLabel": "શહેર",
+        "cityPlaceholder": "દા.ત. સુરત",
+        "notesLabel": "નોંધ (વૈકલ્પિક)",
+        "isActiveLabel": "સક્રિય"
+      },
+      "errors": {
+        "nameRequired": "ગ્રુપનું નામ જરૂરી છે",
+        "cityRequired": "શહેર જરૂરી છે"
       }
     }
   },

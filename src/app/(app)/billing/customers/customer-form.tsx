@@ -22,14 +22,23 @@ export interface CustomerFormValues {
   state: string | null;
   pincode: string | null;
   notes: string | null;
+  group_id: string | null;
   is_active: boolean;
+}
+
+export interface GroupOption {
+  id: string;
+  name: string;
+  city: string;
 }
 
 export function CustomerForm({
   initial,
+  groups,
   isSuperAdmin,
 }: {
   initial: CustomerFormValues | null;
+  groups: GroupOption[];
   isSuperAdmin: boolean;
 }) {
   const t = useTranslations('billing.customers.form');
@@ -184,6 +193,26 @@ export function CustomerForm({
             className="input-base"
           />
         </div>
+      </div>
+
+      <div>
+        <label htmlFor="group_id" className="label-base">
+          {t('groupLabel')}
+        </label>
+        <select
+          id="group_id"
+          name="group_id"
+          defaultValue={initial?.group_id ?? ''}
+          className="input-base"
+        >
+          <option value="">{t('groupPlaceholder')}</option>
+          {groups.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.city} — {g.name}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-neutral-500">{t('groupHint')}</p>
       </div>
 
       <div>

@@ -58,6 +58,16 @@ const SaveSchema = z.object({
       message: 'billing.customers.errors.invalidPincode',
     }),
   notes: optionalTrim('billing.customers.errors.invalidInput'),
+  group_id: z
+    .string()
+    .trim()
+    .refine(
+      (v) => v === '' || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v),
+      {
+        message: 'common.errors.invalidInput',
+      },
+    )
+    .transform((v) => (v === '' ? null : v)),
   is_active: z.coerce.boolean(),
   reason: z.string().trim().optional(),
 });
@@ -83,6 +93,7 @@ export async function saveBillingCustomerAction(
     state: formData.get('state') ?? '',
     pincode: formData.get('pincode') ?? '',
     notes: formData.get('notes') ?? '',
+    group_id: formData.get('group_id') ?? '',
     is_active: formData.get('is_active') === 'on',
     reason: formData.get('reason'),
   });
@@ -115,6 +126,7 @@ export async function saveBillingCustomerAction(
       p_state: parsed.data.state,
       p_pincode: parsed.data.pincode,
       p_notes: parsed.data.notes,
+      p_group_id: parsed.data.group_id,
       p_reason: reason,
     });
     if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
@@ -133,6 +145,7 @@ export async function saveBillingCustomerAction(
       p_state: parsed.data.state,
       p_pincode: parsed.data.pincode,
       p_notes: parsed.data.notes,
+      p_group_id: parsed.data.group_id,
       p_is_active: parsed.data.is_active,
       p_reason: reason,
     });

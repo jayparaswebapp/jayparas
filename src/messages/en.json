@@ -54,6 +54,7 @@
       "mobileAlreadyExists": "Another active record uses this mobile number.",
       "designNumberAlreadyExists": "Another active design uses this number.",
       "gstinAlreadyExists": "Another active customer uses this GSTIN.",
+      "groupNameAlreadyExists": "A group with this name already exists in this city.",
       "cannotModifySelf": "You cannot change your own role, deactivate yourself, or reset your own PIN.",
       "centreManagerRequiresLocation": "Centre managers must cover at least one location.",
       "centreManagerLocationsExist": "This centre manager still has locations assigned. Remove them before changing the role.",
@@ -102,6 +103,8 @@
       "hint": "Customer invoices, dispatch and ledger.",
       "customersTitle": "Customers",
       "customersHint": "Buyer master with GSTIN, address and mobile.",
+      "groupsTitle": "Customer groups",
+      "groupsHint": "Route buckets inside a city for delivery runs.",
       "invoicesTitle": "Invoices",
       "invoicesHint": "Sales invoices with line items and tax.",
       "paymentsTitle": "Payments received",
@@ -170,6 +173,10 @@
       "newButton": "New customer",
       "searchLabel": "Search",
       "searchPlaceholder": "Name, business, mobile or GSTIN",
+      "filterByGroupLabel": "Group",
+      "filterByGroupAll": "All groups",
+      "filterByGroupNone": "No group",
+      "groupChipLabel": "Group",
       "empty": "No customers yet.",
       "noMatches": "No customers match the search.",
       "form": {
@@ -191,6 +198,9 @@
         "stateLabel": "State",
         "pincodeLabel": "Pincode",
         "pincodePlaceholder": "6-digit pincode",
+        "groupLabel": "Route group (optional)",
+        "groupPlaceholder": "— None —",
+        "groupHint": "Customers in the same group sit on the same road and can be covered together on a delivery run.",
         "notesLabel": "Notes (optional)",
         "isActiveLabel": "Active"
       },
@@ -201,6 +211,30 @@
         "invalidGstin": "GSTIN must be 15 characters (e.g. 24ABCDE1234F1Z5)",
         "invalidPan": "PAN must be 10 characters (e.g. ABCDE1234F)",
         "invalidPincode": "Pincode must be 6 digits"
+      }
+    },
+    "groups": {
+      "title": "Customer groups",
+      "subtitle": "Route buckets inside a city. Customers in the same group are on the same road and can be covered together on a delivery run.",
+      "newButton": "New group",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Group or city",
+      "empty": "No groups yet.",
+      "noMatches": "No groups match the search.",
+      "customersInGroup": "{count} customers",
+      "form": {
+        "createTitle": "New group",
+        "editTitle": "Edit group",
+        "nameLabel": "Group name",
+        "namePlaceholder": "e.g. Station Road",
+        "cityLabel": "City",
+        "cityPlaceholder": "e.g. Surat",
+        "notesLabel": "Notes (optional)",
+        "isActiveLabel": "Active"
+      },
+      "errors": {
+        "nameRequired": "Group name is required",
+        "cityRequired": "City is required"
       }
     }
   },
