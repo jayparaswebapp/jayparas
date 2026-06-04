@@ -37,29 +37,60 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
   // For the TSC TE244 default stock (15 mm label + 2 mm gap = 17 mm),
   // this lines up perfectly. page-break-after on every row forces Chrome
   // to emit exactly rows.length pages instead of guessing from layout
-  // height, which is what caused the "9 sheets" preview.
+  // height.
   const labelHmm = mmValue(DEFAULT_LABEL_GRID.labelHeight);
   const gapYmm = mmValue(DEFAULT_LABEL_GRID.gapY);
   const rowPitchMm = labelHmm + gapYmm;
+  const totalHeightMm = rows.length * rowPitchMm;
 
   return (
     <div className="print-sheet-page">
       {/* Page-scoped print CSS, plain <style>. Lives inline so the sheet is
-          self-contained and we can reset all parent layout chrome (Header +
-          SubNav, both rendered as <header>/<nav>) when the user hits Print.
-          @page is sized to one row (one label cycle). Each row carries
-          page-break-after so Chrome paginates per-row and the printer
-          driver pairs each Chrome page with one physical label. */}
+          self-contained. The print sheet route renders bare (no header / nav
+          wrapper, see skus/layout.tsx), so we only have html, body, and the
+          print-sheet-page itself to constrain. */}
       <style>{`
         @page { size: ${DEFAULT_LABEL_GRID.pageWidth} ${rowPitchMm}mm; margin: 0; }
         @media print {
-          html, body { margin: 0 !important; padding: 0 !important; background: white; width: ${DEFAULT_LABEL_GRID.pageWidth} !important; min-height: 0 !important; }
-          header, nav, .no-print { display: none !important; }
-          *, *::before, *::after { min-height: 0 !important; }
-          main { max-width: none !important; padding: 0 !important; margin: 0 !important; min-height: 0 !important; flex: none !important; }
-          .print-sheet-root { margin: 0 !important; border: 0 !important; min-height: 0 !important; padding: 0 !important; }
-          .print-row { page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; height: ${labelHmm}mm; margin-bottom: 0 !important; }
-          .print-row:last-child { page-break-after: auto; break-after: auto; }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            width: ${DEFAULT_LABEL_GRID.pageWidth} !important;
+            height: ${totalHeightMm}mm !important;
+            min-height: 0 !important;
+            max-height: ${totalHeightMm}mm !important;
+            overflow: hidden !important;
+          }
+          .no-print { display: none !important; }
+          .print-sheet-page {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: ${DEFAULT_LABEL_GRID.pageWidth} !important;
+            height: ${totalHeightMm}mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .print-sheet-root {
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            min-height: 0 !important;
+            height: ${totalHeightMm}mm !important;
+          }
+          .print-row {
+            page-break-after: always;
+            break-after: page;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            height: ${labelHmm}mm !important;
+            margin-bottom: 0 !important;
+          }
+          .print-row:last-child {
+            page-break-after: auto;
+            break-after: auto;
+          }
         }
       `}</style>
 
