@@ -53,6 +53,7 @@
     "errors": {
       "mobileAlreadyExists": "Another active record uses this mobile number.",
       "designNumberAlreadyExists": "Another active design uses this number.",
+      "gstinAlreadyExists": "Another active customer uses this GSTIN.",
       "cannotModifySelf": "You cannot change your own role, deactivate yourself, or reset your own PIN.",
       "centreManagerRequiresLocation": "Centre managers must cover at least one location.",
       "centreManagerLocationsExist": "This centre manager still has locations assigned. Remove them before changing the role.",
@@ -161,6 +162,47 @@
     "supervisor": "Supervisor",
     "centre_manager": "Centre manager",
     "accountant": "Accountant"
+  },
+  "billing": {
+    "customers": {
+      "title": "Customers",
+      "subtitle": "Wholesale buyers. GSTIN is required only for the kite line; rakhi buyers can leave it blank.",
+      "newButton": "New customer",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Name, business, mobile or GSTIN",
+      "empty": "No customers yet.",
+      "noMatches": "No customers match the search.",
+      "form": {
+        "createTitle": "New customer",
+        "editTitle": "Edit customer",
+        "fullNameLabel": "Contact name",
+        "businessNameLabel": "Business name (optional)",
+        "mobileLabel": "Mobile number",
+        "mobilePlaceholder": "10-digit mobile number",
+        "emailLabel": "Email (optional)",
+        "gstinLabel": "GSTIN (optional)",
+        "gstinPlaceholder": "15-character GSTIN",
+        "gstinHint": "Leave blank for rakhi (no GST) customers.",
+        "panLabel": "PAN (optional)",
+        "panPlaceholder": "10-character PAN",
+        "addressLine1Label": "Address line 1",
+        "addressLine2Label": "Address line 2",
+        "cityLabel": "City",
+        "stateLabel": "State",
+        "pincodeLabel": "Pincode",
+        "pincodePlaceholder": "6-digit pincode",
+        "notesLabel": "Notes (optional)",
+        "isActiveLabel": "Active"
+      },
+      "errors": {
+        "fullNameRequired": "Contact name is required",
+        "invalidMobile": "Enter a 10-digit Indian mobile number",
+        "invalidEmail": "Enter a valid email address",
+        "invalidGstin": "GSTIN must be 15 characters (e.g. 24ABCDE1234F1Z5)",
+        "invalidPan": "PAN must be 10 characters (e.g. ABCDE1234F)",
+        "invalidPincode": "Pincode must be 6 digits"
+      }
+    }
   },
   "masterData": {
     "title": "Master data",

@@ -53,6 +53,7 @@
     "errors": {
       "mobileAlreadyExists": "આ મોબાઇલ નંબર પહેલેથી બીજા સક્રિય રેકોર્ડ સાથે જોડાયેલો છે.",
       "designNumberAlreadyExists": "આ ડિઝાઇન નંબર પહેલેથી બીજી સક્રિય ડિઝાઇન સાથે જોડાયેલો છે.",
+      "gstinAlreadyExists": "આ GSTIN પહેલેથી બીજા સક્રિય ગ્રાહક સાથે જોડાયેલો છે.",
       "cannotModifySelf": "તમે તમારી પોતાની ભૂમિકા બદલી શકતા નથી, પોતાને નિષ્ક્રિય કરી શકતા નથી, કે પોતાનો PIN રીસેટ કરી શકતા નથી.",
       "centreManagerRequiresLocation": "સેન્ટર મેનેજરને ઓછામાં ઓછી એક લોકેશન આપવી જરૂરી છે.",
       "centreManagerLocationsExist": "આ સેન્ટર મેનેજરને હજુ લોકેશન સોંપાયેલી છે. ભૂમિકા બદલતા પહેલાં લોકેશન દૂર કરો.",
@@ -161,6 +162,47 @@
     "supervisor": "સુપરવાઈઝર",
     "centre_manager": "સેન્ટર મેનેજર",
     "accountant": "એકાઉન્ટન્ટ"
+  },
+  "billing": {
+    "customers": {
+      "title": "ગ્રાહકો",
+      "subtitle": "હોલસેલ ખરીદનાર. GSTIN ફક્ત પતંગ લાઇન માટે જરૂરી — રાખડી ગ્રાહકોને ખાલી રાખી શકાય.",
+      "newButton": "નવો ગ્રાહક",
+      "searchLabel": "શોધો",
+      "searchPlaceholder": "નામ, બિઝનેસ, મોબાઇલ કે GSTIN",
+      "empty": "હજુ કોઈ ગ્રાહક નથી.",
+      "noMatches": "શોધ સાથે મેળ ખાતો કોઈ ગ્રાહક નથી.",
+      "form": {
+        "createTitle": "નવો ગ્રાહક",
+        "editTitle": "ગ્રાહકમાં ફેરફાર કરો",
+        "fullNameLabel": "સંપર્કનું નામ",
+        "businessNameLabel": "બિઝનેસનું નામ (વૈકલ્પિક)",
+        "mobileLabel": "મોબાઇલ નંબર",
+        "mobilePlaceholder": "10 અંકનો મોબાઇલ નંબર",
+        "emailLabel": "ઇમેઇલ (વૈકલ્પિક)",
+        "gstinLabel": "GSTIN (વૈકલ્પિક)",
+        "gstinPlaceholder": "15 અક્ષરનો GSTIN",
+        "gstinHint": "રાખડી (નોન-GST) ગ્રાહકો માટે ખાલી રાખો.",
+        "panLabel": "PAN (વૈકલ્પિક)",
+        "panPlaceholder": "10 અક્ષરનો PAN",
+        "addressLine1Label": "સરનામું લાઇન 1",
+        "addressLine2Label": "સરનામું લાઇન 2",
+        "cityLabel": "શહેર",
+        "stateLabel": "રાજ્ય",
+        "pincodeLabel": "પિનકોડ",
+        "pincodePlaceholder": "6 અંકનો પિનકોડ",
+        "notesLabel": "નોંધ (વૈકલ્પિક)",
+        "isActiveLabel": "સક્રિય"
+      },
+      "errors": {
+        "fullNameRequired": "સંપર્કનું નામ જરૂરી છે",
+        "invalidMobile": "10 અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો",
+        "invalidEmail": "માન્ય ઇમેઇલ સરનામું દાખલ કરો",
+        "invalidGstin": "GSTIN 15 અક્ષરનો હોવો જોઈએ (દા.ત. 24ABCDE1234F1Z5)",
+        "invalidPan": "PAN 10 અક્ષરનો હોવો જોઈએ (દા.ત. ABCDE1234F)",
+        "invalidPincode": "પિનકોડ 6 અંકનો હોવો જોઈએ"
+      }
+    }
   },
   "masterData": {
     "title": "માસ્ટર ડેટા",
