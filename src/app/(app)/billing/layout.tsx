@@ -10,11 +10,12 @@ export default function BillingLayout({ children }: { children: ReactNode }) {
       <Header />
       <SubNav
         items={[
+          { href: '/billing/invoices', label: t('invoicesTitle') },
           { href: '/billing/customers', label: t('customersTitle') },
           { href: '/billing/groups', label: t('groupsTitle') },
-          { href: '/billing/invoices', label: t('invoicesTitle') },
           { href: '/billing/payments', label: t('paymentsTitle') },
           { href: '/billing/returns', label: t('returnsTitle') },
+          { href: '/billing/company', label: t('companyTitle') },
         ]}
       />
       <main className="mx-auto w-full max-w-screen-md flex-1 px-4 py-6">{children}</main>

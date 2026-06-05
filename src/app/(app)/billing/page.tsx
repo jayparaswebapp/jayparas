@@ -2,11 +2,12 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 const SECTIONS = [
+  { key: 'invoices', href: '/billing/invoices' },
   { key: 'customers', href: '/billing/customers' },
   { key: 'groups', href: '/billing/groups' },
-  { key: 'invoices', href: '/billing/invoices' },
   { key: 'payments', href: '/billing/payments' },
   { key: 'returns', href: '/billing/returns' },
+  { key: 'company', href: '/billing/company' },
 ] as const;
 
 export default function BillingPage() {
