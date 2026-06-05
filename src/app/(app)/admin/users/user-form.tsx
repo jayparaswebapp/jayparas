@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { AuditReasonField } from '@/components/audit-reason-field';
 import { ServerError, SubmitButton } from '@/components/form-status';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { createAppUserAction, updateAppUserAction } from './actions';
@@ -160,8 +159,6 @@ export function UserForm({
       ) : (
         <input type="hidden" name="is_active" value="on" />
       )}
-
-      <AuditReasonField required />
 
       {state && state.ok === false ? <ServerError messageKey={state.messageKey} /> : null}
 

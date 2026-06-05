@@ -12,7 +12,6 @@
 export const RPC_ERROR_KEYS = [
   'session_invalid',
   'permission_denied',
-  'reason_required',
   'mobile_taken',
   'design_number_taken',
   'sku_duplicate',
@@ -30,7 +29,6 @@ export type RpcErrorKey = (typeof RPC_ERROR_KEYS)[number];
 const RPC_TO_I18N: Record<RpcErrorKey, string> = {
   session_invalid: 'common.errors.sessionInvalid',
   permission_denied: 'common.errors.permissionDenied',
-  reason_required: 'common.errors.reasonRequired',
   mobile_taken: 'common.errors.mobileAlreadyExists',
   design_number_taken: 'common.errors.designNumberAlreadyExists',
   sku_duplicate: 'skus.errors.duplicate',

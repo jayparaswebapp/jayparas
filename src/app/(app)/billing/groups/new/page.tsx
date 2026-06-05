@@ -6,16 +6,16 @@ import { GroupForm } from '../group-form';
 export const dynamic = 'force-dynamic';
 
 export default async function NewCustomerGroupPage() {
-  const user = await requireRole(['super_admin', 'supervisor']);
-  return <NewView isSuperAdmin={user.role === 'super_admin'} />;
+  await requireRole(['super_admin', 'supervisor']);
+  return <NewView />;
 }
 
-function NewView({ isSuperAdmin }: { isSuperAdmin: boolean }) {
+function NewView() {
   const t = useTranslations('billing.groups.form');
   return (
     <>
       <PageHeader title={t('createTitle')} />
-      <GroupForm initial={null} isSuperAdmin={isSuperAdmin} />
+      <GroupForm initial={null} />
     </>
   );
 }

@@ -18,15 +18,13 @@ const SaveSchema = z.object({
   notes: z.string().trim().optional(),
   location_ids: z.array(z.string().uuid()).min(1, 'masterData.leadLadies.errors.locationsRequired'),
   is_active: z.coerce.boolean(),
-  reason: z.string().trim().optional(),
 });
 
 export async function saveLeadLadyAction(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  const user = await requireRole(['super_admin', 'supervisor']);
-  const isSuperAdmin = user.role === 'super_admin';
+  await requireRole(['super_admin', 'supervisor']);
 
   const parsed = SaveSchema.safeParse({
     id: formData.get('id') || undefined,
@@ -35,7 +33,6 @@ export async function saveLeadLadyAction(
     notes: formData.get('notes'),
     location_ids: formData.getAll('location_ids').map((v) => String(v)),
     is_active: formData.get('is_active') === 'on',
-    reason: formData.get('reason'),
   });
 
   if (!parsed.success) {
@@ -45,12 +42,7 @@ export async function saveLeadLadyAction(
     };
   }
 
-  if (isSuperAdmin && (!parsed.data.reason || parsed.data.reason.length === 0)) {
-    return { ok: false, messageKey: 'common.errors.reasonRequired' };
-  }
-
   const supabase = createClient();
-  const reason = parsed.data.reason ?? '';
 
   if (!parsed.data.id) {
     const { error } = await supabase.rpc('create_lead_lady', {
@@ -58,7 +50,7 @@ export async function saveLeadLadyAction(
       p_mobile: parsed.data.mobile,
       p_notes: parsed.data.notes ?? '',
       p_location_ids: parsed.data.location_ids,
-      p_reason: reason,
+      p_reason: '',
     });
     if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
   } else {
@@ -69,7 +61,7 @@ export async function saveLeadLadyAction(
       p_notes: parsed.data.notes ?? '',
       p_location_ids: parsed.data.location_ids,
       p_is_active: parsed.data.is_active,
-      p_reason: reason,
+      p_reason: '',
     });
     if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
   }
@@ -78,20 +70,14 @@ export async function saveLeadLadyAction(
   redirect('/master-data/lead-ladies');
 }
 
-const DestructiveSchema = z.object({
-  id: z.string().uuid(),
-  reason: z.string().trim().min(1, 'common.errors.reasonRequired'),
-});
+const DestructiveSchema = z.object({ id: z.string().uuid() });
 
 export async function softDeleteLeadLadyAction(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
   await requireRole(['super_admin', 'supervisor']);
-  const parsed = DestructiveSchema.safeParse({
-    id: formData.get('id'),
-    reason: formData.get('reason'),
-  });
+  const parsed = DestructiveSchema.safeParse({ id: formData.get('id') });
   if (!parsed.success)
     return {
       ok: false,
@@ -101,7 +87,7 @@ export async function softDeleteLeadLadyAction(
   const supabase = createClient();
   const { error } = await supabase.rpc('soft_delete_lead_lady', {
     p_id: parsed.data.id,
-    p_reason: parsed.data.reason,
+    p_reason: '',
   });
   if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
 
@@ -114,10 +100,7 @@ export async function restoreLeadLadyAction(
   formData: FormData,
 ): Promise<ActionResult> {
   await requireRole(['super_admin']);
-  const parsed = DestructiveSchema.safeParse({
-    id: formData.get('id'),
-    reason: formData.get('reason'),
-  });
+  const parsed = DestructiveSchema.safeParse({ id: formData.get('id') });
   if (!parsed.success)
     return {
       ok: false,
@@ -127,7 +110,7 @@ export async function restoreLeadLadyAction(
   const supabase = createClient();
   const { error } = await supabase.rpc('restore_lead_lady', {
     p_id: parsed.data.id,
-    p_reason: parsed.data.reason,
+    p_reason: '',
   });
   if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
 

@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { AuditReasonField } from '@/components/audit-reason-field';
 import { ServerError, SubmitButton } from '@/components/form-status';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { saveLeadLadyAction } from './actions';
@@ -25,11 +24,9 @@ export interface LocationOption {
 export function LeadLadyForm({
   initial,
   locations,
-  isSuperAdmin,
 }: {
   initial: LeadLadyFormValues | null;
   locations: LocationOption[];
-  isSuperAdmin: boolean;
 }) {
   const t = useTranslations('masterData.leadLadies');
   const tCommon = useTranslations('common.actions');
@@ -116,8 +113,6 @@ export function LeadLadyForm({
       ) : (
         <input type="hidden" name="is_active" value="on" />
       )}
-
-      <AuditReasonField required={isSuperAdmin} />
 
       {state && state.ok === false ? <ServerError messageKey={state.messageKey} /> : null}
 

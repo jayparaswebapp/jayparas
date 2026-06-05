@@ -24,7 +24,6 @@ const CreateSchema = z.object({
     .regex(/^\d{6}$/, 'admin.users.errors.invalidPin'),
   role: RoleEnum,
   location_ids: z.array(z.string().uuid()),
-  reason: z.string().trim().min(1, 'common.errors.reasonRequired'),
 });
 
 const UpdateSchema = z.object({
@@ -33,13 +32,9 @@ const UpdateSchema = z.object({
   role: RoleEnum,
   is_active: z.coerce.boolean(),
   location_ids: z.array(z.string().uuid()),
-  reason: z.string().trim().min(1, 'common.errors.reasonRequired'),
 });
 
-const DestructiveSchema = z.object({
-  id: z.string().uuid(),
-  reason: z.string().trim().min(1, 'common.errors.reasonRequired'),
-});
+const DestructiveSchema = z.object({ id: z.string().uuid() });
 
 const ResetPinSchema = z.object({
   id: z.string().uuid(),
@@ -48,7 +43,6 @@ const ResetPinSchema = z.object({
     .trim()
     .regex(/^\d{6}$/, 'admin.users.errors.invalidPin'),
   pin_confirm: z.string().trim(),
-  reason: z.string().trim().min(1, 'common.errors.reasonRequired'),
 });
 
 export async function createAppUserAction(
@@ -63,7 +57,6 @@ export async function createAppUserAction(
     pin: formData.get('pin'),
     role: formData.get('role'),
     location_ids: formData.getAll('location_ids').map((v) => String(v)),
-    reason: formData.get('reason'),
   });
   if (!parsed.success) {
     return {
@@ -93,7 +86,7 @@ export async function createAppUserAction(
     p_mobile: parsed.data.mobile,
     p_role: parsed.data.role,
     p_location_ids: parsed.data.location_ids,
-    p_reason: parsed.data.reason,
+    p_reason: '',
   });
 
   if (error) {
@@ -118,7 +111,6 @@ export async function updateAppUserAction(
     role: formData.get('role'),
     is_active: formData.get('is_active') === 'on',
     location_ids: formData.getAll('location_ids').map((v) => String(v)),
-    reason: formData.get('reason'),
   });
   if (!parsed.success) {
     return {
@@ -138,7 +130,7 @@ export async function updateAppUserAction(
     p_role: parsed.data.role,
     p_is_active: parsed.data.is_active,
     p_location_ids: parsed.data.location_ids,
-    p_reason: parsed.data.reason,
+    p_reason: '',
   });
   if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
 
@@ -151,10 +143,7 @@ export async function softDeleteAppUserAction(
   formData: FormData,
 ): Promise<ActionResult> {
   await requireRole(['super_admin']);
-  const parsed = DestructiveSchema.safeParse({
-    id: formData.get('id'),
-    reason: formData.get('reason'),
-  });
+  const parsed = DestructiveSchema.safeParse({ id: formData.get('id') });
   if (!parsed.success)
     return {
       ok: false,
@@ -164,7 +153,7 @@ export async function softDeleteAppUserAction(
   const supabase = createClient();
   const { error } = await supabase.rpc('soft_delete_app_user', {
     p_id: parsed.data.id,
-    p_reason: parsed.data.reason,
+    p_reason: '',
   });
   if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
 
@@ -177,10 +166,7 @@ export async function restoreAppUserAction(
   formData: FormData,
 ): Promise<ActionResult> {
   await requireRole(['super_admin']);
-  const parsed = DestructiveSchema.safeParse({
-    id: formData.get('id'),
-    reason: formData.get('reason'),
-  });
+  const parsed = DestructiveSchema.safeParse({ id: formData.get('id') });
   if (!parsed.success)
     return {
       ok: false,
@@ -190,7 +176,7 @@ export async function restoreAppUserAction(
   const supabase = createClient();
   const { error } = await supabase.rpc('restore_app_user', {
     p_id: parsed.data.id,
-    p_reason: parsed.data.reason,
+    p_reason: '',
   });
   if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
 
@@ -214,7 +200,6 @@ export async function resetUserPinAction(
     id: formData.get('id'),
     pin: formData.get('pin'),
     pin_confirm: formData.get('pin_confirm'),
-    reason: formData.get('reason'),
   });
   if (!parsed.success) {
     return {
@@ -231,7 +216,7 @@ export async function resetUserPinAction(
     body: {
       target_id: parsed.data.id,
       new_pin: parsed.data.pin,
-      reason: parsed.data.reason,
+      reason: '',
     },
   });
 

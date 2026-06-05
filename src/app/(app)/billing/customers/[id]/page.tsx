@@ -9,7 +9,7 @@ import { DestructiveActions } from './destructive-actions';
 export const dynamic = 'force-dynamic';
 
 export default async function EditBillingCustomerPage({ params }: { params: { id: string } }) {
-  const user = await requireRole(['super_admin', 'supervisor']);
+  await requireRole(['super_admin', 'supervisor']);
   const supabase = createClient();
 
   const { data: row } = await supabase
@@ -53,26 +53,17 @@ export default async function EditBillingCustomerPage({ params }: { params: { id
     is_active: row.is_active,
   };
 
-  return (
-    <EditView
-      initial={initial}
-      groups={groups}
-      isDeleted={!!row.deleted_at}
-      isSuperAdmin={user.role === 'super_admin'}
-    />
-  );
+  return <EditView initial={initial} groups={groups} isDeleted={!!row.deleted_at} />;
 }
 
 function EditView({
   initial,
   groups,
   isDeleted,
-  isSuperAdmin,
 }: {
   initial: CustomerFormValues;
   groups: GroupOption[];
   isDeleted: boolean;
-  isSuperAdmin: boolean;
 }) {
   const t = useTranslations('billing.customers.form');
   return (
@@ -82,7 +73,7 @@ function EditView({
         <DestructiveActions customerId={initial.id!} isDeleted />
       ) : (
         <>
-          <CustomerForm initial={initial} groups={groups} isSuperAdmin={isSuperAdmin} />
+          <CustomerForm initial={initial} groups={groups} />
           <div className="mt-6 border-t border-neutral-200 pt-4">
             <DestructiveActions customerId={initial.id!} isDeleted={false} />
           </div>

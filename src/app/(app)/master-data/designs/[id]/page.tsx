@@ -10,7 +10,7 @@ import { getDesignThumbnailUrl } from '../actions';
 export const dynamic = 'force-dynamic';
 
 export default async function EditDesignPage({ params }: { params: { id: string } }) {
-  const user = await requireRole(['super_admin', 'supervisor']);
+  await requireRole(['super_admin', 'supervisor']);
   const supabase = createClient();
 
   const { data: row } = await supabase
@@ -38,7 +38,6 @@ export default async function EditDesignPage({ params }: { params: { id: string 
       }}
       isDeleted={!!row.deleted_at}
       imageSignedUrl={thumb}
-      isSuperAdmin={user.role === 'super_admin'}
     />
   );
 }
@@ -47,7 +46,6 @@ function EditView({
   design,
   isDeleted,
   imageSignedUrl,
-  isSuperAdmin,
 }: {
   design: {
     id: string;
@@ -60,7 +58,6 @@ function EditView({
   };
   isDeleted: boolean;
   imageSignedUrl: string | null;
-  isSuperAdmin: boolean;
 }) {
   const t = useTranslations('masterData.designs.form');
   return (
@@ -70,11 +67,7 @@ function EditView({
         <DestructiveActions designId={design.id} isDeleted />
       ) : (
         <>
-          <DesignForm
-            initial={design}
-            imageSignedUrl={imageSignedUrl}
-            isSuperAdmin={isSuperAdmin}
-          />
+          <DesignForm initial={design} imageSignedUrl={imageSignedUrl} />
           <div className="mt-6 border-t border-neutral-200 pt-4">
             <DestructiveActions designId={design.id} isDeleted={false} />
           </div>

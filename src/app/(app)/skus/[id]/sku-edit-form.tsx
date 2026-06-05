@@ -9,7 +9,6 @@ import {
   validateSkuPhotoFile,
   getSkuPhotoPublicUrl,
 } from '@/lib/storage/sku-photos';
-import { AuditReasonField } from '@/components/audit-reason-field';
 import { ServerError, SubmitButton } from '@/components/form-status';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { updateSkuAction } from '../actions';
@@ -24,11 +23,9 @@ export interface SkuEditValues {
 export function SkuEditForm({
   initial,
   photoUrl,
-  isSuperAdmin,
 }: {
   initial: SkuEditValues;
   photoUrl: string | null;
-  isSuperAdmin: boolean;
 }) {
   const t = useTranslations('skus.form');
   const tCommon = useTranslations('common.actions');
@@ -147,8 +144,6 @@ export function SkuEditForm({
         {uploading ? <p className="mt-1 text-xs text-neutral-500">{tCommon('saving')}</p> : null}
         {uploadError ? <ServerError messageKey={uploadError} /> : null}
       </div>
-
-      <AuditReasonField required={isSuperAdmin} />
 
       {state && state.ok === false ? <ServerError messageKey={state.messageKey} /> : null}
 

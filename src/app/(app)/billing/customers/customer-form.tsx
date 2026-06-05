@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { AuditReasonField } from '@/components/audit-reason-field';
 import { ServerError, SubmitButton } from '@/components/form-status';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { saveBillingCustomerAction } from './actions';
@@ -35,11 +34,9 @@ export interface GroupOption {
 export function CustomerForm({
   initial,
   groups,
-  isSuperAdmin,
 }: {
   initial: CustomerFormValues | null;
   groups: GroupOption[];
-  isSuperAdmin: boolean;
 }) {
   const t = useTranslations('billing.customers.form');
   const tCommon = useTranslations('common.actions');
@@ -241,8 +238,6 @@ export function CustomerForm({
       ) : (
         <input type="hidden" name="is_active" value="on" />
       )}
-
-      <AuditReasonField required={isSuperAdmin} />
 
       {state && state.ok === false ? <ServerError messageKey={state.messageKey} /> : null}
 

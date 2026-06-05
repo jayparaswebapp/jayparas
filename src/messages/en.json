@@ -29,11 +29,6 @@
       "inactive": "Inactive",
       "deleted": "Deleted"
     },
-    "fields": {
-      "reason": "Reason",
-      "reasonPlaceholder": "Why are you making this change?",
-      "reasonHelp": "Required. Captured in the audit log."
-    },
     "confirm": {
       "softDeleteTitle": "Confirm delete",
       "softDeleteBody": "This will hide the record. Super-admin can restore later.",
@@ -59,7 +54,6 @@
       "centreManagerRequiresLocation": "Centre managers must cover at least one location.",
       "centreManagerLocationsExist": "This centre manager still has locations assigned. Remove them before changing the role.",
       "settingLocked": "This setting is locked and cannot be changed from the UI.",
-      "reasonRequired": "Please enter a reason.",
       "permissionDenied": "You don't have permission to do that.",
       "sessionInvalid": "Your session has expired. Please sign in again.",
       "notFound": "That record no longer exists.",
