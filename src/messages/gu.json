@@ -165,6 +165,7 @@
       "title": "ગ્રાહકો",
       "subtitle": "હોલસેલ ખરીદનાર. GSTIN ફક્ત પતંગ લાઇન માટે જરૂરી — રાખડી ગ્રાહકોને ખાલી રાખી શકાય.",
       "newButton": "નવો ગ્રાહક",
+      "newShortcutHint": "શૉર્ટકટ: Ctrl + A (Mac પર ⌘ + A)",
       "searchLabel": "શોધો",
       "searchPlaceholder": "નામ, બિઝનેસ, મોબાઇલ કે GSTIN",
       "filterByGroupLabel": "ગ્રુપ",

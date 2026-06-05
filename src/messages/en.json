@@ -165,6 +165,7 @@
       "title": "Customers",
       "subtitle": "Wholesale buyers. GSTIN is required only for the kite line; rakhi buyers can leave it blank.",
       "newButton": "New customer",
+      "newShortcutHint": "Shortcut: Ctrl + A (⌘ + A on Mac)",
       "searchLabel": "Search",
       "searchPlaceholder": "Name, business, mobile or GSTIN",
       "filterByGroupLabel": "Group",

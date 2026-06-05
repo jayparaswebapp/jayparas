@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireAppUser } from '@/lib/users/current';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/badges';
+import { NewCustomerShortcut } from './new-customer-shortcut';
 
 export const dynamic = 'force-dynamic';
 
@@ -116,13 +117,21 @@ function CustomersView({
 
   return (
     <>
+      {canWrite ? <NewCustomerShortcut /> : null}
       <PageHeader
         title={t('title')}
         subtitle={t('subtitle')}
         action={
           canWrite ? (
-            <Link href="/billing/customers/new" className="btn-primary !w-auto px-4">
+            <Link
+              href="/billing/customers/new"
+              title={t('newShortcutHint')}
+              className="btn-primary !w-auto px-4"
+            >
               {t('newButton')}
+              <kbd className="ml-2 hidden rounded border border-white/40 px-1.5 py-0.5 font-mono text-[10px] text-white/90 sm:inline">
+                Ctrl + A
+              </kbd>
             </Link>
           ) : null
         }
