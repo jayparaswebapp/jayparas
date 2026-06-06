@@ -93,7 +93,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
     const [{ data: cs }, { data: ss }, { data: company }] = await Promise.all([
       supabase
         .from('billing_customers')
-        .select('id, full_name, business_name, state')
+        .select('id, full_name, business_name, city, state')
         .eq('is_active', true)
         .is('deleted_at', null)
         .order('full_name', { ascending: true }),
@@ -106,11 +106,11 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
       supabase.from('company_info').select('state').maybeSingle(),
     ]);
 
-    const customers: CustomerOption[] = (cs ?? []).map((c) => ({
-      id: c.id,
-      label: c.business_name ? `${c.business_name} — ${c.full_name}` : c.full_name,
-      state: c.state,
-    }));
+    const customers: CustomerOption[] = (cs ?? []).map((c) => {
+      const base = c.business_name ? `${c.business_name} — ${c.full_name}` : c.full_name;
+      const label = c.city ? `${base} (${c.city})` : base;
+      return { id: c.id, label, city: c.city, state: c.state };
+    });
     const skus: SkuOption[] = (ss ?? []).map((s) => ({
       id: s.id,
       sku_code: s.sku_code,
@@ -124,7 +124,6 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
       business_line: invoice.business_line,
       customer_id: invoice.customer_id,
       invoice_date: invoice.invoice_date,
-      due_date: invoice.due_date ?? '',
       place_of_supply: invoice.place_of_supply ?? '',
       notes: invoice.notes ?? '',
       terms: invoice.terms ?? '',
@@ -211,10 +210,11 @@ function ReadonlyView({
   const tForm = useTranslations('billing.invoices.form');
   const tStatus = invoice.status === 'cancelled' ? t('statusCancelled') : t('statusIssued');
 
+  const docType = invoice.business_line === 'kite' ? t('docTaxInvoice') : t('docBillOfSupply');
   return (
     <>
       <PageHeader
-        title={`${t('title')} ${invoice.invoice_number ?? ''}`.trim()}
+        title={docType}
         subtitle={tStatus}
         action={
           <div className="flex items-center gap-2">
@@ -228,6 +228,12 @@ function ReadonlyView({
           </div>
         }
       />
+      <div className="mb-4 rounded-lg border border-neutral-200 bg-white p-3 text-sm text-neutral-700">
+        <span className="text-neutral-500">{t('invoiceNumberLabel')}: </span>
+        <span className="font-mono text-base font-bold text-neutral-900">
+          {invoice.invoice_number ?? t('draftLabel')}
+        </span>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Snapshot title={tDet('from')} snap={invoice.seller_snapshot} />

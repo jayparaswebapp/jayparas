@@ -15,7 +15,6 @@ interface InvoiceRow {
   business_line: 'rakhi' | 'kite';
   status: 'draft' | 'issued' | 'cancelled';
   invoice_date: string;
-  due_date: string | null;
   place_of_supply: string | null;
   intra_state: boolean | null;
   notes: string | null;
@@ -53,7 +52,7 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
   const { data: inv } = await supabase
     .from('invoices')
     .select(
-      'id, invoice_number, business_line, status, invoice_date, due_date, place_of_supply, intra_state, notes, terms, subtotal, discount_total, cgst_total, sgst_total, igst_total, round_off, grand_total, customer_snapshot, seller_snapshot',
+      'id, invoice_number, business_line, status, invoice_date, place_of_supply, intra_state, notes, terms, subtotal, discount_total, cgst_total, sgst_total, igst_total, round_off, grand_total, customer_snapshot, seller_snapshot',
     )
     .eq('id', params.id)
     .is('deleted_at', null)
@@ -136,22 +135,15 @@ function PrintView({
           </div>
           <div className="text-right">
             <div className="text-lg font-bold uppercase tracking-wide text-neutral-900">
-              {t('invoiceLabel')}
+              {showGst ? t('invoiceLabel') : t('billOfSupplyLabel')}
             </div>
-            <div className="mt-2 text-sm">
-              <span className="text-neutral-500">{t('numberLabel')}: </span>
-              <span className="font-mono font-semibold">{invoice.invoice_number ?? '—'}</span>
+            <div className="mt-2 font-mono text-base font-bold text-neutral-900">
+              {invoice.invoice_number ?? '—'}
             </div>
             <div className="text-sm">
               <span className="text-neutral-500">{t('dateLabel')}: </span>
               <span>{fmtDate(invoice.invoice_date, locale)}</span>
             </div>
-            {invoice.due_date ? (
-              <div className="text-sm">
-                <span className="text-neutral-500">{t('dueDateLabel')}: </span>
-                <span>{fmtDate(invoice.due_date, locale)}</span>
-              </div>
-            ) : null}
             {invoice.place_of_supply ? (
               <div className="text-sm">
                 <span className="text-neutral-500">{t('placeOfSupplyLabel')}: </span>
@@ -191,31 +183,38 @@ function PrintView({
               <th className="px-2 py-2">{t('descriptionLabel')}</th>
               {showGst ? <th className="px-2 py-2">{t('hsnLabel')}</th> : null}
               <th className="px-2 py-2 text-right">{t('qtyLabel')}</th>
-              <th className="px-2 py-2 text-right">{t('rateLabel')}</th>
+              <th className="px-2 py-2 text-right">{t('mrpLabel')}</th>
               <th className="px-2 py-2 text-right">{t('discountLabel')}</th>
+              <th className="px-2 py-2 text-right">{t('rateLabel')}</th>
               {showGst ? <th className="px-2 py-2 text-right">{t('gstLabel')}</th> : null}
               <th className="px-2 py-2 text-right">{t('amountLabel')}</th>
             </tr>
           </thead>
           <tbody>
-            {lines.map((l) => (
-              <tr key={l.id} className="border-b border-neutral-200 align-top">
-                <td className="px-2 py-2">{l.line_no}</td>
-                <td className="px-2 py-2">{l.description}</td>
-                {showGst ? (
-                  <td className="px-2 py-2 font-mono text-xs">{l.hsn_code ?? ''}</td>
-                ) : null}
-                <td className="px-2 py-2 text-right">
-                  {Number(l.qty)} {l.uom}
-                </td>
-                <td className="px-2 py-2 text-right">{formatRupees(Number(l.rate), locale)}</td>
-                <td className="px-2 py-2 text-right">{Number(l.discount_pct)}%</td>
-                {showGst ? <td className="px-2 py-2 text-right">{Number(l.gst_pct)}%</td> : null}
-                <td className="px-2 py-2 text-right font-medium">
-                  {formatRupees(Number(l.line_total), locale)}
-                </td>
-              </tr>
-            ))}
+            {lines.map((l) => {
+              const mrp = Number(l.rate);
+              const disc = Number(l.discount_pct);
+              const effectiveRate = Math.round(mrp * (1 - disc / 100) * 100) / 100;
+              return (
+                <tr key={l.id} className="border-b border-neutral-200 align-top">
+                  <td className="px-2 py-2">{l.line_no}</td>
+                  <td className="px-2 py-2">{l.description}</td>
+                  {showGst ? (
+                    <td className="px-2 py-2 font-mono text-xs">{l.hsn_code ?? ''}</td>
+                  ) : null}
+                  <td className="px-2 py-2 text-right">
+                    {Number(l.qty)} {l.uom}
+                  </td>
+                  <td className="px-2 py-2 text-right">{formatRupees(mrp, locale)}</td>
+                  <td className="px-2 py-2 text-right">{disc}%</td>
+                  <td className="px-2 py-2 text-right">{formatRupees(effectiveRate, locale)}</td>
+                  {showGst ? <td className="px-2 py-2 text-right">{Number(l.gst_pct)}%</td> : null}
+                  <td className="px-2 py-2 text-right font-medium">
+                    {formatRupees(Number(l.line_total), locale)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 

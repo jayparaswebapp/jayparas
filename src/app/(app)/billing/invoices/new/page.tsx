@@ -20,7 +20,7 @@ export default async function NewInvoicePage() {
   const [{ data: cs }, { data: ss }, { data: company }] = await Promise.all([
     supabase
       .from('billing_customers')
-      .select('id, full_name, business_name, state')
+      .select('id, full_name, business_name, city, state')
       .eq('is_active', true)
       .is('deleted_at', null)
       .order('full_name', { ascending: true }),
@@ -33,11 +33,11 @@ export default async function NewInvoicePage() {
     supabase.from('company_info').select('state').maybeSingle(),
   ]);
 
-  const customers: CustomerOption[] = (cs ?? []).map((c) => ({
-    id: c.id,
-    label: c.business_name ? `${c.business_name} — ${c.full_name}` : c.full_name,
-    state: c.state,
-  }));
+  const customers: CustomerOption[] = (cs ?? []).map((c) => {
+    const base = c.business_name ? `${c.business_name} — ${c.full_name}` : c.full_name;
+    const label = c.city ? `${base} (${c.city})` : base;
+    return { id: c.id, label, city: c.city, state: c.state };
+  });
   const skus: SkuOption[] = (ss ?? []).map((s) => ({
     id: s.id,
     sku_code: s.sku_code,
@@ -50,7 +50,6 @@ export default async function NewInvoicePage() {
     business_line: 'rakhi',
     customer_id: null,
     invoice_date: new Date().toISOString().slice(0, 10),
-    due_date: '',
     place_of_supply: '',
     notes: '',
     terms: '',

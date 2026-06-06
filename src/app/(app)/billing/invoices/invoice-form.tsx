@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ServerError } from '@/components/form-status';
 import { formatRupees } from '@/lib/format/locale-shared';
 import type { Locale } from '@/lib/i18n/config';
@@ -29,7 +29,6 @@ export interface InvoiceFormValues {
   business_line: BusinessLine;
   customer_id: string | null;
   invoice_date: string;
-  due_date: string;
   place_of_supply: string;
   notes: string;
   terms: string;
@@ -39,6 +38,7 @@ export interface InvoiceFormValues {
 export interface CustomerOption {
   id: string;
   label: string;
+  city: string | null;
   state: string | null;
 }
 
@@ -56,7 +56,7 @@ const EMPTY_LINE: InvoiceLineValues = {
   description: '',
   hsn_code: '',
   qty: '1',
-  uom: 'Pack',
+  uom: 'Pcs',
   rate: '0',
   discount_pct: '0',
   gst_pct: '0',
@@ -65,6 +65,29 @@ const EMPTY_LINE: InvoiceLineValues = {
 function num(s: string): number {
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+function lineFromSku(sku: SkuOption): InvoiceLineValues {
+  const ratePerPiece = sku.pack_size > 0 ? round2(sku.price / sku.pack_size) : sku.price;
+  return {
+    sku_id: sku.id,
+    sku_snapshot: {
+      sku_code: sku.sku_code,
+      design_name: sku.design_name,
+      pack_size: sku.pack_size,
+    },
+    description: `${sku.design_name} (${sku.sku_code})`,
+    hsn_code: '',
+    qty: String(sku.pack_size),
+    uom: 'Pcs',
+    rate: String(ratePerPiece),
+    discount_pct: '0',
+    gst_pct: '0',
+  };
 }
 
 export function InvoiceForm({
@@ -91,11 +114,25 @@ export function InvoiceForm({
   const [customerId, setCustomerId] = useState<string>(initial.customer_id ?? '');
   const [placeOfSupply, setPlaceOfSupply] = useState<string>(initial.place_of_supply ?? '');
   const [invoiceDate, setInvoiceDate] = useState<string>(initial.invoice_date);
-  const [dueDate, setDueDate] = useState<string>(initial.due_date ?? '');
   const [notes, setNotes] = useState<string>(initial.notes ?? '');
   const [terms, setTerms] = useState<string>(initial.terms ?? '');
   const [lines, setLines] = useState<InvoiceLineValues[]>(
     initial.lines.length ? initial.lines : [{ ...EMPTY_LINE }],
+  );
+
+  const [scanValue, setScanValue] = useState<string>('');
+  const [scanError, setScanError] = useState<string | null>(null);
+  const scanInputRef = useRef<HTMLInputElement | null>(null);
+
+  const skuByCode = useMemo(() => {
+    const m = new Map<string, SkuOption>();
+    for (const s of skus) m.set(s.sku_code.toUpperCase(), s);
+    return m;
+  }, [skus]);
+
+  const selectedCustomer = useMemo(
+    () => customers.find((c) => c.id === customerId) ?? null,
+    [customers, customerId],
   );
 
   function onCustomerChange(id: string) {
@@ -110,6 +147,26 @@ export function InvoiceForm({
     setLines((curr) => curr.map((l, i) => (i === idx ? { ...l, ...patch } : l)));
   }
 
+  function addBlankLine() {
+    setLines((curr) => [...curr, { ...EMPTY_LINE }]);
+  }
+
+  function addOrIncrementSku(sku: SkuOption) {
+    setLines((curr) => {
+      const existingIdx = curr.findIndex((l) => l.sku_id === sku.id);
+      if (existingIdx >= 0) {
+        return curr.map((l, i) =>
+          i === existingIdx ? { ...l, qty: String(num(l.qty) + sku.pack_size) } : l,
+        );
+      }
+      const first = curr[0];
+      const isEmptyFirst =
+        curr.length === 1 && first && first.sku_id === null && !first.description;
+      const fresh = lineFromSku(sku);
+      return isEmptyFirst ? [fresh] : [...curr, fresh];
+    });
+  }
+
   function pickSkuForLine(idx: number, skuId: string) {
     if (!skuId) {
       updateLine(idx, { sku_id: null, sku_snapshot: null });
@@ -117,19 +174,26 @@ export function InvoiceForm({
     }
     const s = skus.find((x) => x.id === skuId);
     if (!s) return;
-    updateLine(idx, {
-      sku_id: s.id,
-      sku_snapshot: { sku_code: s.sku_code, design_name: s.design_name, pack_size: s.pack_size },
-      description: `${s.design_name} — ${s.sku_code} (${s.pack_size} pcs)`,
-      rate: String(s.price),
-    });
+    const fresh = lineFromSku(s);
+    setLines((curr) => curr.map((l, i) => (i === idx ? { ...fresh, hsn_code: l.hsn_code } : l)));
   }
 
-  function addLine() {
-    setLines((curr) => [...curr, { ...EMPTY_LINE }]);
-  }
   function removeLine(idx: number) {
     setLines((curr) => (curr.length <= 1 ? curr : curr.filter((_, i) => i !== idx)));
+  }
+
+  function handleScan() {
+    const code = scanValue.trim().toUpperCase();
+    if (!code) return;
+    const sku = skuByCode.get(code);
+    if (!sku) {
+      setScanError(`SKU ${code} not found`);
+      return;
+    }
+    addOrIncrementSku(sku);
+    setScanError(null);
+    setScanValue('');
+    scanInputRef.current?.focus();
   }
 
   const intraState = useMemo(() => {
@@ -149,16 +213,16 @@ export function InvoiceForm({
       const qty = num(l.qty);
       const rate = num(l.rate);
       const disc = num(l.discount_pct);
-      const lineSubtotal = +(qty * rate * (1 - disc / 100)).toFixed(2);
-      const lineDiscount = +(qty * rate * (disc / 100)).toFixed(2);
+      const lineSubtotal = round2(qty * rate * (1 - disc / 100));
+      const lineDiscount = round2(qty * rate * (disc / 100));
       subtotal += lineSubtotal;
       discount += lineDiscount;
       if (showGst) {
         const gstPct = num(l.gst_pct);
         if (gstPct > 0) {
-          const tax = +(lineSubtotal * (gstPct / 100)).toFixed(2);
+          const tax = round2(lineSubtotal * (gstPct / 100));
           if (intraState) {
-            const half = +(tax / 2).toFixed(2);
+            const half = round2(tax / 2);
             cgst += half;
             sgst += tax - half;
           } else {
@@ -167,9 +231,9 @@ export function InvoiceForm({
         }
       }
     }
-    const sum = +(subtotal + cgst + sgst + igst).toFixed(2);
+    const sum = round2(subtotal + cgst + sgst + igst);
     const grand = Math.round(sum);
-    const round = +(grand - sum).toFixed(2);
+    const round = round2(grand - sum);
     return { subtotal, discount, cgst, sgst, igst, round, grand };
   }, [lines, showGst, intraState]);
 
@@ -181,7 +245,6 @@ export function InvoiceForm({
           business_line: businessLine,
           customer_id: customerId || null,
           invoice_date: invoiceDate,
-          due_date: dueDate || undefined,
           place_of_supply: placeOfSupply || undefined,
           notes: notes || undefined,
           terms: terms || undefined,
@@ -192,7 +255,7 @@ export function InvoiceForm({
           description: l.description || (l.sku_snapshot?.design_name ?? '—'),
           hsn_code: l.hsn_code || null,
           qty: num(l.qty),
-          uom: l.uom || 'Pack',
+          uom: l.uom || 'Pcs',
           rate: num(l.rate),
           discount_pct: num(l.discount_pct),
           gst_pct: showGst ? num(l.gst_pct) : 0,
@@ -203,7 +266,6 @@ export function InvoiceForm({
       businessLine,
       customerId,
       invoiceDate,
-      dueDate,
       placeOfSupply,
       notes,
       terms,
@@ -243,6 +305,20 @@ export function InvoiceForm({
           </div>
 
           <div>
+            <label htmlFor="invoice_date" className="label-base">
+              {tForm('invoiceDateLabel')}
+            </label>
+            <input
+              id="invoice_date"
+              type="date"
+              value={invoiceDate}
+              onChange={(e) => setInvoiceDate(e.target.value)}
+              required
+              className="input-base"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
             <label htmlFor="customer_id" className="label-base">
               {tForm('customerLabel')}
             </label>
@@ -260,33 +336,19 @@ export function InvoiceForm({
                 </option>
               ))}
             </select>
-          </div>
-
-          <div>
-            <label htmlFor="invoice_date" className="label-base">
-              {tForm('invoiceDateLabel')}
-            </label>
-            <input
-              id="invoice_date"
-              type="date"
-              value={invoiceDate}
-              onChange={(e) => setInvoiceDate(e.target.value)}
-              required
-              className="input-base"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="due_date" className="label-base">
-              {tForm('dueDateLabel')}
-            </label>
-            <input
-              id="due_date"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="input-base"
-            />
+            {selectedCustomer ? (
+              <p className="mt-1 text-xs text-neutral-600">
+                {selectedCustomer.city ? (
+                  <>
+                    <span className="font-medium">{tForm('customerCityLabel')}:</span>{' '}
+                    {selectedCustomer.city}
+                  </>
+                ) : (
+                  <span className="text-amber-700">{tForm('customerCityMissing')}</span>
+                )}
+                {selectedCustomer.state ? ` · ${selectedCustomer.state}` : null}
+              </p>
+            ) : null}
           </div>
 
           <div className="sm:col-span-2">
@@ -304,30 +366,64 @@ export function InvoiceForm({
         </div>
       </section>
 
-      {/* Lines */}
+      {/* Scan + add */}
       <section className="space-y-3 rounded-lg border border-neutral-200 bg-white p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-medium uppercase tracking-wide text-neutral-500">
             {tForm('linesSection')}
           </h2>
           <button
             type="button"
-            onClick={addLine}
+            onClick={addBlankLine}
             className="btn-ghost border border-neutral-300 text-sm"
           >
             {tForm('addLineButton')}
           </button>
         </div>
 
+        <div className="rounded-md border border-dashed border-neutral-300 bg-neutral-50 p-3">
+          <label htmlFor="scan_code" className="label-base">
+            {tForm('scanLabel')}
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="scan_code"
+              ref={scanInputRef}
+              value={scanValue}
+              onChange={(e) => setScanValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleScan();
+                }
+              }}
+              placeholder={tForm('scanPlaceholder')}
+              className="input-base flex-1 font-mono"
+            />
+            <button
+              type="button"
+              onClick={handleScan}
+              className="btn-ghost border border-neutral-300"
+            >
+              {tForm('scanAddButton')}
+            </button>
+          </div>
+          {scanError ? (
+            <p className="mt-1 text-xs text-red-700">{scanError}</p>
+          ) : (
+            <p className="mt-1 text-xs text-neutral-500">{tForm('scanHint')}</p>
+          )}
+        </div>
+
         <div className="space-y-3">
           {lines.map((l, idx) => {
-            const lineSubtotal = +(
-              num(l.qty) *
-              num(l.rate) *
-              (1 - num(l.discount_pct) / 100)
-            ).toFixed(2);
-            const lineTax = showGst ? +((lineSubtotal * num(l.gst_pct)) / 100).toFixed(2) : 0;
-            const lineTotal = +(lineSubtotal + lineTax).toFixed(2);
+            const qty = num(l.qty);
+            const rate = num(l.rate);
+            const disc = num(l.discount_pct);
+            const effectiveRate = round2(rate * (1 - disc / 100));
+            const lineSubtotal = round2(qty * effectiveRate);
+            const lineTax = showGst ? round2((lineSubtotal * num(l.gst_pct)) / 100) : 0;
+            const lineTotal = round2(lineSubtotal + lineTax);
             return (
               <div key={idx} className="space-y-2 rounded-md border border-neutral-200 p-3">
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-12">
@@ -343,7 +439,7 @@ export function InvoiceForm({
                       <option value="">{tForm('skuNone')}</option>
                       {skus.map((s) => (
                         <option key={s.id} value={s.id}>
-                          {s.sku_code} — {s.design_name}
+                          {s.sku_code} — {s.design_name} ({s.pack_size} pcs)
                         </option>
                       ))}
                     </select>
@@ -380,11 +476,11 @@ export function InvoiceForm({
                     </label>
                     <input
                       type="number"
-                      step="0.001"
+                      step="1"
                       min="0"
                       value={l.qty}
                       onChange={(e) => updateLine(idx, { qty: e.target.value })}
-                      inputMode="decimal"
+                      inputMode="numeric"
                       className="input-base"
                       required
                     />
@@ -401,7 +497,7 @@ export function InvoiceForm({
                   </div>
                   <div className="sm:col-span-2">
                     <label className="text-xs font-medium text-neutral-600">
-                      {tForm('rateLabel')}
+                      {tForm('mrpLabel')}
                     </label>
                     <input
                       type="number"
@@ -459,7 +555,10 @@ export function InvoiceForm({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-4 text-sm text-neutral-700">
+                <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-sm text-neutral-700">
+                  <span>
+                    {tForm('effectiveRateLabel')}: {formatRupees(effectiveRate, locale)}
+                  </span>
                   <span>
                     {tForm('lineSubtotalLabel')}: {formatRupees(lineSubtotal, locale)}
                   </span>
