@@ -32,6 +32,8 @@ export interface InvoiceFormValues {
   place_of_supply: string;
   notes: string;
   terms: string;
+  packing_charges: string;
+  delivery_charges: string;
   lines: InvoiceLineValues[];
 }
 
@@ -72,7 +74,6 @@ function round2(n: number): number {
 }
 
 function lineFromSku(sku: SkuOption): InvoiceLineValues {
-  const ratePerPiece = sku.pack_size > 0 ? round2(sku.price / sku.pack_size) : sku.price;
   return {
     sku_id: sku.id,
     sku_snapshot: {
@@ -84,7 +85,7 @@ function lineFromSku(sku: SkuOption): InvoiceLineValues {
     hsn_code: '',
     qty: String(sku.pack_size),
     uom: 'Pcs',
-    rate: String(ratePerPiece),
+    rate: String(sku.price),
     discount_pct: '0',
     gst_pct: '0',
   };
@@ -116,6 +117,8 @@ export function InvoiceForm({
   const [invoiceDate, setInvoiceDate] = useState<string>(initial.invoice_date);
   const [notes, setNotes] = useState<string>(initial.notes ?? '');
   const [terms, setTerms] = useState<string>(initial.terms ?? '');
+  const [packingCharges, setPackingCharges] = useState<string>(initial.packing_charges ?? '0');
+  const [deliveryCharges, setDeliveryCharges] = useState<string>(initial.delivery_charges ?? '0');
   const [lines, setLines] = useState<InvoiceLineValues[]>(
     initial.lines.length ? initial.lines : [{ ...EMPTY_LINE }],
   );
@@ -231,11 +234,14 @@ export function InvoiceForm({
         }
       }
     }
-    const sum = round2(subtotal + cgst + sgst + igst);
+    const packing = num(packingCharges);
+    const delivery = num(deliveryCharges);
+    const extras = round2(packing + delivery);
+    const sum = round2(subtotal + cgst + sgst + igst + extras);
     const grand = Math.round(sum);
     const round = round2(grand - sum);
-    return { subtotal, discount, cgst, sgst, igst, round, grand };
-  }, [lines, showGst, intraState]);
+    return { subtotal, discount, cgst, sgst, igst, packing, delivery, extras, round, grand };
+  }, [lines, showGst, intraState, packingCharges, deliveryCharges]);
 
   const payload = useMemo(
     () =>
@@ -248,6 +254,8 @@ export function InvoiceForm({
           place_of_supply: placeOfSupply || undefined,
           notes: notes || undefined,
           terms: terms || undefined,
+          packing_charges: num(packingCharges),
+          delivery_charges: num(deliveryCharges),
         },
         lines: lines.map((l) => ({
           sku_id: l.sku_id || null,
@@ -269,6 +277,8 @@ export function InvoiceForm({
       placeOfSupply,
       notes,
       terms,
+      packingCharges,
+      deliveryCharges,
       lines,
       showGst,
     ],
@@ -600,6 +610,50 @@ export function InvoiceForm({
         </div>
       </section>
 
+      {/* Extras */}
+      <section className="grid grid-cols-1 gap-4 rounded-lg border border-neutral-200 bg-white p-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="packing_charges" className="label-base">
+            {tForm('packingChargesLabel')}
+          </label>
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-lg text-neutral-500">
+              ₹
+            </span>
+            <input
+              id="packing_charges"
+              type="number"
+              step="0.01"
+              min="0"
+              value={packingCharges}
+              onChange={(e) => setPackingCharges(e.target.value)}
+              inputMode="decimal"
+              className="input-base pl-8"
+            />
+          </div>
+        </div>
+        <div>
+          <label htmlFor="delivery_charges" className="label-base">
+            {tForm('deliveryChargesLabel')}
+          </label>
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-lg text-neutral-500">
+              ₹
+            </span>
+            <input
+              id="delivery_charges"
+              type="number"
+              step="0.01"
+              min="0"
+              value={deliveryCharges}
+              onChange={(e) => setDeliveryCharges(e.target.value)}
+              inputMode="decimal"
+              className="input-base pl-8"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Totals */}
       <section className="rounded-lg border border-neutral-200 bg-white p-4">
         <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-neutral-500">
@@ -628,6 +682,22 @@ export function InvoiceForm({
             <>
               <dt className="text-neutral-600">{tForm('igstLabel')}</dt>
               <dd className="text-right text-neutral-900">{formatRupees(totals.igst, locale)}</dd>
+            </>
+          ) : null}
+          {totals.packing > 0 ? (
+            <>
+              <dt className="text-neutral-600">{tForm('packingChargesLabel')}</dt>
+              <dd className="text-right text-neutral-900">
+                + {formatRupees(totals.packing, locale)}
+              </dd>
+            </>
+          ) : null}
+          {totals.delivery > 0 ? (
+            <>
+              <dt className="text-neutral-600">{tForm('deliveryChargesLabel')}</dt>
+              <dd className="text-right text-neutral-900">
+                + {formatRupees(totals.delivery, locale)}
+              </dd>
             </>
           ) : null}
           {totals.round !== 0 ? (

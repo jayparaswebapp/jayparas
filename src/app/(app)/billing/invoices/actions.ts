@@ -37,6 +37,8 @@ const HeaderSchema = z.object({
   place_of_supply: z.string().trim().optional(),
   notes: z.string().trim().optional(),
   terms: z.string().trim().optional(),
+  packing_charges: z.coerce.number().min(0).default(0),
+  delivery_charges: z.coerce.number().min(0).default(0),
 });
 
 const PayloadSchema = z.object({
@@ -78,6 +80,8 @@ function headerToRpc(h: Payload['header']): Record<string, unknown> {
     place_of_supply: h.place_of_supply ?? '',
     notes: h.notes ?? '',
     terms: h.terms ?? '',
+    packing_charges: h.packing_charges ?? 0,
+    delivery_charges: h.delivery_charges ?? 0,
   };
 }
 

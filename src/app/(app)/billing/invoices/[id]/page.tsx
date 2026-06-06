@@ -33,6 +33,8 @@ interface InvoiceRow {
   cgst_total: number;
   sgst_total: number;
   igst_total: number;
+  packing_charges: number;
+  delivery_charges: number;
   round_off: number;
   grand_total: number;
   issued_at: string | null;
@@ -69,7 +71,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
   const { data: inv } = await supabase
     .from('invoices')
     .select(
-      'id, invoice_number, business_line, status, invoice_date, due_date, customer_id, place_of_supply, intra_state, notes, terms, subtotal, discount_total, cgst_total, sgst_total, igst_total, round_off, grand_total, issued_at, cancelled_at, created_at, customer_snapshot, seller_snapshot',
+      'id, invoice_number, business_line, status, invoice_date, due_date, customer_id, place_of_supply, intra_state, notes, terms, subtotal, discount_total, cgst_total, sgst_total, igst_total, packing_charges, delivery_charges, round_off, grand_total, issued_at, cancelled_at, created_at, customer_snapshot, seller_snapshot',
     )
     .eq('id', params.id)
     .is('deleted_at', null)
@@ -127,6 +129,8 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
       place_of_supply: invoice.place_of_supply ?? '',
       notes: invoice.notes ?? '',
       terms: invoice.terms ?? '',
+      packing_charges: String(invoice.packing_charges ?? 0),
+      delivery_charges: String(invoice.delivery_charges ?? 0),
       lines: lines.map((l) => ({
         sku_id: l.sku_id,
         sku_snapshot: l.sku_snapshot
@@ -316,6 +320,22 @@ function ReadonlyView({
             <>
               <dt className="text-neutral-600">{tForm('igstLabel')}</dt>
               <dd className="text-right">{formatRupees(Number(invoice.igst_total), locale)}</dd>
+            </>
+          ) : null}
+          {Number(invoice.packing_charges) > 0 ? (
+            <>
+              <dt className="text-neutral-600">{tForm('packingChargesLabel')}</dt>
+              <dd className="text-right">
+                + {formatRupees(Number(invoice.packing_charges), locale)}
+              </dd>
+            </>
+          ) : null}
+          {Number(invoice.delivery_charges) > 0 ? (
+            <>
+              <dt className="text-neutral-600">{tForm('deliveryChargesLabel')}</dt>
+              <dd className="text-right">
+                + {formatRupees(Number(invoice.delivery_charges), locale)}
+              </dd>
             </>
           ) : null}
           {Number(invoice.round_off) !== 0 ? (

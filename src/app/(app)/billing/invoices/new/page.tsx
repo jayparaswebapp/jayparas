@@ -53,6 +53,8 @@ export default async function NewInvoicePage() {
     place_of_supply: '',
     notes: '',
     terms: '',
+    packing_charges: '0',
+    delivery_charges: '0',
     lines: [],
   };
 

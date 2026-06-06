@@ -24,6 +24,8 @@ interface InvoiceRow {
   cgst_total: number;
   sgst_total: number;
   igst_total: number;
+  packing_charges: number;
+  delivery_charges: number;
   round_off: number;
   grand_total: number;
   customer_snapshot: Record<string, string | null> | null;
@@ -52,7 +54,7 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
   const { data: inv } = await supabase
     .from('invoices')
     .select(
-      'id, invoice_number, business_line, status, invoice_date, place_of_supply, intra_state, notes, terms, subtotal, discount_total, cgst_total, sgst_total, igst_total, round_off, grand_total, customer_snapshot, seller_snapshot',
+      'id, invoice_number, business_line, status, invoice_date, place_of_supply, intra_state, notes, terms, subtotal, discount_total, cgst_total, sgst_total, igst_total, packing_charges, delivery_charges, round_off, grand_total, customer_snapshot, seller_snapshot',
     )
     .eq('id', params.id)
     .is('deleted_at', null)
@@ -287,6 +289,18 @@ function PrintView({
           ) : null}
           {showGst && Number(invoice.igst_total) > 0 ? (
             <Row label={t('igstLabel')} value={Number(invoice.igst_total).toFixed(2)} />
+          ) : null}
+          {Number(invoice.packing_charges) > 0 ? (
+            <Row
+              label={t('packingChargesLabel')}
+              value={`+ ${Number(invoice.packing_charges).toFixed(2)}`}
+            />
+          ) : null}
+          {Number(invoice.delivery_charges) > 0 ? (
+            <Row
+              label={t('deliveryChargesLabel')}
+              value={`+ ${Number(invoice.delivery_charges).toFixed(2)}`}
+            />
           ) : null}
           {Number(invoice.round_off) !== 0 ? (
             <Row
