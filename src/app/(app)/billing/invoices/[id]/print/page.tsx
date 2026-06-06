@@ -1,10 +1,10 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/server';
 import { requireAppUser } from '@/lib/users/current';
 import { getServerLocale, formatRupees } from '@/lib/format/locale';
 import type { Locale } from '@/lib/i18n/config';
+import { indianAmountInWords } from '@/lib/format/amount-words';
 import { PrintToolbar } from './print-toolbar';
 
 export const dynamic = 'force-dynamic';
@@ -70,147 +70,200 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
     .order('line_no', { ascending: true });
   const lines = (ls ?? []) as unknown as LineRow[];
 
-  return <PrintView invoice={invoice} lines={lines} locale={locale} />;
+  // Fall back to current company info defaults for terms (when an issued
+  // invoice didn't have terms text saved, or when previewing a draft).
+  const { data: company } = await supabase
+    .from('company_info')
+    .select('default_terms')
+    .maybeSingle();
+  const terms = invoice.terms ?? company?.default_terms ?? null;
+
+  return <PrintView invoice={invoice} lines={lines} terms={terms} locale={locale} />;
 }
 
 function fmtDate(s: string | null, locale: Locale): string {
   if (!s) return '';
   return new Intl.DateTimeFormat(locale === 'gu' ? 'gu-IN' : 'en-IN', {
     day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }).format(new Date(s));
+    month: 'short',
+    year: '2-digit',
+  })
+    .format(new Date(s))
+    .replace(/ /g, '-');
 }
 
 function PrintView({
   invoice,
   lines,
+  terms,
   locale,
 }: {
   invoice: InvoiceRow;
   lines: LineRow[];
+  terms: string | null;
   locale: Locale;
 }) {
   const t = useTranslations('billing.invoices.print');
   const seller = invoice.seller_snapshot ?? {};
   const customer = invoice.customer_snapshot ?? {};
-  const showGst = invoice.business_line === 'kite';
+  const isTax = invoice.business_line === 'kite';
+  const showHsn = isTax;
+  const showGst = isTax;
+
+  const sellerAddr = [seller.address_line1, seller.address_line2, seller.city, seller.state]
+    .filter(Boolean)
+    .join(', ');
+  const sellerPincode = seller.pincode ?? '';
+
+  const customerAddr = [
+    customer.address_line1,
+    customer.address_line2,
+    customer.city,
+    customer.state,
+    customer.pincode,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  const amountWords = indianAmountInWords(Number(invoice.grand_total));
+  const balance = Number(invoice.grand_total); // no payments tracked yet
+  const sellerCity = seller.city ?? 'Valsad';
 
   return (
     <div className="print-clean min-h-screen bg-neutral-100 print:bg-white">
       <PrintToolbar invoiceId={invoice.id} />
 
-      <div className="mx-auto my-6 max-w-4xl bg-white p-8 shadow print:my-0 print:max-w-none print:shadow-none">
+      <div
+        className="relative mx-auto my-6 max-w-4xl bg-white p-8 text-[12px] text-neutral-900 shadow print:my-0 print:max-w-none print:p-6 print:shadow-none"
+        style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+      >
         {invoice.status === 'draft' ? (
-          <div className="mb-4 rounded border-2 border-dashed border-amber-400 bg-amber-50 p-2 text-center text-sm font-semibold text-amber-800">
+          <div className="mb-3 rounded border-2 border-dashed border-amber-400 bg-amber-50 p-2 text-center text-sm font-semibold text-amber-800">
             {t('draftWatermark')}
           </div>
         ) : null}
 
-        <header className="mb-6 flex items-start justify-between gap-6 border-b border-neutral-900 pb-4">
-          <div>
-            <div className="text-xl font-bold text-neutral-900">{seller.legal_name ?? '—'}</div>
-            <div className="mt-1 text-sm text-neutral-700">
-              {[seller.address_line1, seller.address_line2].filter(Boolean).join(', ')}
-            </div>
-            <div className="text-sm text-neutral-700">
-              {[seller.city, seller.state, seller.pincode].filter(Boolean).join(', ')}
-            </div>
-            <div className="mt-1 text-sm text-neutral-700">
-              {seller.mobile ? `${seller.mobile}` : null}
-              {seller.email ? ` · ${seller.email}` : null}
-            </div>
-            {seller.gstin ? (
-              <div className="mt-1 text-sm">
-                <span className="text-neutral-500">{t('gstinLabel')}: </span>
-                <span className="font-mono">{seller.gstin}</span>
-              </div>
-            ) : null}
-            {seller.pan ? (
-              <div className="text-sm">
-                <span className="text-neutral-500">{t('panLabel')}: </span>
-                <span className="font-mono">{seller.pan}</span>
-              </div>
-            ) : null}
-          </div>
-          <div className="text-right">
-            <div className="text-lg font-bold uppercase tracking-wide text-neutral-900">
-              {showGst ? t('invoiceLabel') : t('billOfSupplyLabel')}
-            </div>
-            <div className="mt-2 font-mono text-base font-bold text-neutral-900">
-              {invoice.invoice_number ?? '—'}
-            </div>
-            <div className="text-sm">
-              <span className="text-neutral-500">{t('dateLabel')}: </span>
-              <span>{fmtDate(invoice.invoice_date, locale)}</span>
-            </div>
-            {invoice.place_of_supply ? (
-              <div className="text-sm">
-                <span className="text-neutral-500">{t('placeOfSupplyLabel')}: </span>
-                <span>{invoice.place_of_supply}</span>
-              </div>
-            ) : null}
-          </div>
-        </header>
+        <div className="mb-1 text-right text-[10px] text-neutral-600">{t('pageLabel')}</div>
 
-        <section className="mb-5">
-          <div className="text-xs uppercase tracking-wide text-neutral-500">Billed to</div>
-          <div className="mt-1 text-sm text-neutral-900">
-            <div className="font-semibold">
-              {customer.business_name ?? customer.full_name ?? '—'}
+        {/* TITLE + ORIGINAL COPY */}
+        <div className="relative border-b-2 border-black pb-2 text-center">
+          <div className="text-2xl font-bold tracking-widest">
+            {isTax ? t('docTaxInvoice') : t('docBillOfSupply')}
+          </div>
+          <div className="absolute right-0 top-0 border border-black px-2 py-0.5 text-[10px] tracking-widest">
+            {t('originalCopy')}
+          </div>
+        </div>
+
+        {/* SELLER BLOCK */}
+        <div className="mt-3 text-center">
+          <div className="text-lg font-bold tracking-wide">{seller.legal_name ?? '—'}</div>
+          <div className="text-xs text-neutral-700">
+            {sellerAddr}
+            {sellerPincode ? `-${sellerPincode}` : ''}
+          </div>
+          <div className="mt-0.5 text-xs text-neutral-700">
+            {seller.mobile ? `${t('mobileLabel')}: +91 ${seller.mobile}` : null}
+            {seller.email ? ` | ${t('emailLabel')}: ${seller.email}` : null}
+          </div>
+          <div className="text-xs text-neutral-700">
+            {seller.gstin ? `${t('gstinLabel')} - ${seller.gstin}` : null}
+            {seller.pan ? ` | ${t('panLabel')} - ${seller.pan}` : null}
+          </div>
+        </div>
+
+        {/* BILLING DETAILS + INVOICE NUMBER */}
+        <div className="mt-3 grid grid-cols-2 border border-black text-xs">
+          <div className="border-r border-black p-2">
+            <div className="text-[10px] uppercase tracking-wide text-neutral-500">
+              {t('billingDetails')}
             </div>
-            {customer.business_name && customer.full_name ? <div>{customer.full_name}</div> : null}
-            <div className="text-neutral-700">
-              {[customer.address_line1, customer.address_line2].filter(Boolean).join(', ')}
+            <div className="font-bold">{customer.business_name ?? customer.full_name ?? '—'}</div>
+            {customer.business_name && customer.full_name ? (
+              <div className="text-neutral-700">{customer.full_name}</div>
+            ) : null}
+            <div className="text-neutral-700">{customerAddr || '—'}</div>
+            <div className="mt-1 text-neutral-700">
+              {customer.gstin ? `${t('gstinLabel')}: ${customer.gstin}` : ''}
+              {customer.gstin && customer.mobile ? ' | ' : ''}
+              {customer.mobile ? `${t('mobileLabel')}: +91 ${customer.mobile}` : ''}
             </div>
-            <div className="text-neutral-700">
-              {[customer.city, customer.state, customer.pincode].filter(Boolean).join(', ')}
-            </div>
-            <div className="text-neutral-700">{customer.mobile}</div>
-            {customer.gstin ? (
-              <div className="mt-1">
-                <span className="text-neutral-500">{t('gstinLabel')}: </span>
-                <span className="font-mono">{customer.gstin}</span>
+            {customer.email ? (
+              <div className="text-neutral-700">
+                {t('emailLabel')}: {customer.email}
               </div>
             ) : null}
           </div>
-        </section>
+          <div className="p-2">
+            <table className="w-full text-xs">
+              <tbody>
+                <tr>
+                  <td className="py-0.5 text-neutral-600">{t('numberLabel')}</td>
+                  <td className="py-0.5 font-mono font-semibold">
+                    : {invoice.invoice_number ?? '—'}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-0.5 text-neutral-600">{t('dateLabel')}</td>
+                  <td className="py-0.5">: {fmtDate(invoice.invoice_date, locale)}</td>
+                </tr>
+                {invoice.place_of_supply ? (
+                  <tr>
+                    <td className="py-0.5 text-neutral-600">{t('placeOfSupplyLabel')}</td>
+                    <td className="py-0.5">: {invoice.place_of_supply}</td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-        <table className="mb-4 w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-y border-neutral-900 bg-neutral-50 text-left">
-              <th className="px-2 py-2">{t('snoLabel')}</th>
-              <th className="px-2 py-2">{t('descriptionLabel')}</th>
-              {showGst ? <th className="px-2 py-2">{t('hsnLabel')}</th> : null}
-              <th className="px-2 py-2 text-right">{t('qtyLabel')}</th>
-              <th className="px-2 py-2 text-right">{t('mrpLabel')}</th>
-              <th className="px-2 py-2 text-right">{t('discountLabel')}</th>
-              <th className="px-2 py-2 text-right">{t('rateLabel')}</th>
-              {showGst ? <th className="px-2 py-2 text-right">{t('gstLabel')}</th> : null}
-              <th className="px-2 py-2 text-right">{t('amountLabel')}</th>
+        {/* LINE ITEMS */}
+        <table className="mt-2 w-full border-collapse border border-black text-xs">
+          <thead className="bg-neutral-100">
+            <tr>
+              <th className="border border-black p-1">{t('snoLabel')}</th>
+              <th className="border border-black p-1 text-left">{t('itemDescriptionLabel')}</th>
+              {showHsn ? <th className="border border-black p-1">{t('hsnLabel')}</th> : null}
+              <th className="border border-black p-1">{t('qtyLabel')}</th>
+              <th className="border border-black p-1">{t('unitLabel')}</th>
+              <th className="border border-black p-1 text-right">{t('listPriceLabel')}</th>
+              <th className="border border-black p-1 text-right">{t('discountLabel')}</th>
+              <th className="border border-black p-1 text-right">{t('actualRateLabel')}</th>
+              {showGst ? (
+                <th className="border border-black p-1 text-right">{t('gstLabel')}</th>
+              ) : null}
+              <th className="border border-black p-1 text-right">{t('amountLabel')}</th>
             </tr>
           </thead>
           <tbody>
             {lines.map((l) => {
-              const mrp = Number(l.rate);
+              const list = Number(l.rate);
               const disc = Number(l.discount_pct);
-              const effectiveRate = Math.round(mrp * (1 - disc / 100) * 100) / 100;
+              const actual = Math.round(list * (1 - disc / 100) * 100) / 100;
               return (
-                <tr key={l.id} className="border-b border-neutral-200 align-top">
-                  <td className="px-2 py-2">{l.line_no}</td>
-                  <td className="px-2 py-2">{l.description}</td>
-                  {showGst ? (
-                    <td className="px-2 py-2 font-mono text-xs">{l.hsn_code ?? ''}</td>
+                <tr key={l.id} className="align-top">
+                  <td className="border border-black p-1 text-center">{l.line_no}</td>
+                  <td className="border border-black p-1">{l.description}</td>
+                  {showHsn ? (
+                    <td className="border border-black p-1 text-center font-mono">
+                      {l.hsn_code ?? ''}
+                    </td>
                   ) : null}
-                  <td className="px-2 py-2 text-right">
-                    {Number(l.qty)} {l.uom}
+                  <td className="border border-black p-1 text-right">{Number(l.qty).toFixed(2)}</td>
+                  <td className="border border-black p-1 text-center">{l.uom}</td>
+                  <td className="border border-black p-1 text-right">{list.toFixed(2)}</td>
+                  <td className="border border-black p-1 text-right">
+                    {disc > 0 ? `${disc} (%)` : 'N.A.'}
                   </td>
-                  <td className="px-2 py-2 text-right">{formatRupees(mrp, locale)}</td>
-                  <td className="px-2 py-2 text-right">{disc}%</td>
-                  <td className="px-2 py-2 text-right">{formatRupees(effectiveRate, locale)}</td>
-                  {showGst ? <td className="px-2 py-2 text-right">{Number(l.gst_pct)}%</td> : null}
-                  <td className="px-2 py-2 text-right font-medium">
-                    {formatRupees(Number(l.line_total), locale)}
+                  <td className="border border-black p-1 text-right">{actual.toFixed(2)}</td>
+                  {showGst ? (
+                    <td className="border border-black p-1 text-right">
+                      {Number(l.gst_pct) > 0 ? `${Number(l.gst_pct)} (%)` : '—'}
+                    </td>
+                  ) : null}
+                  <td className="border border-black p-1 text-right font-semibold">
+                    {Number(l.line_total).toFixed(2)}
                   </td>
                 </tr>
               );
@@ -218,62 +271,93 @@ function PrintView({
           </tbody>
         </table>
 
-        <section className="mb-6 ml-auto max-w-sm text-sm">
-          <Row label={t('subtotalLabel')} value={formatRupees(Number(invoice.subtotal), locale)} />
+        {/* TOTALS */}
+        <div className="ml-auto mt-2 max-w-md text-xs">
           {Number(invoice.discount_total) > 0 ? (
             <Row
-              label="Discount"
-              value={`− ${formatRupees(Number(invoice.discount_total), locale)}`}
+              label={t('discountTotalLabel')}
+              value={`- ${Number(invoice.discount_total).toFixed(2)}`}
             />
           ) : null}
-          {Number(invoice.cgst_total) > 0 ? (
-            <Row label={t('cgstLabel')} value={formatRupees(Number(invoice.cgst_total), locale)} />
+          {showGst && Number(invoice.cgst_total) > 0 ? (
+            <Row label={t('cgstLabel')} value={Number(invoice.cgst_total).toFixed(2)} />
           ) : null}
-          {Number(invoice.sgst_total) > 0 ? (
-            <Row label={t('sgstLabel')} value={formatRupees(Number(invoice.sgst_total), locale)} />
+          {showGst && Number(invoice.sgst_total) > 0 ? (
+            <Row label={t('sgstLabel')} value={Number(invoice.sgst_total).toFixed(2)} />
           ) : null}
-          {Number(invoice.igst_total) > 0 ? (
-            <Row label={t('igstLabel')} value={formatRupees(Number(invoice.igst_total), locale)} />
+          {showGst && Number(invoice.igst_total) > 0 ? (
+            <Row label={t('igstLabel')} value={Number(invoice.igst_total).toFixed(2)} />
           ) : null}
           {Number(invoice.round_off) !== 0 ? (
             <Row
               label={t('roundOffLabel')}
-              value={`${Number(invoice.round_off) > 0 ? '+ ' : '− '}${formatRupees(Math.abs(Number(invoice.round_off)), locale)}`}
+              value={`${Number(invoice.round_off) > 0 ? '+ ' : '− '}${Math.abs(Number(invoice.round_off)).toFixed(2)}`}
             />
           ) : null}
-          <div className="mt-1 flex items-center justify-between border-t-2 border-neutral-900 pt-1 text-base font-bold">
-            <span>{t('grandTotalLabel')}</span>
-            <span>{formatRupees(Number(invoice.grand_total), locale)}</span>
+          <div className="mt-1 flex items-center justify-between border-y-2 border-black py-1 text-sm font-bold">
+            <span>{t('totalLabel')}</span>
+            <span>{Number(invoice.grand_total).toFixed(0)}</span>
           </div>
-        </section>
+          <div className="mt-1 italic text-neutral-700">{amountWords}</div>
+          <div className="mt-2 border-t border-neutral-300 pt-1 text-[11px]">
+            <span className="font-semibold">{t('settledByLabel')}</span> -{' '}
+            {t('invoiceBalanceLabel')}: {formatRupees(balance, locale)}
+          </div>
+        </div>
 
-        {seller.bank_name || seller.bank_account_no || seller.bank_ifsc ? (
-          <section className="mb-4 rounded border border-neutral-300 p-3 text-sm">
-            <div className="mb-1 text-xs uppercase tracking-wide text-neutral-500">
-              {t('bankLabel')}
+        {/* NOTES (per-invoice) */}
+        {invoice.notes ? (
+          <div className="mt-3 border-t border-neutral-300 pt-2 text-xs">
+            <div className="text-[10px] uppercase tracking-wide text-neutral-500">
+              {t('notesLabel')}
             </div>
-            <div>
-              <strong>{seller.bank_name}</strong>
-            </div>
+            <div>{invoice.notes}</div>
+          </div>
+        ) : null}
+
+        {/* TERMS */}
+        <div className="mt-3 border-t border-neutral-300 pt-2 text-[11px]">
+          <div className="font-semibold">{t('termsTitle')}</div>
+          <div className="mb-1 italic">{t('eoe')}</div>
+          {terms ? (
+            <pre className="whitespace-pre-wrap font-serif">{terms}</pre>
+          ) : (
+            <ol className="list-decimal pl-5">
+              <li>{t('defaultTerm1')}</li>
+              <li>{t('defaultTerm2', { company: seller.legal_name ?? t('companyFallback') })}</li>
+              <li>{t('defaultTerm3', { city: sellerCity })}</li>
+            </ol>
+          )}
+        </div>
+
+        {/* FOOTER: bank left / signature right */}
+        <div className="mt-4 grid grid-cols-2 border-t border-neutral-300 pt-2 text-xs">
+          <div>
             {seller.bank_account_no ? (
               <div>
-                {t('accountLabel')}: <span className="font-mono">{seller.bank_account_no}</span>
+                <span className="font-semibold">{t('accountNumberLabel')}:</span>{' '}
+                <span className="font-mono">{seller.bank_account_no}</span>
+              </div>
+            ) : null}
+            {seller.bank_name ? (
+              <div>
+                <span className="font-semibold">{t('bankLabel')}:</span> {seller.bank_name}
               </div>
             ) : null}
             {seller.bank_ifsc ? (
               <div>
-                {t('ifscLabel')}: <span className="font-mono">{seller.bank_ifsc}</span>
+                <span className="font-semibold">{t('ifscLabel')}:</span>{' '}
+                <span className="font-mono">{seller.bank_ifsc}</span>
               </div>
             ) : null}
-          </section>
-        ) : null}
-
-        {invoice.notes ? <div className="mb-3 text-sm">{invoice.notes}</div> : null}
-        {invoice.terms ? (
-          <div className="border-t border-neutral-200 pt-3 text-xs text-neutral-600">
-            {invoice.terms}
           </div>
-        ) : null}
+          <div className="text-right">
+            <div className="mb-10">
+              {t('forLabel')} <strong>{seller.legal_name ?? '—'}</strong>
+            </div>
+            <div className="border-t border-black pt-1">{t('signatoryLabel')}</div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -281,8 +365,8 @@ function PrintView({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-neutral-600">{label}</span>
+    <div className="flex items-center justify-between py-0.5">
+      <span className="text-neutral-700">{label}</span>
       <span>{value}</span>
     </div>
   );
