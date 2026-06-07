@@ -110,7 +110,11 @@
     },
     "purchase": {
       "title": "પરચેઝ ડિપાર્ટમેન્ટ",
-      "hint": "કાચો માલ, સપ્લાયર અને પરચેઝ ઑર્ડર."
+      "hint": "કાચો માલ, સપ્લાયર અને પરચેઝ ઑર્ડર.",
+      "suppliersTitle": "સપ્લાયર",
+      "suppliersHint": "વેન્ડર માસ્ટર — GSTIN, સરનામું, મોબાઇલ.",
+      "itemsTitle": "આઇટમ્સ",
+      "itemsHint": "કાચા માલ / પરચેઝ આઇટમ માસ્ટર — ડિફૉલ્ટ દર અને GST સાથે."
     },
     "accounting": {
       "title": "ફાઇનાન્શિયલ એકાઉન્ટિંગ",
@@ -412,6 +416,75 @@
         "companyMissing": "પ્રથમ ઇન્વોઇસ ઇશ્યૂ કરતા પહેલા કંપની ડિટેલ ભરો.",
         "linesRequiredIssue": "લાઇન વગર ઇન્વોઇસ ઇશ્યૂ થઈ શકતો નથી.",
         "customerMissing": "ઇશ્યૂ કરતા પહેલા ગ્રાહક પસંદ કરો."
+      }
+    }
+  },
+  "purchases": {
+    "suppliers": {
+      "title": "સપ્લાયર",
+      "subtitle": "વેન્ડર માસ્ટર. પતંગ લાઇન ઇનપુટ ક્રેડિટ માટે GSTIN અહીં રાખો.",
+      "newButton": "નવો સપ્લાયર",
+      "searchPlaceholder": "નામ, બિઝનેસ, મોબાઇલ કે GSTIN",
+      "empty": "હજુ કોઈ સપ્લાયર નથી.",
+      "noMatches": "શોધ સાથે મેળ ખાતો કોઈ સપ્લાયર નથી.",
+      "form": {
+        "createTitle": "નવો સપ્લાયર",
+        "editTitle": "સપ્લાયરમાં ફેરફાર કરો",
+        "fullNameLabel": "સંપર્કનું નામ",
+        "businessNameLabel": "બિઝનેસનું નામ (વૈકલ્પિક)",
+        "mobileLabel": "મોબાઇલ નંબર",
+        "mobilePlaceholder": "10 અંકનો મોબાઇલ નંબર",
+        "emailLabel": "ઇમેઇલ (વૈકલ્પિક)",
+        "gstinLabel": "GSTIN (વૈકલ્પિક)",
+        "gstinPlaceholder": "15 અક્ષરનો GSTIN",
+        "panLabel": "PAN (વૈકલ્પિક)",
+        "panPlaceholder": "10 અક્ષરનો PAN",
+        "addressLine1Label": "સરનામું લાઇન 1",
+        "addressLine2Label": "સરનામું લાઇન 2",
+        "cityLabel": "શહેર",
+        "stateLabel": "રાજ્ય",
+        "pincodeLabel": "પિનકોડ",
+        "pincodePlaceholder": "6 અંકનો પિનકોડ",
+        "notesLabel": "નોંધ (વૈકલ્પિક)",
+        "isActiveLabel": "સક્રિય"
+      },
+      "errors": {
+        "fullNameRequired": "સંપર્કનું નામ જરૂરી છે",
+        "invalidMobile": "10 અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો",
+        "invalidEmail": "માન્ય ઇમેઇલ સરનામું દાખલ કરો",
+        "invalidGstin": "GSTIN 15 અક્ષરનો હોવો જોઈએ",
+        "invalidPan": "PAN 10 અક્ષરનો હોવો જોઈએ",
+        "invalidPincode": "પિનકોડ 6 અંકનો હોવો જોઈએ",
+        "mobileTaken": "આ મોબાઇલ પહેલેથી બીજા સક્રિય સપ્લાયર સાથે જોડાયેલ છે.",
+        "gstinTaken": "આ GSTIN પહેલેથી બીજા સક્રિય સપ્લાયર સાથે જોડાયેલ છે."
+      }
+    },
+    "items": {
+      "title": "પરચેઝ આઇટમ્સ",
+      "subtitle": "કાચા માલ અને કન્ઝ્યુમેબલ્સ. ડિફૉલ્ટ દર અને GST% નવા પરચેઝ બિલ માં આપમેળે ભરાશે.",
+      "newButton": "નવી આઇટમ",
+      "searchPlaceholder": "કોડ કે નામ",
+      "empty": "હજુ કોઈ આઇટમ નથી.",
+      "noMatches": "શોધ સાથે મેળ ખાતી કોઈ આઇટમ નથી.",
+      "form": {
+        "createTitle": "નવી આઇટમ",
+        "editTitle": "આઇટમમાં ફેરફાર કરો",
+        "itemCodeLabel": "આઇટમ કોડ",
+        "itemCodePlaceholder": "દા.ત. MANJHA-09",
+        "nameLabel": "નામ",
+        "nameGuLabel": "નામ (ગુજરાતી, વૈકલ્પિક)",
+        "uomLabel": "એકમ (દા.ત. pcs, kg, meter)",
+        "hsnLabel": "HSN કોડ (વૈકલ્પિક)",
+        "defaultRateLabel": "ડિફૉલ્ટ દર (₹)",
+        "defaultGstLabel": "ડિફૉલ્ટ GST %",
+        "notesLabel": "નોંધ (વૈકલ્પિક)",
+        "isActiveLabel": "સક્રિય"
+      },
+      "errors": {
+        "itemCodeRequired": "આઇટમ કોડ જરૂરી છે",
+        "nameRequired": "નામ જરૂરી છે",
+        "codeTaken": "આ કોડ પહેલેથી બીજી સક્રિય આઇટમ સાથે જોડાયેલ છે.",
+        "invalidGst": "GST % 0–100 વચ્ચે હોવો જોઈએ"
       }
     }
   },

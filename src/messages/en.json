@@ -110,7 +110,11 @@
     },
     "purchase": {
       "title": "Purchase Department",
-      "hint": "Raw material, suppliers and purchase orders."
+      "hint": "Raw material, suppliers and purchase orders.",
+      "suppliersTitle": "Suppliers",
+      "suppliersHint": "Vendor master with GSTIN, address and mobile.",
+      "itemsTitle": "Items",
+      "itemsHint": "Raw-material / purchase item master with default rate and GST."
     },
     "accounting": {
       "title": "Financial Accounting",
@@ -412,6 +416,75 @@
         "companyMissing": "Set the company info before issuing the first invoice.",
         "linesRequiredIssue": "Cannot issue an invoice with no lines.",
         "customerMissing": "Pick a customer before issuing."
+      }
+    }
+  },
+  "purchases": {
+    "suppliers": {
+      "title": "Suppliers",
+      "subtitle": "Vendor master. Keep GSTIN here for kite-line input credit.",
+      "newButton": "New supplier",
+      "searchPlaceholder": "Name, business, mobile or GSTIN",
+      "empty": "No suppliers yet.",
+      "noMatches": "No suppliers match the search.",
+      "form": {
+        "createTitle": "New supplier",
+        "editTitle": "Edit supplier",
+        "fullNameLabel": "Contact name",
+        "businessNameLabel": "Business name (optional)",
+        "mobileLabel": "Mobile number",
+        "mobilePlaceholder": "10-digit mobile number",
+        "emailLabel": "Email (optional)",
+        "gstinLabel": "GSTIN (optional)",
+        "gstinPlaceholder": "15-character GSTIN",
+        "panLabel": "PAN (optional)",
+        "panPlaceholder": "10-character PAN",
+        "addressLine1Label": "Address line 1",
+        "addressLine2Label": "Address line 2",
+        "cityLabel": "City",
+        "stateLabel": "State",
+        "pincodeLabel": "Pincode",
+        "pincodePlaceholder": "6-digit pincode",
+        "notesLabel": "Notes (optional)",
+        "isActiveLabel": "Active"
+      },
+      "errors": {
+        "fullNameRequired": "Contact name is required",
+        "invalidMobile": "Enter a 10-digit Indian mobile number",
+        "invalidEmail": "Enter a valid email address",
+        "invalidGstin": "GSTIN must be 15 characters (e.g. 24ABCDE1234F1Z5)",
+        "invalidPan": "PAN must be 10 characters (e.g. ABCDE1234F)",
+        "invalidPincode": "Pincode must be 6 digits",
+        "mobileTaken": "Another active supplier uses this mobile number.",
+        "gstinTaken": "Another active supplier uses this GSTIN."
+      }
+    },
+    "items": {
+      "title": "Purchase items",
+      "subtitle": "Raw materials and consumables you buy. Default rate and GST% auto-fill on a new purchase bill.",
+      "newButton": "New item",
+      "searchPlaceholder": "Code or name",
+      "empty": "No items yet.",
+      "noMatches": "No items match the search.",
+      "form": {
+        "createTitle": "New item",
+        "editTitle": "Edit item",
+        "itemCodeLabel": "Item code",
+        "itemCodePlaceholder": "e.g. MANJHA-09",
+        "nameLabel": "Name",
+        "nameGuLabel": "Name (Gujarati, optional)",
+        "uomLabel": "Unit (e.g. pcs, kg, meter)",
+        "hsnLabel": "HSN code (optional)",
+        "defaultRateLabel": "Default rate (₹)",
+        "defaultGstLabel": "Default GST %",
+        "notesLabel": "Notes (optional)",
+        "isActiveLabel": "Active"
+      },
+      "errors": {
+        "itemCodeRequired": "Item code is required",
+        "nameRequired": "Name is required",
+        "codeTaken": "Another active item uses this code.",
+        "invalidGst": "GST % must be 0–100"
       }
     }
   },
