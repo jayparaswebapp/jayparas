@@ -807,9 +807,13 @@
       "back": "પાછા",
       "printNow": "હમણાં પ્રિન્ટ કરો",
       "empty": "પ્રિન્ટ યોગ્ય કોઈ SKU નથી.",
-      "setupTitle": "પહેલી વાર છો? પ્રિન્ટર એક વાર સેટ કરી લો.",
-      "setupBody": "જ્યાં સુધી પ્રિન્ટર ડ્રાઇવરમાં રોલની સાઇઝ ન હોય ત્યાં સુધી બ્રાઉઝર પેજ સાઇઝ સ્વીકારતું નથી. પ્રિન્ટ ડાયલોગમાં તમારું થર્મલ પ્રિન્ટર પસંદ કરો, “More settings” ખોલો, અને Paper size ને 57 × 15 mm કસ્ટમ સેટ કરો. Margins → None, Scale → Default (100%). પ્રીસેટ તરીકે સેવ કરી લો જેથી આ ફરી ન કરવું પડે.",
-      "setupHint": "જો હજુ પણ બ્લેન્ક સ્ટિકર આવે, તો Windows/Mac ની પ્રિન્ટર સેટિંગ્સ (બ્રાઉઝરથી બહાર) હજુ A4 પર સેટ છે — ત્યાં પણ સાઇઝ બદલવી પડશે."
+      "setupTitle": "TSC TE244: એક વાર આ સેટિંગ કરી લો, પછી પ્રિન્ટ બરાબર થશે.",
+      "setupBody": "તમારા TSC TE244 ડ્રાઇવરમાં ડિફોલ્ટ પેપર A4 છે, એટલે Chrome એ A4 પર પ્રિન્ટ મોકલે છે અને પ્રિન્ટર ~8 ખાલી સ્ટિકર બહાર કાઢે છે. ડ્રાઇવરમાં એક વાર 57 × 15 mm નો કસ્ટમ સ્ટૉક ઉમેરો:",
+      "setupStep1": "1. Windows: Settings → Printers & scanners → TSC TE244 → Printer preferences (અથવા right-click → Printing preferences).",
+      "setupStep2": "2. Page Setup ટૅબ → Stock → New… નામ “JaiParas 57x15”, Width 57.0 mm, Height 15.0 mm. OK પછી Apply.",
+      "setupStep3": "3. Stock dropdown → “JaiParas 57x15” ને default તરીકે પસંદ કરો. Apply, OK.",
+      "setupStep4": "4. પાછા આ પેજમાં Print now પર ક્લિક કરો. Chrome ના ડાયલોગમાં: Destination → TSC TE244, Paper size → JaiParas 57x15, Margins → None, Scale → Default. પ્રીસેટ તરીકે સેવ કરી લો.",
+      "setupHint": "ત્યાર પછી — એક ક્લિક = એક રો સ્ટિકર. કોઈ ખાલી સ્ટિકર નહીં."
     },
     "label": {
       "brand": "જય પારસ",

@@ -92,7 +92,13 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
       <div className="no-print mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
         <div className="font-semibold">{t('setupTitle')}</div>
         <p className="mt-1">{t('setupBody')}</p>
-        <p className="mt-1 text-xs text-amber-800">{t('setupHint')}</p>
+        <ol className="mt-2 space-y-1 pl-1">
+          <li>{t('setupStep1')}</li>
+          <li>{t('setupStep2')}</li>
+          <li>{t('setupStep3')}</li>
+          <li>{t('setupStep4')}</li>
+        </ol>
+        <p className="mt-2 text-xs text-amber-800">{t('setupHint')}</p>
       </div>
 
       {/*
