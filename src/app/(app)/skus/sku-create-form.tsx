@@ -52,15 +52,17 @@ export function SkuCreateForm() {
   const isSingle = packType === 'single';
 
   let previewCode = '';
-  if (isSingle && designNo && packSize !== null) {
+  if (isSingle && designName && designNo && packSize !== null) {
     previewCode = generateSkuCode({
       pack_type: 'single',
+      design_name: designName,
       design_no: designNo,
       pack_size: packSize,
     });
-  } else if (isMix && mixCode && packSize !== null) {
+  } else if (isMix && designName && mixCode && packSize !== null) {
     previewCode = generateSkuCode({
       pack_type: 'mix',
+      design_name: designName,
       mix_code: mixCode,
       pack_size: packSize,
     });
@@ -122,7 +124,7 @@ export function SkuCreateForm() {
                     : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
                 ].join(' ')}
               >
-                {n}
+                {n === 12 ? '1 Doz' : n}
               </button>
             );
           })}
@@ -161,7 +163,7 @@ export function SkuCreateForm() {
                       : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
                   ].join(' ')}
                 >
-                  {n}
+                  {n === 12 ? '1 Doz' : n}
                 </button>
               );
             })}
