@@ -31,7 +31,10 @@ export function SkuLabel({
         height: DEFAULT_LABEL_GRID.labelHeight,
         display: 'flex',
         flexDirection: 'column',
-        padding: '0.5mm',
+        // Extra right padding pulls the QR ~1 mm in from the cell's right
+        // edge so the rightmost column of QR modules can't be trimmed by
+        // sub-pixel rendering at the sticker boundary.
+        padding: '0.5mm 1.5mm 0.5mm 0.5mm',
         boxSizing: 'border-box',
         background: 'white',
         color: '#000',
@@ -98,7 +101,7 @@ export function SkuLabel({
             flexShrink: 0,
           }}
         >
-          <QrCode value={sku.sku_code} size={LABEL_FONT.qrSize} margin={0} />
+          <QrCode value={sku.sku_code} size={LABEL_FONT.qrSize} margin={2} />
         </div>
       </div>
     </div>
