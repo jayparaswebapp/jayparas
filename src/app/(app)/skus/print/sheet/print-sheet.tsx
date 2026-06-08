@@ -83,6 +83,19 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
       </div>
 
       {/*
+       * Printer-setup hint. CSS @page is only a hint; if the OS-level
+       * driver paper size is still A4, the thermal printer will feed A4
+       * worth of stickers regardless of what the browser says. The most
+       * common reason staff see "8 blanks for every 1 printed" lives in
+       * the printer dialog, not the code — hence this in-app reminder.
+       */}
+      <div className="no-print mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <div className="font-semibold">{t('setupTitle')}</div>
+        <p className="mt-1">{t('setupBody')}</p>
+        <p className="mt-1 text-xs text-amber-800">{t('setupHint')}</p>
+      </div>
+
+      {/*
        * On-screen preview: stack rows vertically with a faint separator so
        * you can scroll the queue. In print, each .print-row becomes its
        * own page (one row of stickers per page).

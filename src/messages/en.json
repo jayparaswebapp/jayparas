@@ -806,7 +806,10 @@
       "perSheet": "{count} per sheet",
       "back": "Back",
       "printNow": "Print now",
-      "empty": "No printable SKUs."
+      "empty": "No printable SKUs.",
+      "setupTitle": "First time? Set up your printer once.",
+      "setupBody": "Browsers ignore page size unless the printer driver knows about your roll. In the print dialog, pick your thermal printer, open “More settings”, and set Paper size to a custom 57 × 15 mm. Set Margins to None and Scale to Default (100%). Save it as a preset so you only do this once.",
+      "setupHint": "If you still see blank stickers, your Windows/Mac printer settings (outside the browser) are still set to A4 — fix the paper size there too."
     },
     "label": {
       "brand": "Jai Paras",
