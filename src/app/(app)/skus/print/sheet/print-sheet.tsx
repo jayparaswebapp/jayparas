@@ -12,9 +12,9 @@ export interface SheetItem {
 }
 
 /**
- * Chunks the flat label list into rows of `columns` items. Padding the
- * trailing row is unnecessary on a continuous roll — the printer will simply
- * stop after the last label.
+ * Chunks the flat label list into rows of `columns`. The last row may have
+ * only one label; the right slot is left blank (one physical sticker is
+ * wasted, but the user wanted exact-count printing so this is intentional).
  */
 function chunkRows<T>(items: T[], columns: number): T[][] {
   const rows: T[][] = [];
@@ -30,17 +30,34 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
 
   return (
     <div className="print-sheet-page">
-      {/* Page-scoped print CSS, plain <style>. Lives inline so the sheet is
-          self-contained and we can reset all parent layout chrome (Header +
-          SubNav, both rendered as <header>/<nav>) when the user hits Print. */}
+      {/*
+       * Each @page is exactly one row of stickers (57 × 15 mm). A forced
+       * page break after every .print-row makes the browser send one page
+       * per row to the printer, and the printer's gap sensor advances the
+       * 3 mm row gap automatically. Without this, the browser was using an
+       * implicit A4 page height and the thermal printer obediently fed
+       * ~A4-worth of stickers per print job → 8 blanks for every 1 used.
+       */}
       <style>{`
-        @page { size: ${DEFAULT_LABEL_GRID.pageWidth} auto; margin: 0; }
+        @page {
+          size: ${DEFAULT_LABEL_GRID.pageWidth} ${DEFAULT_LABEL_GRID.pageHeight};
+          margin: 0;
+        }
         @media print {
           html, body { margin: 0; padding: 0; background: white; }
           header, nav, .no-print { display: none !important; }
           main { max-width: none !important; padding: 0 !important; margin: 0 !important; }
           .print-sheet-root { margin: 0 !important; padding: 0 !important; border: 0 !important; }
-          .print-row { page-break-inside: avoid; break-inside: avoid; }
+          .print-row {
+            page-break-after: always;
+            break-after: page;
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          .print-row:last-child {
+            page-break-after: auto;
+            break-after: auto;
+          }
         }
       `}</style>
 
@@ -48,7 +65,7 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
       <div className="no-print sticky top-0 z-10 -mx-4 mb-4 border-b border-neutral-200 bg-white px-4 py-3">
         <div className="flex items-center justify-between gap-3">
           <div className="text-sm text-neutral-700">
-            {t('sheetTitle')} · {items.length} labels
+            {t('sheetTitle')} · {items.length} {items.length === 1 ? 'label' : 'labels'}
           </div>
           <div className="flex items-center gap-2">
             <Link href="/skus/print" className="btn-ghost border border-neutral-300 text-sm">
@@ -65,7 +82,11 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
         </div>
       </div>
 
-      {/* The actual label sheet. Same DOM used for both screen preview and print. */}
+      {/*
+       * On-screen preview: stack rows vertically with a faint separator so
+       * you can scroll the queue. In print, each .print-row becomes its
+       * own page (one row of stickers per page).
+       */}
       <div
         className="print-sheet-root mx-auto rounded-md border border-dashed border-neutral-300 bg-white p-2 print:m-0 print:rounded-none print:border-0 print:p-0"
         style={{ width: DEFAULT_LABEL_GRID.pageWidth }}

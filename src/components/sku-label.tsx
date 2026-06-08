@@ -3,15 +3,15 @@ import { DEFAULT_LABEL_GRID, LABEL_FONT } from '@/lib/skus/label-grid';
 import { labelItemName, labelRate, labelUnit, type SkuLabelInput } from '@/lib/skus/label';
 
 /**
- * One physical label cell, 25 × 15 mm. Used identically on the SKU detail
- * page (single label preview), the single-print page (one row = 2 copies),
- * and the bulk sheet (rows of 2-up labels).
+ * One physical label cell, sized from DEFAULT_LABEL_GRID. Used identically
+ * on the SKU detail page (single label preview), the single-print path
+ * (one sticker fed), and the bulk sheet (one sticker per @page).
  *
  * Layout: three text rows on the left (item name / rate / unit) and a
- * square QR on the right. Font sizes locked in `LABEL_FONT` (Variant C
- * picked by the user). Borders are off by default for print (the sticker
- * cell on the roll is the boundary); we render a light border on-screen so
- * the preview is visible against a white background.
+ * square QR on the right. Font sizes locked in `LABEL_FONT`. Borders are
+ * off by default for print (the sticker cell on the roll is the boundary);
+ * we render a light border on-screen so the preview is visible against a
+ * white background.
  */
 export function SkuLabel({
   sku,
