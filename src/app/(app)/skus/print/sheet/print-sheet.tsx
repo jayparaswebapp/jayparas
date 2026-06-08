@@ -44,10 +44,25 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
           margin: 0;
         }
         @media print {
-          html, body { margin: 0; padding: 0; background: white; }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            min-height: 0 !important;
+            height: auto !important;
+          }
+          body * { visibility: hidden; }
+          .print-sheet-root, .print-sheet-root * { visibility: visible; }
+          .print-sheet-root {
+            position: absolute;
+            inset: 0;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: white !important;
+          }
           header, nav, .no-print { display: none !important; }
           main { max-width: none !important; padding: 0 !important; margin: 0 !important; }
-          .print-sheet-root { margin: 0 !important; padding: 0 !important; border: 0 !important; }
           .print-row {
             page-break-after: always;
             break-after: page;
