@@ -36,7 +36,7 @@ function mmValue(css: string): number {
  * only paginate what's in the iframe document, so the sheet count matches
  * the row count exactly.
  */
-function printIsolated(rowsHtml: string, pageWidth: string, rowPitchMm: number) {
+function printIsolated(rowsHtml: string, pageWidth: string, rowPitchMm: number, marginX: string) {
   const iframe = document.createElement('iframe');
   iframe.setAttribute('aria-hidden', 'true');
   iframe.style.cssText =
@@ -49,6 +49,10 @@ function printIsolated(rowsHtml: string, pageWidth: string, rowPitchMm: number) 
     return;
   }
 
+  // Side padding lives on <body> inside the iframe — not on the React
+  // wrapper — because we copy root.innerHTML, which excludes the wrapper.
+  // Without this, every row was rendered flush against x=0 of the 57mm
+  // page, shoving the left cell 2mm onto the carrier strip.
   doc.open();
   doc.write(`<!doctype html>
 <html>
@@ -56,7 +60,8 @@ function printIsolated(rowsHtml: string, pageWidth: string, rowPitchMm: number) 
 <meta charset="utf-8" />
 <style>
   @page { size: ${pageWidth} ${rowPitchMm}mm; margin: 0; }
-  html, body { margin: 0; padding: 0; background: white; width: ${pageWidth}; }
+  html { margin: 0; padding: 0; background: white; }
+  body { margin: 0; padding: 0 ${marginX}; background: white; width: ${pageWidth}; box-sizing: border-box; }
   .print-row { display: flex; page-break-after: always; break-after: page; page-break-inside: avoid; break-inside: avoid; }
   .print-row:last-child { page-break-after: auto; break-after: auto; }
 </style>
@@ -98,7 +103,12 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
   const handlePrint = () => {
     const root = printRootRef.current;
     if (!root) return;
-    printIsolated(root.innerHTML, DEFAULT_LABEL_GRID.pageWidth, rowPitchMm);
+    printIsolated(
+      root.innerHTML,
+      DEFAULT_LABEL_GRID.pageWidth,
+      rowPitchMm,
+      DEFAULT_LABEL_GRID.marginX,
+    );
   };
 
   return (
