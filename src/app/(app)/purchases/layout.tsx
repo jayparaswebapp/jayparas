@@ -10,6 +10,7 @@ export default function PurchasesLayout({ children }: { children: ReactNode }) {
       <Header />
       <SubNav
         items={[
+          { href: '/purchases/bills', label: t('billsTitle') },
           { href: '/purchases/suppliers', label: t('suppliersTitle') },
           { href: '/purchases/items', label: t('itemsTitle') },
         ]}

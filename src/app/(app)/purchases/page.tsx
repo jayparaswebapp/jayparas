@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
 const SECTIONS = [
+  { key: 'bills', href: '/purchases/bills' },
   { key: 'suppliers', href: '/purchases/suppliers' },
   { key: 'items', href: '/purchases/items' },
 ] as const;
