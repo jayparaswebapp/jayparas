@@ -54,7 +54,7 @@ export function SkuLabel({
       <div
         style={{
           display: 'flex',
-          alignItems: 'flex-end',
+          alignItems: 'center',
           justifyContent: 'space-between',
           flex: 1,
           minHeight: 0,
@@ -65,10 +65,11 @@ export function SkuLabel({
           style={{
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'flex-end',
+            justifyContent: 'flex-start',
             flex: 1,
             minWidth: 0,
             paddingRight: '0.5mm',
+            gap: '0.3mm',
           }}
         >
           <div

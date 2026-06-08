@@ -88,21 +88,38 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
   // Mirror the React-rendered rows into the visible iframe whenever items
   // change. The iframe is the SAME document that will print, so what staff
   // see on screen is byte-for-byte what the printer receives.
+  //
+  // QR codes inside <SkuLabel> hydrate asynchronously (the qrcode lib
+  // returns a Promise, and the component injects the SVG via
+  // dangerouslySetInnerHTML after a useEffect tick). A MutationObserver on
+  // the hidden source div re-writes the iframe whenever the source DOM
+  // changes, so the iframe converges to the final state with all QRs in
+  // place — instead of capturing an empty snapshot taken before the
+  // QR effects ran.
   useEffect(() => {
     const source = sourceRef.current;
     const iframe = previewIframeRef.current;
     if (!source || !iframe) return;
-    const doc = iframe.contentDocument;
-    if (!doc) return;
-    const html = buildPrintHtml(
-      source.innerHTML,
-      DEFAULT_LABEL_GRID.pageWidth,
-      rowPitchMm,
-      DEFAULT_LABEL_GRID.marginX,
-    );
-    doc.open();
-    doc.write(html);
-    doc.close();
+
+    const refreshIframe = () => {
+      const doc = iframe.contentDocument;
+      if (!doc) return;
+      const html = buildPrintHtml(
+        source.innerHTML,
+        DEFAULT_LABEL_GRID.pageWidth,
+        rowPitchMm,
+        DEFAULT_LABEL_GRID.marginX,
+      );
+      doc.open();
+      doc.write(html);
+      doc.close();
+    };
+
+    refreshIframe();
+
+    const obs = new MutationObserver(refreshIframe);
+    obs.observe(source, { childList: true, subtree: true });
+    return () => obs.disconnect();
   }, [items, rowPitchMm]);
 
   const handlePrint = () => {
