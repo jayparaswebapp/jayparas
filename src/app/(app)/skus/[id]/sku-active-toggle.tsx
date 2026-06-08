@@ -4,7 +4,6 @@ import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { ServerError, SubmitButton } from '@/components/form-status';
-import { AuditReasonField } from '@/components/audit-reason-field';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { setSkuActiveAction } from '../actions';
 
@@ -37,7 +36,6 @@ export function SkuActiveToggle({ id, isActive }: { id: string; isActive: boolea
       <p className="text-sm text-neutral-700">
         {isActive ? t('deactivateConfirm') : t('reactivateConfirm')}
       </p>
-      <AuditReasonField />
       {state && state.ok === false ? <ServerError messageKey={state.messageKey} /> : null}
       <div className="flex items-center gap-2">
         <SubmitButton

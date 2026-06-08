@@ -8,7 +8,7 @@ import { LeadLadyForm, type LocationOption } from '../lead-lady-form';
 export const dynamic = 'force-dynamic';
 
 export default async function NewLeadLadyPage() {
-  const user = await requireRole(['super_admin', 'supervisor']);
+  await requireRole(['super_admin', 'supervisor']);
   const locale = getServerLocale();
   const supabase = createClient();
 
@@ -24,21 +24,15 @@ export default async function NewLeadLadyPage() {
     label: pickLocalised(locale, l.name_en, l.name_gu),
   }));
 
-  return <NewView locations={locations} isSuperAdmin={user.role === 'super_admin'} />;
+  return <NewView locations={locations} />;
 }
 
-function NewView({
-  locations,
-  isSuperAdmin,
-}: {
-  locations: LocationOption[];
-  isSuperAdmin: boolean;
-}) {
+function NewView({ locations }: { locations: LocationOption[] }) {
   const t = useTranslations('masterData.leadLadies.form');
   return (
     <>
       <PageHeader title={t('createTitle')} />
-      <LeadLadyForm initial={null} locations={locations} isSuperAdmin={isSuperAdmin} />
+      <LeadLadyForm initial={null} locations={locations} />
     </>
   );
 }

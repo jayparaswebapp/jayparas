@@ -69,7 +69,6 @@ export default async function SkuDetailPage({
   const photoUrl = getSkuPhotoPublicUrl(supabase, sku.photo_path);
   const canEdit = user.role === 'super_admin' || user.role === 'supervisor';
   const canToggleActive = user.role === 'super_admin';
-  const isSuperAdmin = user.role === 'super_admin';
 
   return (
     <SkuDetailView
@@ -77,7 +76,6 @@ export default async function SkuDetailPage({
       photoUrl={photoUrl}
       canEdit={canEdit}
       canToggleActive={canToggleActive}
-      isSuperAdmin={isSuperAdmin}
       justCreated={searchParams.created === '1'}
       locale={locale}
     />
@@ -89,7 +87,6 @@ function SkuDetailView({
   photoUrl,
   canEdit,
   canToggleActive,
-  isSuperAdmin,
   justCreated,
   locale,
 }: {
@@ -97,7 +94,6 @@ function SkuDetailView({
   photoUrl: string | null;
   canEdit: boolean;
   canToggleActive: boolean;
-  isSuperAdmin: boolean;
   justCreated: boolean;
   locale: 'gu' | 'en';
 }) {
@@ -186,7 +182,6 @@ function SkuDetailView({
               photo_path: sku.photo_path,
             }}
             photoUrl={photoUrl}
-            isSuperAdmin={isSuperAdmin}
           />
         </div>
       ) : null}

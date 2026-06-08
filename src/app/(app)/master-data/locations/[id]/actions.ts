@@ -13,7 +13,6 @@ const Schema = z.object({
   name_en: z.string().trim().min(1, 'masterData.locations.errors.nameEnRequired'),
   name_gu: z.string().trim().min(1, 'masterData.locations.errors.nameGuRequired'),
   is_active: z.coerce.boolean(),
-  reason: z.string().trim().min(1, 'common.errors.reasonRequired'),
 });
 
 export async function updateLocationAction(
@@ -27,7 +26,6 @@ export async function updateLocationAction(
     name_en: formData.get('name_en'),
     name_gu: formData.get('name_gu'),
     is_active: formData.get('is_active') === 'on',
-    reason: formData.get('reason'),
   });
 
   if (!parsed.success) {
@@ -43,7 +41,7 @@ export async function updateLocationAction(
     p_name_en: parsed.data.name_en,
     p_name_gu: parsed.data.name_gu,
     p_is_active: parsed.data.is_active,
-    p_reason: parsed.data.reason,
+    p_reason: '',
   });
 
   if (error) {

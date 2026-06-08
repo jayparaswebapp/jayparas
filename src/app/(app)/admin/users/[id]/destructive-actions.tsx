@@ -4,7 +4,6 @@ import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { ServerError, SubmitButton } from '@/components/form-status';
-import { AuditReasonField } from '@/components/audit-reason-field';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { restoreAppUserAction, softDeleteAppUserAction } from '../actions';
 
@@ -39,7 +38,6 @@ export function DestructiveActions({ userId, isDeleted }: { userId: string; isDe
       <p className="text-sm text-neutral-700">
         {isDeleted ? tCommon('confirm.restoreBody') : tCommon('confirm.deactivateUserBody')}
       </p>
-      <AuditReasonField />
       {state && state.ok === false ? <ServerError messageKey={state.messageKey} /> : null}
       <div className="flex items-center gap-2">
         <SubmitButton

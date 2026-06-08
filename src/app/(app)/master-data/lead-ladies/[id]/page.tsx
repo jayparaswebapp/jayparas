@@ -10,7 +10,7 @@ import { DestructiveActions } from './destructive-actions';
 export const dynamic = 'force-dynamic';
 
 export default async function EditLeadLadyPage({ params }: { params: { id: string } }) {
-  const user = await requireRole(['super_admin', 'supervisor']);
+  await requireRole(['super_admin', 'supervisor']);
   const locale = getServerLocale();
   const supabase = createClient();
 
@@ -45,26 +45,17 @@ export default async function EditLeadLadyPage({ params }: { params: { id: strin
     ),
   };
 
-  return (
-    <EditView
-      initial={initial}
-      isDeleted={!!row.deleted_at}
-      locations={locations}
-      isSuperAdmin={user.role === 'super_admin'}
-    />
-  );
+  return <EditView initial={initial} isDeleted={!!row.deleted_at} locations={locations} />;
 }
 
 function EditView({
   initial,
   isDeleted,
   locations,
-  isSuperAdmin,
 }: {
   initial: LeadLadyFormValues;
   isDeleted: boolean;
   locations: LocationOption[];
-  isSuperAdmin: boolean;
 }) {
   const t = useTranslations('masterData.leadLadies.form');
   return (
@@ -74,7 +65,7 @@ function EditView({
         <DestructiveActions leadLadyId={initial.id!} isDeleted />
       ) : (
         <>
-          <LeadLadyForm initial={initial} locations={locations} isSuperAdmin={isSuperAdmin} />
+          <LeadLadyForm initial={initial} locations={locations} />
           <div className="mt-6 border-t border-neutral-200 pt-4">
             <DestructiveActions leadLadyId={initial.id!} isDeleted={false} />
           </div>

@@ -128,22 +128,19 @@ const UpdateSchema = z.object({
   design_name: z.string().trim().min(1, 'skus.errors.designNameRequired'),
   price: z.coerce.number().min(0, 'skus.errors.priceRequired'),
   photo_path: z.string().optional(),
-  reason: z.string().trim().optional(),
 });
 
 export async function updateSkuAction(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  const user = await requireRole(['super_admin', 'supervisor']);
-  const isSuperAdmin = user.role === 'super_admin';
+  await requireRole(['super_admin', 'supervisor']);
 
   const parsed = UpdateSchema.safeParse({
     id: formData.get('id'),
     design_name: formData.get('design_name'),
     price: formData.get('price'),
     photo_path: formData.get('photo_path'),
-    reason: formData.get('reason'),
   });
 
   if (!parsed.success) {
@@ -153,17 +150,13 @@ export async function updateSkuAction(
     };
   }
 
-  if (isSuperAdmin && (!parsed.data.reason || parsed.data.reason.length === 0)) {
-    return { ok: false, messageKey: 'common.errors.reasonRequired' };
-  }
-
   const supabase = createClient();
   const { error } = await supabase.rpc('update_sku', {
     p_id: parsed.data.id,
     p_design_name: parsed.data.design_name,
     p_price: parsed.data.price,
     p_photo_path: parsed.data.photo_path ?? '',
-    p_reason: parsed.data.reason ?? '',
+    p_reason: '',
   });
 
   if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
@@ -176,7 +169,6 @@ export async function updateSkuAction(
 const ActiveSchema = z.object({
   id: z.string().uuid(),
   is_active: z.enum(['true', 'false']),
-  reason: z.string().trim().min(1, 'common.errors.reasonRequired'),
 });
 
 export async function setSkuActiveAction(
@@ -187,7 +179,6 @@ export async function setSkuActiveAction(
   const parsed = ActiveSchema.safeParse({
     id: formData.get('id'),
     is_active: formData.get('is_active'),
-    reason: formData.get('reason'),
   });
   if (!parsed.success) {
     return {
@@ -200,7 +191,7 @@ export async function setSkuActiveAction(
   const { error } = await supabase.rpc('set_sku_active', {
     p_id: parsed.data.id,
     p_is_active: parsed.data.is_active === 'true',
-    p_reason: parsed.data.reason,
+    p_reason: '',
   });
   if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
 

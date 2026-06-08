@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { useState, useTransition, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { uploadDesignImage, validateDesignImageFile } from '@/lib/storage/design-images';
-import { AuditReasonField } from '@/components/audit-reason-field';
 import { ServerError, SubmitButton } from '@/components/form-status';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { saveDesignAction } from './actions';
@@ -24,11 +23,9 @@ export interface DesignFormValues {
 export function DesignForm({
   initial,
   imageSignedUrl,
-  isSuperAdmin,
 }: {
   initial: DesignFormValues | null;
   imageSignedUrl: string | null;
-  isSuperAdmin: boolean;
 }) {
   const t = useTranslations('masterData.designs');
   const tCommon = useTranslations('common.actions');
@@ -185,8 +182,6 @@ export function DesignForm({
       ) : (
         <input type="hidden" name="is_active" value="on" />
       )}
-
-      <AuditReasonField required={isSuperAdmin} />
 
       {state && state.ok === false ? <ServerError messageKey={state.messageKey} /> : null}
 

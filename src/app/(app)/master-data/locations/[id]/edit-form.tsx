@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { AuditReasonField } from '@/components/audit-reason-field';
 import { ServerError, SubmitButton } from '@/components/form-status';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { updateLocationAction } from './actions';
@@ -60,8 +59,6 @@ export function LocationEditForm({
         />
         {t('isActiveLabel')}
       </label>
-
-      <AuditReasonField />
 
       {state && state.ok === false ? <ServerError messageKey={state.messageKey} /> : null}
 
