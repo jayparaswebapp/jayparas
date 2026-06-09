@@ -102,6 +102,13 @@ export function SkuLabel({
             width: LABEL_FONT.qrSize,
             height: LABEL_FONT.qrSize,
             flexShrink: 0,
+            // Top-align JUST the QR (the rate+unit column stays centered
+            // via the row's alignItems: 'center'). Lifting the QR to the
+            // top of the bottom row puts its bottom edge ~1.6 mm above
+            // the sticker's bottom edge instead of ~1 mm — enough buffer
+            // that sub-pixel print rendering and minor printer drift
+            // don't trim the bottom row of QR modules.
+            alignSelf: 'flex-start',
           }}
         >
           <QrCode value={sku.sku_code} size={LABEL_FONT.qrSize} margin={2} />
