@@ -31,10 +31,13 @@ export function SkuLabel({
         height: DEFAULT_LABEL_GRID.labelHeight,
         display: 'flex',
         flexDirection: 'column',
-        // Extra right padding pulls the QR ~1 mm in from the cell's right
-        // edge so the rightmost column of QR modules can't be trimmed by
-        // sub-pixel rendering at the sticker boundary.
-        padding: '0.5mm 1.5mm 0.5mm 0.5mm',
+        // Right padding of 3.5 mm shifts the QR ~2 mm leftward from where
+        // it sat at 1.5 mm, giving more visible space between the QR and
+        // the sticker's right edge. Combined with the 9 mm QR (down from
+        // 10 mm) this also leaves the QR ~1 mm clear of the sticker's
+        // bottom edge — protects against the bottom row of modules being
+        // trimmed by sub-pixel rendering at the sticker boundary.
+        padding: '0.5mm 3.5mm 0.5mm 0.5mm',
         boxSizing: 'border-box',
         background: 'white',
         color: '#000',
