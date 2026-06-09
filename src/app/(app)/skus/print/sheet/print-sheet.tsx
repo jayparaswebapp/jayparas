@@ -47,13 +47,14 @@ function buildPrintHtml(
 <meta charset="utf-8" />
 <style>
   @page { size: ${pageWidth} ${rowPitchMm}mm; margin: 0; }
-  html { margin: 0; padding: 0; background: white; }
+  html { margin: 0; padding: 0; background: white; overflow: hidden; }
   body {
     margin: 0;
     padding: 0 ${marginX};
     background: white;
     width: ${pageWidth};
     box-sizing: border-box;
+    overflow: hidden;
     font-family: system-ui, -apple-system, "Segoe UI", Inter, "Helvetica Neue", Arial, sans-serif;
     color: #000;
   }
