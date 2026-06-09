@@ -31,13 +31,15 @@ export function SkuLabel({
         height: DEFAULT_LABEL_GRID.labelHeight,
         display: 'flex',
         flexDirection: 'column',
-        // Right padding of 3.5 mm shifts the QR ~2 mm leftward from where
-        // it sat at 1.5 mm, giving more visible space between the QR and
-        // the sticker's right edge. Combined with the 9 mm QR (down from
-        // 10 mm) this also leaves the QR ~1 mm clear of the sticker's
-        // bottom edge — protects against the bottom row of modules being
-        // trimmed by sub-pixel rendering at the sticker boundary.
-        padding: '0.5mm 3.5mm 0.5mm 0.5mm',
+        // Padding: 1 mm top / 3.5 mm right / 0.5 mm bottom / 0.5 mm left.
+        // The 1 mm top is for tolerance against the TSC printer's upward
+        // drift on each row — without it, a 1-2 mm upward shift puts the
+        // design name off the top edge of the sticker. The 3.5 mm right
+        // gives the QR clear gutter from the sticker's right edge. Bottom
+        // stays at 0.5 mm because the QR is top-aligned within the bottom
+        // row (alignSelf below), so its bottom edge sits ~1 mm above the
+        // sticker's bottom regardless of this value.
+        padding: '1mm 3.5mm 0.5mm 0.5mm',
         boxSizing: 'border-box',
         background: 'white',
         color: '#000',
