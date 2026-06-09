@@ -37,8 +37,19 @@ export function QrCode({
     QRCode.toString(value, { type: 'svg', margin, errorCorrectionLevel: 'M' })
       .then((str) => {
         if (cancelled) return;
-        // Strip the outer width/height so our CSS controls sizing.
-        setSvg(str.replace(/\s+(width|height)="[^"]*"/g, ''));
+        // qrcode lib emits its own width/height attrs that lock the SVG to
+        // its viewBox units regardless of CSS. Strip them, then inject
+        // width/height/style="100%" so the SVG actually fills the parent
+        // div. Without this the SVG falls back to the browser default
+        // 300×150 — twice as wide as tall — and squashes the square QR
+        // matrix into horizontal stripes.
+        const sized = str
+          .replace(/\s+(width|height)="[^"]*"/g, '')
+          .replace(
+            /<svg\b/,
+            '<svg width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:100%"',
+          );
+        setSvg(sized);
       })
       .catch(() => {
         if (!cancelled) setSvg('');
