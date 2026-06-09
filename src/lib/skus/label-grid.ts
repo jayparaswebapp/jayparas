@@ -53,8 +53,8 @@ export const DEFAULT_LABEL_GRID = ROLL_2UP_25x15;
  * Stored here so the label component reads from one source.
  */
 export const LABEL_FONT = {
-  name: { sizePt: 8, weight: 700 },
-  rate: { sizePt: 8, weight: 400 },
+  name: { sizePt: 9, weight: 700 },
+  rate: { sizePt: 9, weight: 700 },
   unit: { sizePt: 7, weight: 700 },
-  qrSize: '8mm',
+  qrSize: '10mm',
 } as const;
