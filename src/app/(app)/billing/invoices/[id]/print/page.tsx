@@ -355,12 +355,9 @@ function PrintView({
 
         {/* TOTALS */}
         <div className="ml-auto mt-2 max-w-md text-xs">
-          {Number(invoice.discount_total) > 0 ? (
-            <Row
-              label={t('discountTotalLabel')}
-              value={`- ${Number(invoice.discount_total).toFixed(2)}`}
-            />
-          ) : null}
+          {/* No aggregated "Discount" row: the Rate column on every line is
+              already post-discount, so a section-total would double-count
+              from the customer's view. Per-line math still runs. */}
           {showGst && Number(invoice.cgst_total) > 0 ? (
             <Row label={t('cgstLabel')} value={Number(invoice.cgst_total).toFixed(2)} />
           ) : null}
