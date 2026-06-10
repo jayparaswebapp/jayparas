@@ -28,6 +28,7 @@ export default function SkusLayout({ children }: { children: ReactNode }) {
         items={[
           { href: '/skus', label: t('skusLibrary') },
           { href: '/skus/new', label: t('skusNew') },
+          { href: '/skus/multiple', label: t('skusMultiple') },
           { href: '/skus/print', label: t('skusPrint') },
         ]}
       />

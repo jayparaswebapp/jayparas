@@ -72,6 +72,7 @@
     "skusLibrary": "Library",
     "skusNew": "New SKU",
     "skusPrint": "Print labels",
+    "skusMultiple": "Multiple SKUs",
     "admin": "Admin",
     "users": "Users",
     "settings": "Settings"
@@ -814,6 +815,35 @@
       "setupStep3": "3. Stock dropdown → pick “JaiParas 57x15” as the default. Apply, OK.",
       "setupStep4": "4. Back in this page, click Print now. In Chrome's dialog: Destination → TSC TE244, Paper size → JaiParas 57x15, Margins → None, Scale → Default. Save as a preset.",
       "setupHint": "After that, one click = one row of stickers. No more blanks."
+    },
+    "multiple": {
+      "title": "Multiple SKUs",
+      "subtitle": "Create many SKUs at once. Enter a print quantity to also send labels straight to the print sheet.",
+      "pasteTitle": "Paste rows from Excel",
+      "pasteHint": "Column order: Design Name, Design #, Pack (1/3/4/6/12 or '1 Doz'), Price, Discount %, Print Qty. One row per line, tabs or commas between columns.",
+      "pasteButton": "Fill rows",
+      "addRow": "+ Add row",
+      "clearAll": "Clear all",
+      "removeRow": "Remove row",
+      "summary": "{rows} rows · {labels} labels to print",
+      "submitWithPrint": "Create all & open print sheet",
+      "submitNoPrint": "Create all",
+      "errorOnRow": "Row {row}:",
+      "errors": {
+        "invalidRow": "One or more rows are missing required fields."
+      },
+      "placeholders": {
+        "designName": "e.g. Dori",
+        "designNo": "e.g. 1325"
+      },
+      "col": {
+        "designName": "Design name",
+        "designNo": "Design #",
+        "pack": "Pack",
+        "price": "Price (₹)",
+        "discount": "Disc %",
+        "printQty": "Print qty"
+      }
     },
     "label": {
       "brand": "Jai Paras",
