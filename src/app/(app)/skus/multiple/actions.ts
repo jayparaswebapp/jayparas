@@ -19,6 +19,7 @@ const RowSchema = z.object({
     .refine((n) => (PACK_SIZES as readonly number[]).includes(n)),
   price: z.coerce.number().min(0),
   discount_pct: z.coerce.number().min(0).max(100).default(0),
+  is_discountable: z.boolean().default(false),
   print_qty: z.coerce.number().int().min(0).default(0),
 });
 
@@ -75,6 +76,7 @@ export async function createMultipleSkusAction(
       p_photo_path: '',
       p_reason: '',
       p_discount_pct: row.discount_pct,
+      p_is_discountable: row.is_discountable,
     });
     if (error) {
       const key = rpcErrorKey(error);

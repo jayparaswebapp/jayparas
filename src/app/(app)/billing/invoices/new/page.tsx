@@ -26,7 +26,7 @@ export default async function NewInvoicePage() {
       .order('full_name', { ascending: true }),
     supabase
       .from('skus')
-      .select('id, sku_code, design_name, pack_size, price')
+      .select('id, sku_code, design_name, pack_size, price, discount_pct, is_discountable')
       .eq('is_active', true)
       .is('deleted_at', null)
       .order('design_name', { ascending: true }),
@@ -44,6 +44,8 @@ export default async function NewInvoicePage() {
     design_name: s.design_name,
     pack_size: s.pack_size,
     price: Number(s.price),
+    discount_pct: Number(s.discount_pct ?? 0),
+    is_discountable: Boolean(s.is_discountable),
   }));
 
   const initial: InvoiceFormValues = {

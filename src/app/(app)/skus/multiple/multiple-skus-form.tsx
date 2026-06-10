@@ -12,10 +12,22 @@ interface RowValues {
   pack_size: string;
   price: string;
   discount_pct: string;
+  is_discountable: boolean;
   print_qty: string;
 }
 
 const PACK_OPTIONS = ['1', '3', '4', '6', '12'];
+
+/**
+ * Convert a paste cell into a boolean. Accepts "y/n", "yes/no", "1/0",
+ * "true/false", "✓", or empty. Anything truthy => discountable, anything
+ * else => not. Case-insensitive.
+ */
+function parseFlag(raw: string | undefined): boolean {
+  if (!raw) return false;
+  const v = raw.trim().toLowerCase();
+  return v === 'y' || v === 'yes' || v === '1' || v === 'true' || v === '✓';
+}
 
 function emptyRow(): RowValues {
   return {
@@ -24,6 +36,7 @@ function emptyRow(): RowValues {
     pack_size: '1',
     price: '0',
     discount_pct: '0',
+    is_discountable: false,
     print_qty: '0',
   };
 }
@@ -52,7 +65,8 @@ function parsePastedRows(raw: string): RowValues[] {
       pack_size: PACK_OPTIONS.includes(packCell) ? packCell : '1',
       price: cleaned[3] ?? '0',
       discount_pct: cleaned[4] ?? '0',
-      print_qty: cleaned[5] ?? '0',
+      is_discountable: parseFlag(cleaned[5]),
+      print_qty: cleaned[6] ?? '0',
     });
   }
   return out;
@@ -83,6 +97,7 @@ export function MultipleSkusForm() {
           pack_size: num(r.pack_size),
           price: num(r.price),
           discount_pct: num(r.discount_pct),
+          is_discountable: r.is_discountable,
           print_qty: num(r.print_qty),
         })),
       }),
@@ -191,6 +206,9 @@ export function MultipleSkusForm() {
                 <th className="px-2 py-2">{t('col.pack')}</th>
                 <th className="px-2 py-2">{t('col.price')}</th>
                 <th className="px-2 py-2">{t('col.discount')}</th>
+                <th className="px-2 py-2 text-center" title={t('col.discountableHint')}>
+                  {t('col.discountable')}
+                </th>
                 <th className="px-2 py-2">{t('col.printQty')}</th>
                 <th className="px-2 py-2" />
               </tr>
@@ -247,6 +265,15 @@ export function MultipleSkusForm() {
                       className="input-base !min-h-0 !py-1 !text-sm"
                       value={r.discount_pct}
                       onChange={(e) => updateRow(idx, { discount_pct: e.target.value })}
+                    />
+                  </td>
+                  <td className="px-1 py-1 text-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-brand-700"
+                      checked={r.is_discountable}
+                      onChange={(e) => updateRow(idx, { is_discountable: e.target.checked })}
+                      aria-label={t('col.discountable')}
                     />
                   </td>
                   <td className="px-1 py-1">

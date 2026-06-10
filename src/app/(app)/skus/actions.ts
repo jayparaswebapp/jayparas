@@ -24,6 +24,11 @@ const CreateSchema = z
         message: 'skus.errors.packSizeRequired',
       }),
     price: z.coerce.number().min(0, 'skus.errors.priceRequired'),
+    discount_pct: z.coerce.number().min(0).max(100).default(0),
+    is_discountable: z
+      .union([z.literal('on'), z.literal('true'), z.literal('false'), z.literal('')])
+      .optional()
+      .transform((v) => v === 'on' || v === 'true'),
     photo_path: z.string().optional(),
   })
   .superRefine((val, ctx) => {
@@ -60,6 +65,8 @@ export async function createSkuAction(
     design_name: formData.get('design_name'),
     pack_size: formData.get('pack_size'),
     price: formData.get('price'),
+    discount_pct: formData.get('discount_pct') ?? 0,
+    is_discountable: formData.get('is_discountable') ?? '',
     photo_path: formData.get('photo_path'),
   });
 
@@ -96,6 +103,8 @@ export async function createSkuAction(
     p_price: parsed.data.price,
     p_photo_path: parsed.data.photo_path ?? '',
     p_reason: '',
+    p_discount_pct: parsed.data.discount_pct,
+    p_is_discountable: parsed.data.is_discountable,
   });
 
   if (error) {
