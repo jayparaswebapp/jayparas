@@ -72,6 +72,7 @@
     "skusLibrary": "લાઇબ્રેરી",
     "skusNew": "નવો SKU",
     "skusPrint": "લેબલ પ્રિન્ટ",
+    "skusMultiple": "મલ્ટિપલ SKU",
     "admin": "એડમિન",
     "users": "યુઝર",
     "settings": "સેટિંગ"
@@ -814,6 +815,35 @@
       "setupStep3": "3. Stock dropdown → “JaiParas 57x15” ને default તરીકે પસંદ કરો. Apply, OK.",
       "setupStep4": "4. પાછા આ પેજમાં Print now પર ક્લિક કરો. Chrome ના ડાયલોગમાં: Destination → TSC TE244, Paper size → JaiParas 57x15, Margins → None, Scale → Default. પ્રીસેટ તરીકે સેવ કરી લો.",
       "setupHint": "ત્યાર પછી — એક ક્લિક = એક રો સ્ટિકર. કોઈ ખાલી સ્ટિકર નહીં."
+    },
+    "multiple": {
+      "title": "મલ્ટિપલ SKU",
+      "subtitle": "એક સાથે ઘણા SKU બનાવો. પ્રિન્ટ qty પણ ભરો તો સીધા લેબલ પ્રિન્ટ શીટ પર જશે.",
+      "pasteTitle": "Excel માંથી રો પેસ્ટ કરો",
+      "pasteHint": "કોલમ ક્રમ: ડિઝાઇન નામ, ડિઝાઇન #, પૅક (1/3/4/6/12 અથવા '1 Doz'), ભાવ, ડિસ્કાઉન્ટ %, પ્રિન્ટ qty. એક રો દીઠ એક લાઇન, કોલમ વચ્ચે tab કે comma.",
+      "pasteButton": "રો ભરો",
+      "addRow": "+ રો ઉમેરો",
+      "clearAll": "બધું ક્લિયર કરો",
+      "removeRow": "રો દૂર કરો",
+      "summary": "{rows} રો · {labels} લેબલ પ્રિન્ટ થશે",
+      "submitWithPrint": "બધા બનાવો અને પ્રિન્ટ શીટ ખોલો",
+      "submitNoPrint": "બધા બનાવો",
+      "errorOnRow": "રો {row}:",
+      "errors": {
+        "invalidRow": "એક કે વધુ રો માં જરૂરી ફીલ્ડ ખાલી છે."
+      },
+      "placeholders": {
+        "designName": "દા.ત. Dori",
+        "designNo": "દા.ત. 1325"
+      },
+      "col": {
+        "designName": "ડિઝાઇન નામ",
+        "designNo": "ડિઝાઇન #",
+        "pack": "પૅક",
+        "price": "ભાવ (₹)",
+        "discount": "ડિસ્ક %",
+        "printQty": "પ્રિન્ટ qty"
+      }
     },
     "label": {
       "brand": "જય પારસ",
