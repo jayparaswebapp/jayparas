@@ -136,6 +136,11 @@ const UpdateSchema = z.object({
   id: z.string().uuid(),
   design_name: z.string().trim().min(1, 'skus.errors.designNameRequired'),
   price: z.coerce.number().min(0, 'skus.errors.priceRequired'),
+  discount_pct: z.coerce.number().min(0).max(100).default(0),
+  is_discountable: z
+    .union([z.literal('on'), z.literal('true'), z.literal('false'), z.literal('')])
+    .optional()
+    .transform((v) => v === 'on' || v === 'true'),
   photo_path: z.string().optional(),
 });
 
@@ -149,6 +154,8 @@ export async function updateSkuAction(
     id: formData.get('id'),
     design_name: formData.get('design_name'),
     price: formData.get('price'),
+    discount_pct: formData.get('discount_pct') ?? 0,
+    is_discountable: formData.get('is_discountable') ?? '',
     photo_path: formData.get('photo_path'),
   });
 
@@ -166,6 +173,8 @@ export async function updateSkuAction(
     p_price: parsed.data.price,
     p_photo_path: parsed.data.photo_path ?? '',
     p_reason: '',
+    p_discount_pct: parsed.data.discount_pct,
+    p_is_discountable: parsed.data.is_discountable,
   });
 
   if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
