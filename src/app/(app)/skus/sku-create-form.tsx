@@ -31,6 +31,8 @@ export function SkuCreateForm() {
   const [mixCode, setMixCode] = useState('');
   const [designName, setDesignName] = useState('');
   const [price, setPrice] = useState('');
+  const [discountPct, setDiscountPct] = useState('0');
+  const [isDiscountable, setIsDiscountable] = useState(false);
   const [photoPath, setPhotoPath] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -244,6 +246,40 @@ export function SkuCreateForm() {
           />
         </div>
         <p className="mt-1 text-xs text-neutral-500">{t('priceHint')}</p>
+      </div>
+
+      <div>
+        <label htmlFor="discount_pct" className="label-base">
+          {t('discountLabel')}
+        </label>
+        <input
+          id="discount_pct"
+          name="discount_pct"
+          type="number"
+          min="0"
+          max="100"
+          step="0.01"
+          value={discountPct}
+          onChange={(e) => setDiscountPct(e.target.value)}
+          inputMode="decimal"
+          className="input-base"
+        />
+        <p className="mt-1 text-xs text-neutral-500">{t('discountHint')}</p>
+      </div>
+
+      <div className="flex items-start gap-3 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2">
+        <input
+          id="is_discountable"
+          name="is_discountable"
+          type="checkbox"
+          checked={isDiscountable}
+          onChange={(e) => setIsDiscountable(e.target.checked)}
+          className="mt-1 h-4 w-4 accent-brand-700"
+        />
+        <label htmlFor="is_discountable" className="text-sm">
+          <span className="block font-medium text-neutral-900">{t('discountableLabel')}</span>
+          <span className="block text-xs text-neutral-500">{t('discountableHint')}</span>
+        </label>
       </div>
 
       <div>

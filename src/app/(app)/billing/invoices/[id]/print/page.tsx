@@ -44,6 +44,11 @@ interface LineRow {
   gst_pct: number;
   line_subtotal: number;
   line_total: number;
+  /** Frozen-at-pick-time snapshot of the SKU. We read is_discountable from
+   *  here (not from the live skus table) so changing a SKU's flag later
+   *  doesn't re-group historical invoices. Manual lines have a null snapshot
+   *  and fall into the non-discountable section. */
+  sku_snapshot: { is_discountable?: boolean } | null;
 }
 
 export default async function InvoicePrintPage({ params }: { params: { id: string } }) {
@@ -66,7 +71,7 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
   const { data: ls } = await supabase
     .from('invoice_lines')
     .select(
-      'id, line_no, description, hsn_code, qty, uom, rate, discount_pct, gst_pct, line_subtotal, line_total',
+      'id, line_no, description, hsn_code, qty, uom, rate, discount_pct, gst_pct, line_subtotal, line_total, sku_snapshot',
     )
     .eq('invoice_id', params.id)
     .order('line_no', { ascending: true });
@@ -239,37 +244,112 @@ function PrintView({
             </tr>
           </thead>
           <tbody>
-            {lines.map((l) => {
-              const list = Number(l.rate);
-              const disc = Number(l.discount_pct);
-              const actual = Math.round(list * (1 - disc / 100) * 100) / 100;
-              return (
-                <tr key={l.id} className="align-top">
-                  <td className="border border-black p-1 text-center">{l.line_no}</td>
-                  <td className="border border-black p-1">{l.description}</td>
-                  {showHsn ? (
-                    <td className="border border-black p-1 text-center font-mono">
-                      {l.hsn_code ?? ''}
-                    </td>
-                  ) : null}
-                  <td className="border border-black p-1 text-right">{Number(l.qty).toFixed(2)}</td>
-                  <td className="border border-black p-1 text-center">{l.uom}</td>
-                  <td className="border border-black p-1 text-right">{list.toFixed(2)}</td>
-                  <td className="border border-black p-1 text-right">
-                    {disc > 0 ? `${disc} (%)` : 'N.A.'}
-                  </td>
-                  <td className="border border-black p-1 text-right">{actual.toFixed(2)}</td>
-                  {showGst ? (
+            {(() => {
+              // Group lines by sku_snapshot.is_discountable. Lines without a
+              // snapshot (manual entries) go in the non-discountable group.
+              const discountable = lines.filter(
+                (l) =>
+                  (l.sku_snapshot as { is_discountable?: boolean } | null)?.is_discountable ===
+                  true,
+              );
+              const nonDiscountable = lines.filter(
+                (l) =>
+                  (l.sku_snapshot as { is_discountable?: boolean } | null)?.is_discountable !==
+                  true,
+              );
+              const sumLineTotal = (rows: LineRow[]) =>
+                rows.reduce((acc, l) => acc + Number(l.line_total), 0);
+              const colCount = 7 + (showHsn ? 1 : 0) + (showGst ? 1 : 0) + 1;
+
+              const renderRow = (l: LineRow, displayIdx: number) => {
+                const list = Number(l.rate);
+                const disc = Number(l.discount_pct);
+                const actual = Math.round(list * (1 - disc / 100) * 100) / 100;
+                return (
+                  <tr key={l.id} className="align-top">
+                    <td className="border border-black p-1 text-center">{displayIdx}</td>
+                    <td className="border border-black p-1">{l.description}</td>
+                    {showHsn ? (
+                      <td className="border border-black p-1 text-center font-mono">
+                        {l.hsn_code ?? ''}
+                      </td>
+                    ) : null}
                     <td className="border border-black p-1 text-right">
-                      {Number(l.gst_pct) > 0 ? `${Number(l.gst_pct)} (%)` : '—'}
+                      {Number(l.qty).toFixed(2)}
                     </td>
-                  ) : null}
-                  <td className="border border-black p-1 text-right font-semibold">
-                    {Number(l.line_total).toFixed(2)}
+                    <td className="border border-black p-1 text-center">{l.uom}</td>
+                    <td className="border border-black p-1 text-right">{list.toFixed(2)}</td>
+                    <td className="border border-black p-1 text-right">
+                      {disc > 0 ? `${disc} (%)` : 'N.A.'}
+                    </td>
+                    <td className="border border-black p-1 text-right">{actual.toFixed(2)}</td>
+                    {showGst ? (
+                      <td className="border border-black p-1 text-right">
+                        {Number(l.gst_pct) > 0 ? `${Number(l.gst_pct)} (%)` : '—'}
+                      </td>
+                    ) : null}
+                    <td className="border border-black p-1 text-right font-semibold">
+                      {Number(l.line_total).toFixed(2)}
+                    </td>
+                  </tr>
+                );
+              };
+
+              const sectionHeader = (label: string) => (
+                <tr key={`hdr-${label}`}>
+                  <td
+                    colSpan={colCount}
+                    className="border border-black bg-neutral-50 p-1 text-left text-[11px] font-semibold uppercase tracking-wide"
+                  >
+                    {label}
                   </td>
                 </tr>
               );
-            })}
+
+              const subtotalRow = (label: string, amount: number) => (
+                <tr key={`sub-${label}`} className="font-semibold">
+                  <td
+                    colSpan={colCount - 1}
+                    className="border border-black p-1 text-right text-[11px]"
+                  >
+                    {label}
+                  </td>
+                  <td className="border border-black p-1 text-right">{amount.toFixed(2)}</td>
+                </tr>
+              );
+
+              const spacerRow = (key: string) => (
+                <tr key={key}>
+                  <td colSpan={colCount} className="border-x border-black p-2">
+                    &nbsp;
+                  </td>
+                </tr>
+              );
+
+              const blocks: React.ReactNode[] = [];
+              let runningIdx = 0;
+              if (discountable.length > 0) {
+                blocks.push(sectionHeader(t('sectionDiscountable')));
+                for (const l of discountable) {
+                  runningIdx += 1;
+                  blocks.push(renderRow(l, runningIdx));
+                }
+                blocks.push(subtotalRow(t('sectionSubtotal'), sumLineTotal(discountable)));
+              }
+              if (discountable.length > 0 && nonDiscountable.length > 0) {
+                // 3-line spacer between the two sections (per user spec).
+                blocks.push(spacerRow('sp-1'), spacerRow('sp-2'), spacerRow('sp-3'));
+              }
+              if (nonDiscountable.length > 0) {
+                blocks.push(sectionHeader(t('sectionNonDiscountable')));
+                for (const l of nonDiscountable) {
+                  runningIdx += 1;
+                  blocks.push(renderRow(l, runningIdx));
+                }
+                blocks.push(subtotalRow(t('sectionSubtotal'), sumLineTotal(nonDiscountable)));
+              }
+              return blocks;
+            })()}
           </tbody>
         </table>
 

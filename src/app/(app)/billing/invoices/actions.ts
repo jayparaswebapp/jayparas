@@ -17,6 +17,7 @@ const LineSchema = z.object({
       sku_code: z.string().optional(),
       design_name: z.string().optional(),
       pack_size: z.number().int().optional(),
+      is_discountable: z.boolean().optional(),
     })
     .nullable()
     .optional(),
@@ -85,8 +86,31 @@ function headerToRpc(h: Payload['header']): Record<string, unknown> {
   };
 }
 
+/**
+ * Sort + group lines into the order they should appear on the saved/printed
+ * invoice: discountable items first (A→Z by design name / description),
+ * then non-discountable items (A→Z). Stable within each group. The
+ * "discountable" flag comes from sku_snapshot.is_discountable, frozen at
+ * line-pick time. Manual lines (no SKU) have no snapshot so they default
+ * to non-discountable.
+ */
+function sortAndGroupLines(lines: Payload['lines']): Payload['lines'] {
+  const sortKey = (l: Payload['lines'][number]) =>
+    (l.sku_snapshot?.design_name ?? l.description).trim().toLowerCase();
+  const isDiscountable = (l: Payload['lines'][number]) => l.sku_snapshot?.is_discountable === true;
+  const discountable = lines
+    .filter(isDiscountable)
+    .slice()
+    .sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+  const nonDiscountable = lines
+    .filter((l) => !isDiscountable(l))
+    .slice()
+    .sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+  return [...discountable, ...nonDiscountable];
+}
+
 function linesToRpc(lines: Payload['lines']): Record<string, unknown>[] {
-  return lines.map((l) => ({
+  return sortAndGroupLines(lines).map((l) => ({
     sku_id: l.sku_id ?? '',
     sku_snapshot: l.sku_snapshot ?? null,
     description: l.description,

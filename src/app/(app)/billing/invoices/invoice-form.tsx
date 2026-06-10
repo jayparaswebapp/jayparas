@@ -14,7 +14,18 @@ export type BusinessLine = 'rakhi' | 'kite';
 
 export interface InvoiceLineValues {
   sku_id: string | null;
-  sku_snapshot: { sku_code: string; design_name: string; pack_size: number } | null;
+  /**
+   * Snapshot of the SKU at line-pick time. `is_discountable` is frozen here
+   * (not re-read from the SKU later) so changing a SKU's discountable flag
+   * doesn't re-shuffle historical invoices that already grouped lines into
+   * sections at the time of print.
+   */
+  sku_snapshot: {
+    sku_code: string;
+    design_name: string;
+    pack_size: number;
+    is_discountable?: boolean;
+  } | null;
   description: string;
   hsn_code: string;
   qty: string;
@@ -50,6 +61,8 @@ export interface SkuOption {
   design_name: string;
   pack_size: number;
   price: number;
+  discount_pct: number;
+  is_discountable: boolean;
 }
 
 const EMPTY_LINE: InvoiceLineValues = {
@@ -80,13 +93,15 @@ function lineFromSku(sku: SkuOption): InvoiceLineValues {
       sku_code: sku.sku_code,
       design_name: sku.design_name,
       pack_size: sku.pack_size,
+      is_discountable: sku.is_discountable,
     },
     description: `${sku.design_name} (${sku.sku_code})`,
     hsn_code: '',
     qty: String(sku.pack_size),
     uom: 'Pcs',
     rate: String(sku.price),
-    discount_pct: '0',
+    // Auto-fill the SKU's default discount; staff can override per invoice.
+    discount_pct: String(sku.discount_pct ?? 0),
     gst_pct: '0',
   };
 }
