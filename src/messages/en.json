@@ -776,6 +776,7 @@
       "designNameLabel": "Design name",
       "designNamePlaceholder": "e.g. Lotus gold",
       "priceLabel": "Price (₹)",
+      "mrpLabel": "MRP (₹)",
       "pricePlaceholder": "e.g. 240",
       "priceHint": "Wholesale price per pack. Never printed on the label.",
       "discountLabel": "Default discount % (used on invoices)",
