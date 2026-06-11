@@ -15,9 +15,34 @@ import { QrCode } from '@/components/qr-code';
 import { generateSkuCode } from '@/lib/skus/code';
 import { createSkuAction, type CreateSkuResult } from './actions';
 
-type PackType = 'single' | 'mix';
 type PackSize = 1 | 3 | 4 | 6 | 12;
-const SIZES: PackSize[] = [1, 3, 4, 6, 12];
+type RateUnit = 'pack' | 'piece';
+
+/**
+ * Pack-size tiles on /skus/new. Each tile is a (pack_size, rate_unit) pair so
+ * the user-visible difference between "1 Doz" (rate × 1 per pack) and "12 pcs"
+ * (rate × 12 per pack) is captured at create time and never has to be
+ * re-derived. See sku_code → packCodeSuffix() in lib/skus/code.ts for the
+ * encoded suffix per tile.
+ */
+interface PackTile {
+  label: string;
+  pack_size: PackSize;
+  rate_unit: RateUnit;
+}
+
+const PACK_TILES: PackTile[] = [
+  { label: '1', pack_size: 1, rate_unit: 'piece' },
+  { label: '3', pack_size: 3, rate_unit: 'piece' },
+  { label: '4', pack_size: 4, rate_unit: 'piece' },
+  { label: '6', pack_size: 6, rate_unit: 'piece' },
+  { label: '1 Doz', pack_size: 12, rate_unit: 'pack' },
+  { label: '12 pcs', pack_size: 12, rate_unit: 'piece' },
+];
+
+function tileKey(t: PackTile): string {
+  return `${t.pack_size}-${t.rate_unit}`;
+}
 
 export function SkuCreateForm() {
   const t = useTranslations('skus.form');
@@ -25,10 +50,7 @@ export function SkuCreateForm() {
   const tCommon = useTranslations('common.actions');
   const [state, formAction] = useFormState<CreateSkuResult | null, FormData>(createSkuAction, null);
 
-  const [packType, setPackType] = useState<PackType | null>(null);
-  const [packSize, setPackSize] = useState<PackSize | null>(null);
-  const [designNo, setDesignNo] = useState('');
-  const [mixCode, setMixCode] = useState('');
+  const [packTileKey, setPackTileKey] = useState<string | null>(null);
   const [designName, setDesignName] = useState('');
   const [price, setPrice] = useState('');
   const [discountPct, setDiscountPct] = useState('0');
@@ -39,34 +61,17 @@ export function SkuCreateForm() {
   const [uploading, setUploading] = useState(false);
   const [, startTransition] = useTransition();
 
-  function chooseSingle(size: PackSize) {
-    setPackType('single');
-    setPackSize(size);
-    setMixCode('');
-  }
-  function chooseMix() {
-    setPackType('mix');
-    // Leave packSize as-is so a return to mix from single keeps the prior size.
-    setDesignNo('');
-  }
-
-  const isMix = packType === 'mix';
-  const isSingle = packType === 'single';
+  const selectedTile = packTileKey
+    ? (PACK_TILES.find((tt) => tileKey(tt) === packTileKey) ?? null)
+    : null;
 
   let previewCode = '';
-  if (isSingle && designName && designNo && packSize !== null) {
+  if (designName && selectedTile) {
     previewCode = generateSkuCode({
       pack_type: 'single',
       design_name: designName,
-      design_no: designNo,
-      pack_size: packSize,
-    });
-  } else if (isMix && designName && mixCode && packSize !== null) {
-    previewCode = generateSkuCode({
-      pack_type: 'mix',
-      design_name: designName,
-      mix_code: mixCode,
-      pack_size: packSize,
+      pack_size: selectedTile.pack_size,
+      rate_unit: selectedTile.rate_unit,
     });
   }
 
@@ -105,20 +110,32 @@ export function SkuCreateForm() {
 
   return (
     <form action={handleAction} onSubmit={onSubmit} className="space-y-5">
-      {packType ? <input type="hidden" name="pack_type" value={packType} /> : null}
-      {packSize !== null ? <input type="hidden" name="pack_size" value={String(packSize)} /> : null}
+      {/*
+       * Hidden fields submitted to the server action. pack_type is always
+       * 'single' (Mix removed from the UI; existing mix SKUs in the DB
+       * remain functional via the unchanged legacy path). pack_size and
+       * rate_unit are derived from the picked tile.
+       */}
+      <input type="hidden" name="pack_type" value="single" />
+      {selectedTile ? (
+        <>
+          <input type="hidden" name="pack_size" value={String(selectedTile.pack_size)} />
+          <input type="hidden" name="rate_unit" value={selectedTile.rate_unit} />
+        </>
+      ) : null}
       <input type="hidden" name="photo_path" value={photoPath} />
 
       <div>
         <label className="label-base">{t('packTypeLabel')}</label>
         <div className="grid grid-cols-4 gap-2">
-          {SIZES.map((n) => {
-            const selected = isSingle && packSize === n;
+          {PACK_TILES.map((tile) => {
+            const key = tileKey(tile);
+            const selected = packTileKey === key;
             return (
               <button
-                key={n}
+                key={key}
                 type="button"
-                onClick={() => chooseSingle(n)}
+                onClick={() => setPackTileKey(key)}
                 className={[
                   'flex h-16 items-center justify-center rounded-lg border text-xl font-semibold',
                   selected
@@ -126,87 +143,26 @@ export function SkuCreateForm() {
                     : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
                 ].join(' ')}
               >
-                {n === 12 ? '1 Doz' : n}
+                {tile.label}
               </button>
             );
           })}
+          {/*
+           * Placeholder tile reserved for a future pack option (e.g. half
+           * dozen, custom size). Disabled and visually muted so staff know
+           * it's not pickable yet but the slot is held.
+           */}
           <button
             type="button"
-            onClick={chooseMix}
-            lang="gu"
-            className={[
-              'flex h-16 items-center justify-center rounded-lg border text-base font-semibold leading-tight',
-              isMix
-                ? 'border-brand-600 bg-brand-100 text-brand-900'
-                : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
-            ].join(' ')}
+            disabled
+            aria-disabled="true"
+            className="flex h-16 cursor-not-allowed items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-neutral-400"
           >
-            {t('packTypeMix')}
+            ＋
           </button>
         </div>
         <p className="mt-1 text-xs text-neutral-500">{t('packTypeHint')}</p>
       </div>
-
-      {isMix ? (
-        <div>
-          <label className="label-base">{t('packTypeLabel')}</label>
-          <div className="grid grid-cols-3 gap-2">
-            {SIZES.map((n) => {
-              const selected = packSize === n;
-              return (
-                <button
-                  key={n}
-                  type="button"
-                  onClick={() => setPackSize(n)}
-                  className={[
-                    'flex h-12 items-center justify-center rounded-md border text-base font-medium',
-                    selected
-                      ? 'border-brand-600 bg-brand-100 text-brand-900'
-                      : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
-                  ].join(' ')}
-                >
-                  {n === 12 ? '1 Doz' : n}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
-
-      {isMix ? (
-        <div>
-          <label htmlFor="mix_code" className="label-base">
-            {t('mixCodeLabel')}
-          </label>
-          <input
-            id="mix_code"
-            name="mix_code"
-            value={mixCode}
-            onChange={(e) => setMixCode(e.target.value.toUpperCase())}
-            required
-            autoComplete="off"
-            placeholder={t('mixCodePlaceholder')}
-            className="input-base uppercase"
-          />
-        </div>
-      ) : (
-        <div>
-          <label htmlFor="design_no" className="label-base">
-            {t('designNumberLabel')}
-          </label>
-          <input
-            id="design_no"
-            name="design_no"
-            value={designNo}
-            onChange={(e) => setDesignNo(e.target.value)}
-            required={isSingle}
-            inputMode="numeric"
-            autoComplete="off"
-            placeholder={t('designNumberPlaceholder')}
-            className="input-base"
-          />
-        </div>
-      )}
 
       <div>
         <label htmlFor="design_name" className="label-base">
@@ -225,7 +181,7 @@ export function SkuCreateForm() {
 
       <div>
         <label htmlFor="price" className="label-base">
-          {t('priceLabel')}
+          {t('mrpLabel')}
         </label>
         <div className="relative">
           <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-lg text-neutral-500">

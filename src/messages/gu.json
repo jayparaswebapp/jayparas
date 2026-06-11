@@ -776,6 +776,7 @@
       "designNameLabel": "ડિઝાઇનનું નામ",
       "designNamePlaceholder": "દા.ત. Lotus gold",
       "priceLabel": "ભાવ (₹)",
+      "mrpLabel": "MRP (₹)",
       "pricePlaceholder": "દા.ત. 240",
       "priceHint": "પૅક દીઠ હોલસેલ ભાવ. લેબલ પર છપાતો નથી.",
       "discountLabel": "ડિફૉલ્ટ ડિસ્કાઉન્ટ % (ઇન્વોઇસ માટે)",

@@ -94,7 +94,7 @@ export function SkuEditForm({
 
       <div>
         <label htmlFor="price" className="label-base">
-          {t('priceLabel')}
+          {t('mrpLabel')}
         </label>
         <div className="relative">
           <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-lg text-neutral-500">

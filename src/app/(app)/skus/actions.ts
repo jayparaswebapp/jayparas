@@ -11,42 +11,34 @@ import { generateSkuCode } from '@/lib/skus/code';
 
 const PACK_SIZES = [1, 3, 4, 6, 12] as const;
 
-const CreateSchema = z
-  .object({
-    pack_type: z.enum(['single', 'mix']),
-    design_no: z.string().trim().optional(),
-    mix_code: z.string().trim().optional(),
-    design_name: z.string().trim().min(1, 'skus.errors.designNameRequired'),
-    pack_size: z.coerce
-      .number()
-      .int()
-      .refine((n) => (PACK_SIZES as readonly number[]).includes(n), {
-        message: 'skus.errors.packSizeRequired',
-      }),
-    price: z.coerce.number().min(0, 'skus.errors.priceRequired'),
-    discount_pct: z.coerce.number().min(0).max(100).default(0),
-    is_discountable: z
-      .union([z.literal('on'), z.literal('true'), z.literal('false'), z.literal('')])
-      .optional()
-      .transform((v) => v === 'on' || v === 'true'),
-    photo_path: z.string().optional(),
-  })
-  .superRefine((val, ctx) => {
-    if (val.pack_type === 'single' && !val.design_no) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['design_no'],
-        message: 'skus.errors.designNumberRequired',
-      });
-    }
-    if (val.pack_type === 'mix' && !val.mix_code) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['mix_code'],
-        message: 'skus.errors.mixCodeRequired',
-      });
-    }
-  });
+/**
+ * Single is the only pack_type writable from the UI now. Mix is kept as a
+ * legacy code path in the DB (existing rows) but no form ships it.
+ *
+ * design_no was retired — the new SKU form combines it into design_name.
+ * The Zod schema accepts the field but treats it as optional so bulk-create
+ * payloads from older code keep validating.
+ */
+const CreateSchema = z.object({
+  pack_type: z.enum(['single', 'mix']).default('single'),
+  design_no: z.string().trim().optional(),
+  mix_code: z.string().trim().optional(),
+  design_name: z.string().trim().min(1, 'skus.errors.designNameRequired'),
+  pack_size: z.coerce
+    .number()
+    .int()
+    .refine((n) => (PACK_SIZES as readonly number[]).includes(n), {
+      message: 'skus.errors.packSizeRequired',
+    }),
+  price: z.coerce.number().min(0, 'skus.errors.priceRequired'),
+  discount_pct: z.coerce.number().min(0).max(100).default(0),
+  is_discountable: z
+    .union([z.literal('on'), z.literal('true'), z.literal('false'), z.literal('')])
+    .optional()
+    .transform((v) => v === 'on' || v === 'true'),
+  rate_unit: z.enum(['pack', 'piece']).default('piece'),
+  photo_path: z.string().optional(),
+});
 
 export type CreateSkuResult =
   | { ok: true; id: string }
@@ -59,7 +51,7 @@ export async function createSkuAction(
   await requireRole(['super_admin', 'supervisor']);
 
   const parsed = CreateSchema.safeParse({
-    pack_type: formData.get('pack_type'),
+    pack_type: formData.get('pack_type') ?? 'single',
     design_no: formData.get('design_no') || undefined,
     mix_code: formData.get('mix_code') || undefined,
     design_name: formData.get('design_name'),
@@ -67,6 +59,7 @@ export async function createSkuAction(
     price: formData.get('price'),
     discount_pct: formData.get('discount_pct') ?? 0,
     is_discountable: formData.get('is_discountable') ?? '',
+    rate_unit: formData.get('rate_unit') ?? 'piece',
     photo_path: formData.get('photo_path'),
   });
 
@@ -77,13 +70,19 @@ export async function createSkuAction(
     };
   }
 
+  // Mix is the legacy path — current UI only emits 'single' but accept 'mix'
+  // for backward-compatible bulk callers, requiring mix_code.
+  if (parsed.data.pack_type === 'mix' && !parsed.data.mix_code) {
+    return { ok: false, messageKey: 'skus.errors.mixCodeRequired' };
+  }
+
   const sku_code =
     parsed.data.pack_type === 'single'
       ? generateSkuCode({
           pack_type: 'single',
           design_name: parsed.data.design_name,
-          design_no: parsed.data.design_no!,
           pack_size: parsed.data.pack_size,
+          rate_unit: parsed.data.rate_unit,
         })
       : generateSkuCode({
           pack_type: 'mix',
@@ -105,6 +104,7 @@ export async function createSkuAction(
     p_reason: '',
     p_discount_pct: parsed.data.discount_pct,
     p_is_discountable: parsed.data.is_discountable,
+    p_rate_unit: parsed.data.rate_unit,
   });
 
   if (error) {
