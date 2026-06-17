@@ -184,11 +184,17 @@ export function InvoiceForm({
   }
 
   function addOrIncrementSku(sku: SkuOption) {
+    // One scan / one "add same SKU" = one more pack. With rate_unit 'pack'
+    // (1 Doz tile) qty is in packs/dozens → increment by 1. With rate_unit
+    // 'piece' (12 pcs / 6 / 4 / 3 / 1) qty is in pieces → increment by
+    // pack_size (= pieces in one pack). Without this branch a second scan
+    // of a "1 Doz" SKU would jump qty 1 → 13 and the total to rate × 13.
+    const qtyPerPack = sku.rate_unit === 'pack' ? 1 : sku.pack_size;
     setLines((curr) => {
       const existingIdx = curr.findIndex((l) => l.sku_id === sku.id);
       if (existingIdx >= 0) {
         return curr.map((l, i) =>
-          i === existingIdx ? { ...l, qty: String(num(l.qty) + sku.pack_size) } : l,
+          i === existingIdx ? { ...l, qty: String(num(l.qty) + qtyPerPack) } : l,
         );
       }
       const first = curr[0];
