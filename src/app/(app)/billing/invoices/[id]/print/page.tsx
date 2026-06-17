@@ -117,6 +117,15 @@ function PrintView({
   const showHsn = isTax;
   const showGst = isTax;
 
+  // Numeric cells (qty, rate, amounts, totals) switch to a sans-serif font
+  // for readability — the body wraps in Georgia/Times for the formal look
+  // but digits in a serif at 12pt are hard to scan. Tabular-nums also keeps
+  // the columns aligned on per-line subtotal rows.
+  const numericFont: React.CSSProperties = {
+    fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif',
+    fontVariantNumeric: 'tabular-nums',
+  };
+
   const sellerAddr = [seller.address_line1, seller.address_line2, seller.city, seller.state]
     .filter(Boolean)
     .join(', ');
@@ -267,28 +276,40 @@ function PrintView({
                 const actual = Math.round(list * (1 - disc / 100) * 100) / 100;
                 return (
                   <tr key={l.id} className="align-top">
-                    <td className="border border-black p-1 text-center">{displayIdx}</td>
+                    <td className="border border-black p-1 text-center" style={numericFont}>
+                      {displayIdx}
+                    </td>
                     <td className="border border-black p-1">{l.description}</td>
                     {showHsn ? (
-                      <td className="border border-black p-1 text-center font-mono">
+                      <td
+                        className="border border-black p-1 text-center font-mono"
+                        style={numericFont}
+                      >
                         {l.hsn_code ?? ''}
                       </td>
                     ) : null}
-                    <td className="border border-black p-1 text-right">
+                    <td className="border border-black p-1 text-right" style={numericFont}>
                       {Number(l.qty).toFixed(2)}
                     </td>
                     <td className="border border-black p-1 text-center">{l.uom}</td>
-                    <td className="border border-black p-1 text-right">{list.toFixed(2)}</td>
-                    <td className="border border-black p-1 text-right">
+                    <td className="border border-black p-1 text-right" style={numericFont}>
+                      {list.toFixed(2)}
+                    </td>
+                    <td className="border border-black p-1 text-right" style={numericFont}>
                       {disc > 0 ? `${disc} (%)` : 'N.A.'}
                     </td>
-                    <td className="border border-black p-1 text-right">{actual.toFixed(2)}</td>
+                    <td className="border border-black p-1 text-right" style={numericFont}>
+                      {actual.toFixed(2)}
+                    </td>
                     {showGst ? (
-                      <td className="border border-black p-1 text-right">
+                      <td className="border border-black p-1 text-right" style={numericFont}>
                         {Number(l.gst_pct) > 0 ? `${Number(l.gst_pct)} (%)` : '—'}
                       </td>
                     ) : null}
-                    <td className="border border-black p-1 text-right font-semibold">
+                    <td
+                      className="border border-black p-1 text-right font-semibold"
+                      style={numericFont}
+                    >
                       {Number(l.line_total).toFixed(2)}
                     </td>
                   </tr>
@@ -314,7 +335,9 @@ function PrintView({
                   >
                     {label}
                   </td>
-                  <td className="border border-black p-1 text-right">{amount.toFixed(2)}</td>
+                  <td className="border border-black p-1 text-right" style={numericFont}>
+                    {amount.toFixed(2)}
+                  </td>
                 </tr>
               );
 
@@ -359,35 +382,50 @@ function PrintView({
               already post-discount, so a section-total would double-count
               from the customer's view. Per-line math still runs. */}
           {showGst && Number(invoice.cgst_total) > 0 ? (
-            <Row label={t('cgstLabel')} value={Number(invoice.cgst_total).toFixed(2)} />
+            <Row
+              label={t('cgstLabel')}
+              value={Number(invoice.cgst_total).toFixed(2)}
+              valueStyle={numericFont}
+            />
           ) : null}
           {showGst && Number(invoice.sgst_total) > 0 ? (
-            <Row label={t('sgstLabel')} value={Number(invoice.sgst_total).toFixed(2)} />
+            <Row
+              label={t('sgstLabel')}
+              value={Number(invoice.sgst_total).toFixed(2)}
+              valueStyle={numericFont}
+            />
           ) : null}
           {showGst && Number(invoice.igst_total) > 0 ? (
-            <Row label={t('igstLabel')} value={Number(invoice.igst_total).toFixed(2)} />
+            <Row
+              label={t('igstLabel')}
+              value={Number(invoice.igst_total).toFixed(2)}
+              valueStyle={numericFont}
+            />
           ) : null}
           {Number(invoice.packing_charges) > 0 ? (
             <Row
               label={t('packingChargesLabel')}
               value={`+ ${Number(invoice.packing_charges).toFixed(2)}`}
+              valueStyle={numericFont}
             />
           ) : null}
           {Number(invoice.delivery_charges) > 0 ? (
             <Row
               label={t('deliveryChargesLabel')}
               value={`+ ${Number(invoice.delivery_charges).toFixed(2)}`}
+              valueStyle={numericFont}
             />
           ) : null}
           {Number(invoice.round_off) !== 0 ? (
             <Row
               label={t('roundOffLabel')}
               value={`${Number(invoice.round_off) > 0 ? '+ ' : '− '}${Math.abs(Number(invoice.round_off)).toFixed(2)}`}
+              valueStyle={numericFont}
             />
           ) : null}
           <div className="mt-1 flex items-center justify-between border-y-2 border-black py-1 text-sm font-bold">
             <span>{t('totalLabel')}</span>
-            <span>{Number(invoice.grand_total).toFixed(0)}</span>
+            <span style={numericFont}>{Number(invoice.grand_total).toFixed(0)}</span>
           </div>
           <div className="mt-1 italic text-neutral-700">{amountWords}</div>
           <div className="mt-2 border-t border-neutral-300 pt-1 text-[11px]">
@@ -454,11 +492,19 @@ function PrintView({
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({
+  label,
+  value,
+  valueStyle,
+}: {
+  label: string;
+  value: string;
+  valueStyle?: React.CSSProperties;
+}) {
   return (
     <div className="flex items-center justify-between py-0.5">
       <span className="text-neutral-700">{label}</span>
-      <span>{value}</span>
+      <span style={valueStyle}>{value}</span>
     </div>
   );
 }
