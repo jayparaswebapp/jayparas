@@ -54,7 +54,10 @@ export const DEFAULT_LABEL_GRID = ROLL_2UP_25x15;
  */
 export const LABEL_FONT = {
   name: { sizePt: 9, weight: 700 },
-  rate: { sizePt: 9, weight: 700 },
+  // 11pt rate (was 9pt) — the wholesale price is the customer-facing number
+  // staff scan stickers for, so it gets the largest font on the label.
+  // Fits ₹999/- in the rate column at 9mm QR width without overflow.
+  rate: { sizePt: 11, weight: 700 },
   unit: { sizePt: 7, weight: 700 },
   qrSize: '9mm',
 } as const;
