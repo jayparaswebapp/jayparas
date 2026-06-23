@@ -63,6 +63,12 @@ export interface SkuOption {
   price: number;
   discount_pct: number;
   is_discountable: boolean;
+  /**
+   * 'pack' = the SKU's stored rate is for the whole pack (e.g. ₹240/dozen);
+   * 'piece' = the stored rate is per individual piece (e.g. ₹20/piece × 12).
+   * Drives the qty / uom defaults when this SKU is picked on an invoice line.
+   */
+  rate_unit: 'pack' | 'piece';
 }
 
 const EMPTY_LINE: InvoiceLineValues = {
@@ -87,6 +93,11 @@ function round2(n: number): number {
 }
 
 function lineFromSku(sku: SkuOption): InvoiceLineValues {
+  // rate_unit = 'pack' (e.g. "1 Doz" tile): the saved price IS the per-pack
+  // rate, so default qty = 1 pack and uom = the pack's friendly unit.
+  // rate_unit = 'piece' (e.g. "12 pcs" tile, or any 1/3/4/6 pack): the saved
+  // price is per piece, so default qty = pack_size pieces, uom = Pcs.
+  const isPerPack = sku.rate_unit === 'pack';
   return {
     sku_id: sku.id,
     sku_snapshot: {
@@ -100,8 +111,8 @@ function lineFromSku(sku: SkuOption): InvoiceLineValues {
     // need to.
     description: sku.design_name,
     hsn_code: '',
-    qty: String(sku.pack_size),
-    uom: 'Pcs',
+    qty: isPerPack ? '1' : String(sku.pack_size),
+    uom: isPerPack ? (sku.pack_size === 12 ? 'Doz' : 'Pack') : 'Pcs',
     rate: String(sku.price),
     // Auto-fill the SKU's default discount; staff can override per invoice.
     discount_pct: String(sku.discount_pct ?? 0),
@@ -173,11 +184,17 @@ export function InvoiceForm({
   }
 
   function addOrIncrementSku(sku: SkuOption) {
+    // One scan / one "add same SKU" = one more pack. With rate_unit 'pack'
+    // (1 Doz tile) qty is in packs/dozens → increment by 1. With rate_unit
+    // 'piece' (12 pcs / 6 / 4 / 3 / 1) qty is in pieces → increment by
+    // pack_size (= pieces in one pack). Without this branch a second scan
+    // of a "1 Doz" SKU would jump qty 1 → 13 and the total to rate × 13.
+    const qtyPerPack = sku.rate_unit === 'pack' ? 1 : sku.pack_size;
     setLines((curr) => {
       const existingIdx = curr.findIndex((l) => l.sku_id === sku.id);
       if (existingIdx >= 0) {
         return curr.map((l, i) =>
-          i === existingIdx ? { ...l, qty: String(num(l.qty) + sku.pack_size) } : l,
+          i === existingIdx ? { ...l, qty: String(num(l.qty) + qtyPerPack) } : l,
         );
       }
       const first = curr[0];

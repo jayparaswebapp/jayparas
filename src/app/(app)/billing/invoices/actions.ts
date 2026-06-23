@@ -98,14 +98,18 @@ function sortAndGroupLines(lines: Payload['lines']): Payload['lines'] {
   const sortKey = (l: Payload['lines'][number]) =>
     (l.sku_snapshot?.design_name ?? l.description).trim().toLowerCase();
   const isDiscountable = (l: Payload['lines'][number]) => l.sku_snapshot?.is_discountable === true;
+  // Natural numeric sort: "Dori-84" < "Dori-90" < "Dori-96" < "Dori-102".
+  // Plain localeCompare does lexicographic compare and would put Dori-102
+  // ahead of Dori-84 because "1" < "8" as characters.
+  const NATURAL = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
   const discountable = lines
     .filter(isDiscountable)
     .slice()
-    .sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+    .sort((a, b) => NATURAL.compare(sortKey(a), sortKey(b)));
   const nonDiscountable = lines
     .filter((l) => !isDiscountable(l))
     .slice()
-    .sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+    .sort((a, b) => NATURAL.compare(sortKey(a), sortKey(b)));
   return [...discountable, ...nonDiscountable];
 }
 
