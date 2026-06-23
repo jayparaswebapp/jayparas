@@ -6,17 +6,36 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { createMultipleSkusAction, type CreateMultipleResult } from './actions';
 
+/**
+ * Pack tile values mirror the single-create form on /skus/new. Each entry
+ * pairs a UI label with the (pack_size, rate_unit) the SKU is saved with.
+ * "1 Doz" and "12 pcs" both have pack_size=12 but a different rate_unit so
+ * invoice line behaviour matches the picker's mental model — see
+ * lib/skus/code.ts → packCodeSuffix().
+ */
+const PACK_TILES = [
+  { key: '1', label: '1', pack_size: 1, rate_unit: 'piece' as const },
+  { key: '3', label: '3', pack_size: 3, rate_unit: 'piece' as const },
+  { key: '4', label: '4', pack_size: 4, rate_unit: 'piece' as const },
+  { key: '6', label: '6', pack_size: 6, rate_unit: 'piece' as const },
+  { key: 'doz', label: '1 Doz', pack_size: 12, rate_unit: 'pack' as const },
+  { key: '12p', label: '12 pcs', pack_size: 12, rate_unit: 'piece' as const },
+];
+
+type PackKey = (typeof PACK_TILES)[number]['key'];
+
+const PACK_BY_KEY: Record<PackKey, (typeof PACK_TILES)[number]> = Object.fromEntries(
+  PACK_TILES.map((tile) => [tile.key, tile]),
+) as Record<PackKey, (typeof PACK_TILES)[number]>;
+
 interface RowValues {
   design_name: string;
-  design_no: string;
-  pack_size: string;
+  pack_key: PackKey;
   price: string;
   discount_pct: string;
   is_discountable: boolean;
   print_qty: string;
 }
-
-const PACK_OPTIONS = ['1', '3', '4', '6', '12'];
 
 /**
  * Convert a paste cell into a boolean. Accepts "y/n", "yes/no", "1/0",
@@ -29,11 +48,24 @@ function parseFlag(raw: string | undefined): boolean {
   return v === 'y' || v === 'yes' || v === '1' || v === 'true' || v === '✓';
 }
 
+/**
+ * Map a paste cell to a pack-tile key. Accepts plain digits ("1", "3", "4",
+ * "6"), the friendly labels "1 Doz" / "1doz" / "doz" / "dozen", and the
+ * loose-12 forms "12pcs" / "12 pcs" / "12p". Defaults to "1" if unparseable.
+ */
+function parsePackKey(raw: string | undefined): PackKey {
+  if (!raw) return '1';
+  const v = raw.trim().toLowerCase().replace(/\s+/g, '');
+  if (v === '1' || v === '3' || v === '4' || v === '6') return v;
+  if (v === 'doz' || v === '1doz' || v === 'dozen') return 'doz';
+  if (v === '12p' || v === '12pcs' || v === '12pc' || v === '12') return '12p';
+  return '1';
+}
+
 function emptyRow(): RowValues {
   return {
     design_name: '',
-    design_no: '',
-    pack_size: '1',
+    pack_key: '1',
     price: '0',
     discount_pct: '0',
     is_discountable: false,
@@ -44,9 +76,8 @@ function emptyRow(): RowValues {
 /**
  * Parses a TSV/CSV block copied from Excel/Sheets. We accept tabs OR commas
  * as the delimiter (Excel copies as tabs; some Sheets exports use commas) and
- * tolerate trailing whitespace + blank rows. Column order is fixed and
- * documented in the placeholder: Design Name | Design # | Pack | Price |
- * Discount % | Print Qty.
+ * tolerate trailing whitespace + blank rows. Column order is now:
+ * Design Name | Pack | Price | Discount % | Disc? | Print Qty
  */
 function parsePastedRows(raw: string): RowValues[] {
   const out: RowValues[] = [];
@@ -55,18 +86,14 @@ function parsePastedRows(raw: string): RowValues[] {
     if (!trimmed) continue;
     const cells = line.includes('\t') ? line.split('\t') : line.split(',');
     const cleaned = cells.map((c) => c.trim());
-    // Need at least design_name + design_no + pack + price.
-    if (cleaned.length < 4 || !cleaned[0]) continue;
-    let packCell = cleaned[2] ?? '1';
-    if (/doz/i.test(packCell)) packCell = '12';
+    if (cleaned.length < 3 || !cleaned[0]) continue;
     out.push({
       design_name: cleaned[0] ?? '',
-      design_no: cleaned[1] ?? '',
-      pack_size: PACK_OPTIONS.includes(packCell) ? packCell : '1',
-      price: cleaned[3] ?? '0',
-      discount_pct: cleaned[4] ?? '0',
-      is_discountable: parseFlag(cleaned[5]),
-      print_qty: cleaned[6] ?? '0',
+      pack_key: parsePackKey(cleaned[1]),
+      price: cleaned[2] ?? '0',
+      discount_pct: cleaned[3] ?? '0',
+      is_discountable: parseFlag(cleaned[4]),
+      print_qty: cleaned[5] ?? '0',
     });
   }
   return out;
@@ -91,15 +118,21 @@ export function MultipleSkusForm() {
   const payload = useMemo(
     () =>
       JSON.stringify({
-        rows: rows.map((r) => ({
-          design_name: r.design_name.trim(),
-          design_no: r.design_no.trim(),
-          pack_size: num(r.pack_size),
-          price: num(r.price),
-          discount_pct: num(r.discount_pct),
-          is_discountable: r.is_discountable,
-          print_qty: num(r.print_qty),
-        })),
+        rows: rows.map((r) => {
+          // PACK_BY_KEY covers every PackKey, but TS's index signature
+          // returns | undefined; fall back to the 1-pack default so the
+          // payload type stays narrow.
+          const tile = PACK_BY_KEY[r.pack_key] ?? PACK_TILES[0]!;
+          return {
+            design_name: r.design_name.trim(),
+            pack_size: tile.pack_size,
+            rate_unit: tile.rate_unit,
+            price: num(r.price),
+            discount_pct: num(r.discount_pct),
+            is_discountable: r.is_discountable,
+            print_qty: num(r.print_qty),
+          };
+        }),
       }),
     [rows],
   );
@@ -124,17 +157,14 @@ export function MultipleSkusForm() {
     // If the current sheet is just one empty starter row, replace it; else
     // append, so accidentally pasting twice doesn't wipe what was typed.
     const first = rows[0];
-    const isStarter =
-      rows.length === 1 && !!first && !first.design_name.trim() && !first.design_no.trim();
+    const isStarter = rows.length === 1 && !!first && !first.design_name.trim();
     setRows(isStarter ? parsed : [...rows, ...parsed]);
     setPaste('');
     setPasteOpen(false);
   }
 
   const totalLabels = rows.reduce((acc, r) => acc + Math.max(0, num(r.print_qty)), 0);
-  const allRowsHaveRequired = rows.every(
-    (r) => r.design_name.trim() && r.design_no.trim() && num(r.pack_size) > 0,
-  );
+  const allRowsHaveRequired = rows.every((r) => r.design_name.trim());
 
   return (
     <div className="space-y-4">
@@ -166,7 +196,7 @@ export function MultipleSkusForm() {
               onChange={(e) => setPaste(e.target.value)}
               rows={6}
               className="input-base h-auto min-h-0 w-full font-mono text-xs"
-              placeholder={'Dori\t1325\t6\t120\t5\t10\nFestive\t2026\t1\t50\t0\t20'}
+              placeholder={'Dori\t6\t120\t5\ty\t10\nFestive\t1 Doz\t240\t0\t\t20'}
             />
             <div className="flex items-center justify-end gap-2">
               <button
@@ -202,9 +232,8 @@ export function MultipleSkusForm() {
               <tr>
                 <th className="px-2 py-2">#</th>
                 <th className="px-2 py-2">{t('col.designName')}</th>
-                <th className="px-2 py-2">{t('col.designNo')}</th>
                 <th className="px-2 py-2">{t('col.pack')}</th>
-                <th className="px-2 py-2">{t('col.price')}</th>
+                <th className="px-2 py-2">{t('col.mrp')}</th>
                 <th className="px-2 py-2">{t('col.discount')}</th>
                 <th className="px-2 py-2 text-center" title={t('col.discountableHint')}>
                   {t('col.discountable')}
@@ -226,22 +255,14 @@ export function MultipleSkusForm() {
                     />
                   </td>
                   <td className="px-1 py-1">
-                    <input
-                      className="input-base !min-h-0 !py-1 !text-sm"
-                      value={r.design_no}
-                      onChange={(e) => updateRow(idx, { design_no: e.target.value })}
-                      placeholder={t('placeholders.designNo')}
-                    />
-                  </td>
-                  <td className="px-1 py-1">
                     <select
                       className="input-base !min-h-0 !py-1 !text-sm"
-                      value={r.pack_size}
-                      onChange={(e) => updateRow(idx, { pack_size: e.target.value })}
+                      value={r.pack_key}
+                      onChange={(e) => updateRow(idx, { pack_key: e.target.value as PackKey })}
                     >
-                      {PACK_OPTIONS.map((p) => (
-                        <option key={p} value={p}>
-                          {p === '12' ? '1 Doz' : p}
+                      {PACK_TILES.map((tile) => (
+                        <option key={tile.key} value={tile.key}>
+                          {tile.label}
                         </option>
                       ))}
                     </select>

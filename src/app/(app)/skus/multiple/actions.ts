@@ -12,11 +12,11 @@ const PACK_SIZES = [1, 3, 4, 6, 12] as const;
 
 const RowSchema = z.object({
   design_name: z.string().trim().min(1),
-  design_no: z.string().trim().min(1),
   pack_size: z.coerce
     .number()
     .int()
     .refine((n) => (PACK_SIZES as readonly number[]).includes(n)),
+  rate_unit: z.enum(['pack', 'piece']).default('piece'),
   price: z.coerce.number().min(0),
   discount_pct: z.coerce.number().min(0).max(100).default(0),
   is_discountable: z.boolean().default(false),
@@ -62,13 +62,13 @@ export async function createMultipleSkusAction(
     const sku_code = generateSkuCode({
       pack_type: 'single',
       design_name: row.design_name,
-      design_no: row.design_no,
       pack_size: row.pack_size,
+      rate_unit: row.rate_unit,
     });
     const { data, error } = await supabase.rpc('create_sku', {
       p_sku_code: sku_code,
       p_pack_type: 'single',
-      p_design_no: row.design_no,
+      p_design_no: '',
       p_mix_code: '',
       p_design_name: row.design_name,
       p_pack_size: row.pack_size,
@@ -77,6 +77,7 @@ export async function createMultipleSkusAction(
       p_reason: '',
       p_discount_pct: row.discount_pct,
       p_is_discountable: row.is_discountable,
+      p_rate_unit: row.rate_unit,
     });
     if (error) {
       const key = rpcErrorKey(error);
