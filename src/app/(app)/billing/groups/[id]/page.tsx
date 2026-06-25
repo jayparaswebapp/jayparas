@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/server';
@@ -28,14 +29,32 @@ export default async function EditCustomerGroupPage({ params }: { params: { id: 
     is_active: row.is_active,
   };
 
-  return <EditView initial={initial} isDeleted={!!row.deleted_at} />;
+  return <EditView initial={initial} isDeleted={!!row.deleted_at} groupId={row.id} />;
 }
 
-function EditView({ initial, isDeleted }: { initial: GroupFormValues; isDeleted: boolean }) {
+function EditView({
+  initial,
+  isDeleted,
+  groupId,
+}: {
+  initial: GroupFormValues;
+  isDeleted: boolean;
+  groupId: string;
+}) {
   const t = useTranslations('billing.groups.form');
+  const tGroup = useTranslations('billing.ledger.group');
   return (
     <>
-      <PageHeader title={t('editTitle')} />
+      <PageHeader
+        title={t('editTitle')}
+        action={
+          !isDeleted ? (
+            <Link href={`/billing/groups/${groupId}/ledger`} className="btn-primary !w-auto px-4">
+              {tGroup('viewLedgerButton')}
+            </Link>
+          ) : null
+        }
+      />
       {isDeleted ? (
         <DestructiveActions groupId={initial.id!} isDeleted />
       ) : (
