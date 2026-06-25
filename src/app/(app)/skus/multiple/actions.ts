@@ -53,18 +53,63 @@ export async function createMultipleSkusAction(
   }
 
   const supabase = createClient();
-  // Build [{ id, print_qty }] from successful inserts so we can redirect to
-  // the print sheet with exactly the labels the user asked for.
-  const printItems: Array<{ id: string; qty: number }> = [];
 
-  for (let i = 0; i < parsed.data.rows.length; i += 1) {
-    const row = parsed.data.rows[i]!;
-    const sku_code = generateSkuCode({
+  // Pre-compute every row's deterministic sku_code, then run two duplicate
+  // checks BEFORE inserting anything. Without this, an inserted-and-then-
+  // failed-mid-loop run would leave orphan SKUs in the DB and skip the
+  // redirect to the print sheet — the user retries, hits the duplicate from
+  // their own leftover insert, and never gets their labels.
+  const rowsWithCodes = parsed.data.rows.map((row, idx) => ({
+    idx,
+    row,
+    sku_code: generateSkuCode({
       pack_type: 'single',
       design_name: row.design_name,
       pack_size: row.pack_size,
       rate_unit: row.rate_unit,
-    });
+    }),
+  }));
+
+  // 1. Intra-batch: same code appearing on two rows in this submission.
+  const seenInBatch = new Map<string, number>();
+  for (const item of rowsWithCodes) {
+    const earlier = seenInBatch.get(item.sku_code);
+    if (earlier !== undefined) {
+      return {
+        ok: false,
+        messageKey: 'skus.errors.duplicate',
+        rowIndex: item.idx,
+        duplicateSkuCode: item.sku_code,
+      };
+    }
+    seenInBatch.set(item.sku_code, item.idx);
+  }
+
+  // 2. Vs. DB: any of these codes already an active SKU?
+  const allCodes = rowsWithCodes.map((r) => r.sku_code);
+  const { data: existing } = await supabase
+    .from('skus')
+    .select('sku_code')
+    .in('sku_code', allCodes)
+    .is('deleted_at', null);
+  if (existing && existing.length > 0) {
+    const taken = new Set((existing as Array<{ sku_code: string }>).map((r) => r.sku_code));
+    const conflict = rowsWithCodes.find((r) => taken.has(r.sku_code));
+    if (conflict) {
+      return {
+        ok: false,
+        messageKey: 'skus.errors.duplicate',
+        rowIndex: conflict.idx,
+        duplicateSkuCode: conflict.sku_code,
+      };
+    }
+  }
+
+  // Build [{ id, print_qty }] from successful inserts so we can redirect to
+  // the print sheet with exactly the labels the user asked for.
+  const printItems: Array<{ id: string; qty: number }> = [];
+
+  for (const { idx: i, row, sku_code } of rowsWithCodes) {
     const { data, error } = await supabase.rpc('create_sku', {
       p_sku_code: sku_code,
       p_pack_type: 'single',
