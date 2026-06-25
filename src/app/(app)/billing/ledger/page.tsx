@@ -35,6 +35,7 @@ interface GroupRow {
 
 interface CustomerLedgerRow {
   customer: CustomerRow;
+  groupId: string | null;
   groupName: string | null;
   totalDue: number;
   invoiceCount: number;
@@ -100,6 +101,7 @@ export default async function LedgerOverviewPage({
     if (!entry) {
       entry = {
         customer,
+        groupId: customer.group_id ?? null,
         groupName: customer.group_id ? (groupById.get(customer.group_id)?.name ?? null) : null,
         totalDue: 0,
         invoiceCount: 0,
@@ -201,11 +203,27 @@ function LedgerView({
   locale: Locale;
 }) {
   const t = useTranslations('billing.ledger');
+  const tGroup = useTranslations('billing.ledger.group');
   const hasFilter = filters.q.length > 0 || filters.group.length > 0 || filters.city.length > 0;
+  const activeGroupId =
+    filters.group.length > 0 && filters.group !== '__none__' ? filters.group : null;
 
   return (
     <>
-      <PageHeader title={t('title')} subtitle={t('subtitle')} />
+      <PageHeader
+        title={t('title')}
+        subtitle={t('subtitle')}
+        action={
+          activeGroupId ? (
+            <Link
+              href={`/billing/groups/${activeGroupId}/ledger`}
+              className="btn-primary !w-auto px-4"
+            >
+              {tGroup('viewLedgerButton')}
+            </Link>
+          ) : null
+        }
+      />
 
       {/* Ageing summary across the filtered set */}
       <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
@@ -297,7 +315,18 @@ function LedgerView({
                       <div className="text-xs text-neutral-500">{r.customer.city}</div>
                     ) : null}
                   </td>
-                  <td className="px-3 py-2 text-neutral-700">{r.groupName ?? '—'}</td>
+                  <td className="px-3 py-2 text-neutral-700">
+                    {r.groupId && r.groupName ? (
+                      <Link
+                        href={`/billing/groups/${r.groupId}/ledger`}
+                        className="text-brand-700 hover:underline"
+                      >
+                        {r.groupName}
+                      </Link>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.invoiceCount}</td>
                   <td className="px-3 py-2 text-right text-xs text-neutral-700">
                     {t('daysAgo', { days: r.oldestAgeDays })}
