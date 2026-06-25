@@ -107,6 +107,11 @@ function num(s: string): number {
 export function MultipleSkusForm() {
   const t = useTranslations('skus.multiple');
   const tCommon = useTranslations('common');
+  // Root translator so we can resolve any full dotted key like
+  // `skus.errors.duplicate` that comes back from a server action's
+  // messageKey — `t` above is scoped to `skus.multiple` and would 404 on
+  // out-of-namespace keys.
+  const tAny = useTranslations();
   const [rows, setRows] = useState<RowValues[]>([emptyRow()]);
   const [paste, setPaste] = useState('');
   const [pasteOpen, setPasteOpen] = useState(false);
@@ -347,7 +352,7 @@ export function MultipleSkusForm() {
         {state && !state.ok ? (
           <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
             {state.rowIndex !== undefined ? t('errorOnRow', { row: state.rowIndex + 1 }) : null}{' '}
-            <span>{state.messageKey}</span>
+            <span>{tAny(state.messageKey)}</span>
             {state.duplicateSkuCode ? (
               <span className="ml-1">({state.duplicateSkuCode})</span>
             ) : null}
