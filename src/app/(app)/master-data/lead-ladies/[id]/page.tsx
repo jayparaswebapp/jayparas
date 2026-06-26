@@ -6,6 +6,7 @@ import { getServerLocale, pickLocalised } from '@/lib/format/locale';
 import { PageHeader } from '@/components/page-header';
 import { LeadLadyForm, type LeadLadyFormValues, type LocationOption } from '../lead-lady-form';
 import { DestructiveActions } from './destructive-actions';
+import { LabourersSection, type LabourerRow } from './labourers-section';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,17 +23,26 @@ export default async function EditLeadLadyPage({ params }: { params: { id: strin
 
   if (!row) notFound();
 
-  const { data: locs } = await supabase
-    .from('locations')
-    .select('id, name_en, name_gu')
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .order('name_en', { ascending: true });
+  const [{ data: locs }, { data: labs }] = await Promise.all([
+    supabase
+      .from('locations')
+      .select('id, name_en, name_gu')
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .order('name_en', { ascending: true }),
+    supabase
+      .from('labourers')
+      .select('id, full_name, mobile, notes, is_active')
+      .eq('lead_lady_id', params.id)
+      .is('deleted_at', null)
+      .order('full_name', { ascending: true }),
+  ]);
 
   const locations: LocationOption[] = (locs ?? []).map((l) => ({
     id: l.id,
     label: pickLocalised(locale, l.name_en, l.name_gu),
   }));
+  const labourers = (labs ?? []) as unknown as LabourerRow[];
 
   const initial: LeadLadyFormValues = {
     id: row.id,
@@ -45,17 +55,26 @@ export default async function EditLeadLadyPage({ params }: { params: { id: strin
     ),
   };
 
-  return <EditView initial={initial} isDeleted={!!row.deleted_at} locations={locations} />;
+  return (
+    <EditView
+      initial={initial}
+      isDeleted={!!row.deleted_at}
+      locations={locations}
+      labourers={labourers}
+    />
+  );
 }
 
 function EditView({
   initial,
   isDeleted,
   locations,
+  labourers,
 }: {
   initial: LeadLadyFormValues;
   isDeleted: boolean;
   locations: LocationOption[];
+  labourers: LabourerRow[];
 }) {
   const t = useTranslations('masterData.leadLadies.form');
   return (
@@ -66,6 +85,7 @@ function EditView({
       ) : (
         <>
           <LeadLadyForm initial={initial} locations={locations} />
+          <LabourersSection leadLadyId={initial.id!} labourers={labourers} />
           <div className="mt-6 border-t border-neutral-200 pt-4">
             <DestructiveActions leadLadyId={initial.id!} isDeleted={false} />
           </div>
