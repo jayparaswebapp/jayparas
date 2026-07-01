@@ -22,6 +22,7 @@ interface SkuRecord {
   mix_code: string | null;
   design_name: string;
   pack_size: number;
+  rate_unit: 'pack' | 'piece';
   price: number;
   discount_pct: number;
   is_discountable: boolean;
@@ -45,7 +46,7 @@ export default async function SkuDetailPage({
   const { data: row } = await supabase
     .from('skus')
     .select(
-      'id, sku_code, pack_type, design_no, mix_code, design_name, pack_size, price, discount_pct, is_discountable, photo_path, is_active, created_at, updated_at',
+      'id, sku_code, pack_type, design_no, mix_code, design_name, pack_size, rate_unit, price, discount_pct, is_discountable, photo_path, is_active, created_at, updated_at',
     )
     .eq('id', params.id)
     .is('deleted_at', null)
@@ -61,6 +62,7 @@ export default async function SkuDetailPage({
     mix_code: row.mix_code,
     design_name: row.design_name,
     pack_size: row.pack_size,
+    rate_unit: row.rate_unit === 'pack' ? 'pack' : 'piece',
     price: Number(row.price),
     discount_pct: Number(row.discount_pct ?? 0),
     is_discountable: Boolean(row.is_discountable),
@@ -137,10 +139,12 @@ function SkuDetailView({
             <StatusBadge isActive={sku.is_active} />
           </div>
           <div className="mt-0.5 text-sm text-neutral-700">
-            {sku.pack_type === 'single'
-              ? `${tCard('designLabel')} ${sku.design_no}`
-              : `${tCard('mixLabel')} ${sku.mix_code}`}{' '}
-            · {labelUnit(sku.pack_size)}
+            {(() => {
+              const ident = sku.pack_type === 'single' ? sku.design_no : sku.mix_code;
+              const label = sku.pack_type === 'single' ? tCard('designLabel') : tCard('mixLabel');
+              const identSegment = ident ? `${label} ${ident} · ` : '';
+              return `${identSegment}${labelUnit(sku.pack_size, sku.rate_unit)}`;
+            })()}
           </div>
           <div className="mt-1 flex items-center gap-2">
             <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-sm text-neutral-700">
@@ -160,12 +164,12 @@ function SkuDetailView({
         <h3 className="mb-3 text-sm font-medium text-neutral-700">{t('lockedSection')}</h3>
         <dl className="grid grid-cols-2 gap-y-2 text-sm">
           <dt className="text-neutral-500">{tForm('packTypeLabel')}</dt>
-          <dd className="text-neutral-900">{labelUnit(sku.pack_size)}</dd>
+          <dd className="text-neutral-900">{labelUnit(sku.pack_size, sku.rate_unit)}</dd>
           <dt className="text-neutral-500">
             {sku.pack_type === 'single' ? tForm('designNumberLabel') : tForm('mixCodeLabel')}
           </dt>
           <dd className="text-neutral-900">
-            {sku.pack_type === 'single' ? sku.design_no : sku.mix_code}
+            {(sku.pack_type === 'single' ? sku.design_no : sku.mix_code) || '—'}
           </dd>
           <dt className="text-neutral-500">{tForm('skuCodeLabel')}</dt>
           <dd>

@@ -10,8 +10,13 @@
  *   rate      → "₹132/-" for whole rupees, "₹132.50" when paise are present.
  *               The "/-" suffix matches the Indian rupee shorthand the user
  *               drew on the spec.
- *   unit      → "1 Doz" for whole-dozen multiples, "N pcs" otherwise.
+ *   unit      → "1 Doz" for the whole-dozen pack sold as one unit (rate per
+ *               dozen), "N pcs" otherwise — including 12 pieces sold loose
+ *               with a per-piece rate, where the pack_size is 12 but the
+ *               rate_unit is 'piece'.
  */
+
+export type RateUnit = 'pack' | 'piece';
 
 export interface SkuLabelInput {
   pack_type: 'single' | 'mix';
@@ -19,6 +24,11 @@ export interface SkuLabelInput {
   mix_code: string | null;
   design_name: string;
   pack_size: number;
+  /** 'pack' → rate is per pack (a 12-size pack shows as "1 Doz"). 'piece' →
+   *  rate is per piece (a 12-size pack shows as "12 pcs"). Optional so old
+   *  callers that don't have the field still get the legacy "N/pack_size%12"
+   *  behaviour. */
+  rate_unit?: RateUnit;
   price: number;
   sku_code: string;
 }
@@ -35,8 +45,12 @@ export function labelRate(price: number): string {
   return `₹${price.toFixed(2)}`;
 }
 
-export function labelUnit(pack_size: number): string {
-  if (pack_size > 0 && pack_size % 12 === 0) {
+export function labelUnit(pack_size: number, rate_unit?: RateUnit): string {
+  // "1 Doz" specifically means the pack IS the sold unit (rate is per pack).
+  // A 12-piece SKU with rate_unit='piece' is really "12 pcs sold loose", so
+  // the label needs to say that, not "1 Doz" — otherwise the display lies
+  // about how it was created and how it invoices.
+  if (pack_size > 0 && pack_size % 12 === 0 && rate_unit !== 'piece') {
     const dozens = pack_size / 12;
     return `${dozens} Doz`;
   }

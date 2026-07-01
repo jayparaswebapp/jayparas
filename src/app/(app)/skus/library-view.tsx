@@ -17,6 +17,7 @@ export interface SkuRow {
   mix_code: string | null;
   design_name: string;
   pack_size: number;
+  rate_unit: 'pack' | 'piece';
   price: number;
   is_active: boolean;
   photo_url: string | null;
@@ -124,7 +125,7 @@ export function SkuLibraryView({
                     {s.pack_type === 'single'
                       ? `${tCard('designLabel')} ${s.design_no}`
                       : `${tCard('mixLabel')} ${s.mix_code}`}{' '}
-                    · {labelUnit(s.pack_size)}
+                    · {labelUnit(s.pack_size, s.rate_unit)}
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-2 text-xs">
                     <code className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-neutral-700">
