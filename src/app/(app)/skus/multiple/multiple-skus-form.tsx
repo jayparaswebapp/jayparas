@@ -22,15 +22,21 @@ const PACK_TILES = [
   { key: '12p', label: '12 pcs', pack_size: 12, rate_unit: 'piece' as const },
 ];
 
-type PackKey = (typeof PACK_TILES)[number]['key'];
+const CUSTOM_KEY = 'custom';
 
-const PACK_BY_KEY: Record<PackKey, (typeof PACK_TILES)[number]> = Object.fromEntries(
+type PackKey = (typeof PACK_TILES)[number]['key'] | typeof CUSTOM_KEY;
+
+const PACK_BY_KEY: Record<string, (typeof PACK_TILES)[number]> = Object.fromEntries(
   PACK_TILES.map((tile) => [tile.key, tile]),
-) as Record<PackKey, (typeof PACK_TILES)[number]>;
+);
 
 interface RowValues {
   design_name: string;
   pack_key: PackKey;
+  /** Only used when pack_key === 'custom'. Otherwise ignored. */
+  custom_pack_size: string;
+  /** Only used when pack_key === 'custom'. Otherwise ignored. */
+  custom_rate_unit: 'pack' | 'piece';
   price: string;
   discount_pct: string;
   is_discountable: boolean;
@@ -49,23 +55,43 @@ function parseFlag(raw: string | undefined): boolean {
 }
 
 /**
- * Map a paste cell to a pack-tile key. Accepts plain digits ("1", "3", "4",
- * "6"), the friendly labels "1 Doz" / "1doz" / "doz" / "dozen", and the
- * loose-12 forms "12pcs" / "12 pcs" / "12p". Defaults to "1" if unparseable.
+ * Map a paste cell to a pack-tile key + custom-size fallback. Accepts:
+ *   plain digits: "1", "3", "4", "6" (map to preset tiles)
+ *   friendly names: "1 Doz"/"doz"/"dozen" → doz, "12 pcs"/"12p" → 12p
+ *   any other positive number ("20", "100", "500") → custom pack
+ * Falls back to "1" if the cell is unparseable.
  */
-function parsePackKey(raw: string | undefined): PackKey {
-  if (!raw) return '1';
+function parsePackKey(raw: string | undefined): {
+  key: PackKey;
+  custom_pack_size: string;
+  custom_rate_unit: 'pack' | 'piece';
+} {
+  const empty = { custom_pack_size: '', custom_rate_unit: 'piece' as const };
+  if (!raw) return { key: '1', ...empty };
   const v = raw.trim().toLowerCase().replace(/\s+/g, '');
-  if (v === '1' || v === '3' || v === '4' || v === '6') return v;
-  if (v === 'doz' || v === '1doz' || v === 'dozen') return 'doz';
-  if (v === '12p' || v === '12pcs' || v === '12pc' || v === '12') return '12p';
-  return '1';
+  if (v === '1' || v === '3' || v === '4' || v === '6') return { key: v as PackKey, ...empty };
+  if (v === 'doz' || v === '1doz' || v === 'dozen') return { key: 'doz', ...empty };
+  if (v === '12p' || v === '12pcs' || v === '12pc' || v === '12') return { key: '12p', ...empty };
+  // Anything else: try to parse a positive integer for the custom slot.
+  // Rate unit defaults to 'piece' — the common bulk-pack case ("500 pcs at
+  // ₹X per piece"). Paste flow can still opt into per-pack with the tiles.
+  const asNum = Number.parseInt(v.replace(/[^\d]/g, ''), 10);
+  if (Number.isFinite(asNum) && asNum >= 1 && asNum <= 9999) {
+    return {
+      key: CUSTOM_KEY,
+      custom_pack_size: String(asNum),
+      custom_rate_unit: 'piece',
+    };
+  }
+  return { key: '1', ...empty };
 }
 
 function emptyRow(): RowValues {
   return {
     design_name: '',
     pack_key: '1',
+    custom_pack_size: '',
+    custom_rate_unit: 'piece',
     price: '0',
     discount_pct: '0',
     is_discountable: false,
@@ -87,9 +113,12 @@ function parsePastedRows(raw: string): RowValues[] {
     const cells = line.includes('\t') ? line.split('\t') : line.split(',');
     const cleaned = cells.map((c) => c.trim());
     if (cleaned.length < 3 || !cleaned[0]) continue;
+    const packInfo = parsePackKey(cleaned[1]);
     out.push({
       design_name: cleaned[0] ?? '',
-      pack_key: parsePackKey(cleaned[1]),
+      pack_key: packInfo.key,
+      custom_pack_size: packInfo.custom_pack_size,
+      custom_rate_unit: packInfo.custom_rate_unit,
       price: cleaned[2] ?? '0',
       discount_pct: cleaned[3] ?? '0',
       is_discountable: parseFlag(cleaned[4]),
@@ -124,14 +153,24 @@ export function MultipleSkusForm() {
     () =>
       JSON.stringify({
         rows: rows.map((r) => {
-          // PACK_BY_KEY covers every PackKey, but TS's index signature
-          // returns | undefined; fall back to the 1-pack default so the
-          // payload type stays narrow.
-          const tile = PACK_BY_KEY[r.pack_key] ?? PACK_TILES[0]!;
+          let pack_size: number;
+          let rate_unit: 'pack' | 'piece';
+          if (r.pack_key === CUSTOM_KEY) {
+            const parsed = Number.parseInt(r.custom_pack_size, 10);
+            // Fall back to 1 when custom slot is blank so the row is still
+            // structurally valid; the disabled-submit guard below prevents
+            // shipping an incomplete row.
+            pack_size = Number.isFinite(parsed) && parsed >= 1 ? parsed : 1;
+            rate_unit = r.custom_rate_unit;
+          } else {
+            const tile = PACK_BY_KEY[r.pack_key] ?? PACK_TILES[0]!;
+            pack_size = tile.pack_size;
+            rate_unit = tile.rate_unit;
+          }
           return {
             design_name: r.design_name.trim(),
-            pack_size: tile.pack_size,
-            rate_unit: tile.rate_unit,
+            pack_size,
+            rate_unit,
             price: num(r.price),
             discount_pct: num(r.discount_pct),
             is_discountable: r.is_discountable,
@@ -169,7 +208,14 @@ export function MultipleSkusForm() {
   }
 
   const totalLabels = rows.reduce((acc, r) => acc + Math.max(0, num(r.print_qty)), 0);
-  const allRowsHaveRequired = rows.every((r) => r.design_name.trim());
+  const allRowsHaveRequired = rows.every((r) => {
+    if (!r.design_name.trim()) return false;
+    if (r.pack_key === CUSTOM_KEY) {
+      const parsed = Number.parseInt(r.custom_pack_size, 10);
+      return Number.isFinite(parsed) && parsed >= 1 && parsed <= 9999;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-4">
@@ -260,17 +306,51 @@ export function MultipleSkusForm() {
                     />
                   </td>
                   <td className="px-1 py-1">
-                    <select
-                      className="input-base !min-h-0 !py-1 !text-sm"
-                      value={r.pack_key}
-                      onChange={(e) => updateRow(idx, { pack_key: e.target.value as PackKey })}
-                    >
-                      {PACK_TILES.map((tile) => (
-                        <option key={tile.key} value={tile.key}>
-                          {tile.label}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="space-y-1">
+                      <select
+                        className="input-base !min-h-0 !py-1 !text-sm"
+                        value={r.pack_key}
+                        onChange={(e) => updateRow(idx, { pack_key: e.target.value as PackKey })}
+                      >
+                        {PACK_TILES.map((tile) => (
+                          <option key={tile.key} value={tile.key}>
+                            {tile.label}
+                          </option>
+                        ))}
+                        <option value={CUSTOM_KEY}>{t('customPack')}</option>
+                      </select>
+                      {r.pack_key === CUSTOM_KEY ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min="1"
+                            max="9999"
+                            step="1"
+                            placeholder="e.g. 100"
+                            value={r.custom_pack_size}
+                            onChange={(e) =>
+                              updateRow(idx, {
+                                custom_pack_size: e.target.value.replace(/[^\d]/g, ''),
+                              })
+                            }
+                            className="input-base !min-h-0 w-16 !py-1 !text-sm"
+                          />
+                          <select
+                            className="input-base !min-h-0 !py-1 !text-xs"
+                            value={r.custom_rate_unit}
+                            onChange={(e) =>
+                              updateRow(idx, {
+                                custom_rate_unit: e.target.value as 'pack' | 'piece',
+                              })
+                            }
+                            title={t('customRateUnitHint')}
+                          >
+                            <option value="piece">{t('customRateUnitPiece')}</option>
+                            <option value="pack">{t('customRateUnitPack')}</option>
+                          </select>
+                        </div>
+                      ) : null}
+                    </div>
                   </td>
                   <td className="px-1 py-1">
                     <input

@@ -75,6 +75,7 @@ export default async function SkuDetailPage({
   const photoUrl = getSkuPhotoPublicUrl(supabase, sku.photo_path);
   const canEdit = user.role === 'super_admin' || user.role === 'supervisor';
   const canToggleActive = user.role === 'super_admin';
+  const canEditLocked = user.role === 'super_admin';
 
   return (
     <SkuDetailView
@@ -82,6 +83,7 @@ export default async function SkuDetailPage({
       photoUrl={photoUrl}
       canEdit={canEdit}
       canToggleActive={canToggleActive}
+      canEditLocked={canEditLocked}
       justCreated={searchParams.created === '1'}
       locale={locale}
     />
@@ -93,6 +95,7 @@ function SkuDetailView({
   photoUrl,
   canEdit,
   canToggleActive,
+  canEditLocked,
   justCreated,
   locale,
 }: {
@@ -100,6 +103,7 @@ function SkuDetailView({
   photoUrl: string | null;
   canEdit: boolean;
   canToggleActive: boolean;
+  canEditLocked: boolean;
   justCreated: boolean;
   locale: 'gu' | 'en';
 }) {
@@ -190,8 +194,11 @@ function SkuDetailView({
               discount_pct: String(sku.discount_pct),
               is_discountable: sku.is_discountable,
               photo_path: sku.photo_path,
+              pack_size: sku.pack_size,
+              rate_unit: sku.rate_unit,
             }}
             photoUrl={photoUrl}
+            canEditLocked={canEditLocked}
           />
         </div>
       ) : null}
