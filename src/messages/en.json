@@ -768,6 +768,118 @@
       }
     }
   },
+  "accounting": {
+    "newJournalEntryButton": "New journal entry",
+    "statusPosted": "Posted",
+    "statusCancelled": "Cancelled",
+    "source": {
+      "manual": "Manual",
+      "invoice": "Invoice",
+      "payment": "Payment",
+      "purchase_bill": "Purchase",
+      "sales_return": "Credit note",
+      "ll_wage_payment": "LL wage"
+    },
+    "nav": {
+      "dayBook": "Day book",
+      "journal": "Journal entries",
+      "coa": "Chart of accounts"
+    },
+    "dayBook": {
+      "title": "Day book",
+      "subtitle": "Recent journal entries — both manual and auto-posted (once phase 2 lands).",
+      "fromLabel": "From",
+      "toLabel": "To",
+      "applyButton": "Apply",
+      "totalDebitLabel": "Total debit",
+      "totalCreditLabel": "Total credit",
+      "entryCountLabel": "Posted entries",
+      "empty": "No entries in this window."
+    },
+    "journal": {
+      "title": "Journal entries",
+      "subtitle": "Every posting that hits the ledger — manual and auto.",
+      "allSources": "All sources",
+      "allStatuses": "All statuses",
+      "applyButton": "Apply",
+      "clearButton": "Clear",
+      "empty": "No journal entries yet.",
+      "noMatches": "No entries match the filters.",
+      "form": {
+        "createTitle": "New journal entry",
+        "createSubtitle": "Debits and credits must balance before you can save.",
+        "dateLabel": "Entry date",
+        "narrationLabel": "Narration",
+        "narrationPlaceholder": "e.g. Paid March rent to landlord",
+        "linesSection": "Ledger lines",
+        "accountColumn": "Account",
+        "accountPickerPlaceholder": "— Pick account —",
+        "debitColumn": "Debit",
+        "creditColumn": "Credit",
+        "noteColumn": "Note",
+        "addLineButton": "+ Add line",
+        "totalsLabel": "Totals",
+        "balancedLabel": "Balanced",
+        "unbalancedLabel": "Off by ₹ {diff}",
+        "saveButton": "Post entry",
+        "cancelButton": "Cancel"
+      },
+      "detail": {
+        "untitled": "Journal entry",
+        "narrationLabel": "Narration",
+        "accountColumn": "Account",
+        "debitColumn": "Debit",
+        "creditColumn": "Credit",
+        "noteColumn": "Note",
+        "totalsLabel": "Totals",
+        "cancelReasonLabel": "Cancellation reason",
+        "cancelButton": "Cancel entry",
+        "cancelConfirm": "Cancel this journal entry? It stays in the books for audit but is excluded from balances.",
+        "reasonLabel": "Reason",
+        "backButton": "Back to list"
+      }
+    },
+    "coa": {
+      "title": "Chart of accounts",
+      "subtitle": "Ledger accounts grouped by type. Add sub-accounts as needed.",
+      "newAccountButton": "+ New account",
+      "newAccountTitle": "New account",
+      "newAccountSubtitle": "Add a sub-account under a group. The type is inherited from the parent.",
+      "parentLabel": "Parent group",
+      "parentPickerPlaceholder": "Pick a group",
+      "parentHint": "Only group accounts can be parents. Sub-accounts inherit their parent's type.",
+      "codeLabel": "Code",
+      "isGroupLabel": "This is a group (header only, no journal postings)",
+      "nameEnLabel": "Name (English)",
+      "nameGuLabel": "Name (Gujarati)",
+      "inactiveLabel": "Inactive",
+      "crShort": "Cr",
+      "type": {
+        "asset": "Assets",
+        "liability": "Liabilities",
+        "income": "Income",
+        "expense": "Expenses",
+        "equity": "Equity"
+      }
+    },
+    "errors": {
+      "dateRequired": "Pick an entry date",
+      "linesRequired": "A journal entry needs at least two lines",
+      "lineDrXorCr": "Each line must be either a debit or a credit, never both or neither",
+      "lineNegative": "Debit and credit must be non-negative",
+      "accountMissing": "Pick an account for every line",
+      "accountIsGroup": "You can't post to a group account — use a sub-account",
+      "accountInactive": "This account is deactivated",
+      "unbalanced": "Total debit must equal total credit",
+      "alreadyCancelled": "This entry is already cancelled",
+      "autoPosted": "This entry was auto-posted from a source document — cancel the source instead",
+      "codeRequired": "Enter an account code",
+      "nameRequired": "Enter the account name in both languages",
+      "parentRequired": "Pick a parent group",
+      "parentMissing": "The selected parent no longer exists",
+      "codeDuplicate": "Another active account already uses this code"
+    }
+  },
   "jobWork": {
     "title": "Job work",
     "subtitle": "Work issued to lead-ladies and tracked through sub-assignments and receipts.",
