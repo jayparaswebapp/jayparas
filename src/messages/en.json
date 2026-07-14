@@ -1231,6 +1231,26 @@
   },
   "admin": {
     "title": "Admin",
+    "wipeTab": "Wipe test data",
+    "wipe": {
+      "title": "Wipe test data",
+      "subtitle": "Danger zone. Clear every transactional row from the database — invoices, payments, purchases, sales returns, job orders, and journal entries — and reset every per-year number counter.",
+      "warningTitle": "This cannot be undone",
+      "warning": "Every invoice, payment, sales return, purchase bill, job order, and journal entry will be permanently deleted, and invoice / payment / job / journal number counters will reset to 0001. Only run this before going live with real customers.",
+      "safeSectionTitle": "What is NOT wiped",
+      "safeList": "Users, locations, designs, lead-ladies, labourers, customers, groups, suppliers, purchase items, SKUs, chart of accounts, company info, settings, and audit log all stay intact.",
+      "countsTitle": "Rows to be deleted",
+      "confirmLabel": "Type WIPE to confirm",
+      "confirmHint": "Case-sensitive. The button unlocks when you type it exactly.",
+      "disabledHint": "Type WIPE in the field above to unlock the button.",
+      "submitButton": "Wipe test data",
+      "submitting": "Wiping…",
+      "successTitle": "Wiped {total} rows.",
+      "successHint": "Number counters have reset. Master data is unchanged. You can start fresh.",
+      "errors": {
+        "confirmationMissing": "Type WIPE exactly to confirm."
+      }
+    },
     "users": {
       "title": "Users",
       "subtitle": "Internal staff who can sign in.",
