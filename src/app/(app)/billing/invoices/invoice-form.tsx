@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ServerError } from '@/components/form-status';
 import { formatRupees } from '@/lib/format/locale-shared';
 import type { Locale } from '@/lib/i18n/config';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { saveInvoiceDraftAction } from './actions';
+import { NewCustomerShortcut } from '../customers/new-customer-shortcut';
 
 export type BusinessLine = 'rakhi' | 'kite';
 
@@ -155,6 +156,23 @@ export function InvoiceForm({
   const [scanValue, setScanValue] = useState<string>('');
   const [scanError, setScanError] = useState<string | null>(null);
   const scanInputRef = useRef<HTMLInputElement | null>(null);
+  const linesContainerRef = useRef<HTMLDivElement | null>(null);
+  // Track line count across renders so we can distinguish an "add" from a
+  // "remove" — only additions should auto-scroll to the bottom, otherwise a
+  // delete of the last row would fight the user's cursor position.
+  const previousLineCountRef = useRef<number>(lines.length);
+
+  // Auto-scroll the line-items container to the bottom whenever the count
+  // grows so the newly-added row is visible without the user reaching for
+  // the scrollbar. Uses useLayoutEffect so the scroll happens synchronously
+  // after the new row's layout but before paint — no flicker.
+  useLayoutEffect(() => {
+    const box = linesContainerRef.current;
+    if (box && lines.length > previousLineCountRef.current) {
+      box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
+    }
+    previousLineCountRef.current = lines.length;
+  }, [lines.length]);
 
   const skuByCode = useMemo(() => {
     const m = new Map<string, SkuOption>();
@@ -321,6 +339,10 @@ export function InvoiceForm({
 
   return (
     <form action={formAction} className="space-y-6">
+      {/* Ctrl/Cmd + A opens the "New customer" form in a new tab so the
+       * in-progress invoice draft on this tab is preserved. Same-tab
+       * navigation would risk losing unsaved header/line edits. */}
+      <NewCustomerShortcut openInNewTab />
       <input type="hidden" name="payload" value={payload} />
 
       {/* Header */}
@@ -381,6 +403,7 @@ export function InvoiceForm({
                 </option>
               ))}
             </select>
+            <p className="mt-1 text-xs text-neutral-500">{tForm('customerShortcutHint')}</p>
             {selectedCustomer ? (
               <p className="mt-1 text-xs text-neutral-600">
                 {selectedCustomer.city ? (
@@ -444,6 +467,12 @@ export function InvoiceForm({
               }}
               placeholder={tForm('scanPlaceholder')}
               className="input-base flex-1 font-mono"
+              // Native browser autocomplete against a datalist of every SKU.
+              // Typing "Dor" filters the dropdown to design names starting
+              // with Dori; picking one drops the SKU code straight into the
+              // input, and Enter fires handleScan() as usual.
+              list="invoice-sku-suggestions"
+              autoComplete="off"
             />
             <button
               type="button"
@@ -453,6 +482,13 @@ export function InvoiceForm({
               {tForm('scanAddButton')}
             </button>
           </div>
+          <datalist id="invoice-sku-suggestions">
+            {skus.map((s) => (
+              <option key={s.id} value={s.sku_code}>
+                {s.design_name}
+              </option>
+            ))}
+          </datalist>
           {scanError ? (
             <p className="mt-1 text-xs text-red-700">{scanError}</p>
           ) : (
@@ -468,13 +504,26 @@ export function InvoiceForm({
          * cluttering the entry screen). HSN and GST % columns appear only on
          * the kite line; rakhi invoices hide them so the row fits cleanly.
          */}
-        <div className="overflow-x-auto rounded-md border border-neutral-200 bg-white">
+        {/* Bounded-height scroll container so long invoices don't push the
+         * totals / Save button below the fold. As lines are added, an effect
+         * above scrolls this box to the bottom so the newly-added row is
+         * always visible. Max-height is 60vh — plenty for 10+ rows on a
+         * laptop, and mobile still gets to scroll the outer page normally. */}
+        <div
+          ref={linesContainerRef}
+          className="max-h-[60vh] overflow-auto rounded-md border border-neutral-200 bg-white"
+        >
           <table className="w-full text-sm">
-            <thead className="bg-neutral-50 text-[10px] uppercase tracking-wide text-neutral-500">
+            <thead className="sticky top-0 z-10 bg-neutral-50 text-[10px] uppercase tracking-wide text-neutral-500">
               <tr>
                 <th className="w-8 px-2 py-2">{tForm('snoColumn')}</th>
-                <th className="px-2 py-2 text-left">{tForm('itemColumn')}</th>
-                <th className="w-16 px-1 py-2">{tForm('qtyLabel')}</th>
+                {/* ITEM: capped so long design names truncate inside the
+                 * select instead of stretching the whole table and starving
+                 * the QTY column. */}
+                <th className="w-[14rem] px-2 py-2 text-left">{tForm('itemColumn')}</th>
+                {/* QTY: bumped from w-16 to w-20 so 3-digit quantities are
+                 * fully visible alongside the number-spinner arrows. */}
+                <th className="w-20 px-1 py-2">{tForm('qtyLabel')}</th>
                 <th className="w-14 px-1 py-2">{tForm('uomLabel')}</th>
                 {showGst ? (
                   <th className="w-20 px-1 py-2 text-left font-mono">{tForm('hsnLabel')}</th>
@@ -501,11 +550,11 @@ export function InvoiceForm({
                 return (
                   <tr key={idx} className="border-t border-neutral-100 align-middle">
                     <td className="px-2 py-1 text-center text-xs text-neutral-400">{idx + 1}</td>
-                    <td className="px-1 py-1">
+                    <td className="max-w-[14rem] px-1 py-1">
                       <select
                         value={l.sku_id ?? ''}
                         onChange={(e) => pickSkuForLine(idx, e.target.value)}
-                        className="input-base !min-h-0 !py-1 !text-sm"
+                        className="input-base !min-h-0 !w-full !min-w-0 !max-w-full !py-1 !text-sm"
                         required
                       >
                         <option value="">{tForm('skuNone')}</option>
@@ -524,7 +573,7 @@ export function InvoiceForm({
                         value={l.qty}
                         onChange={(e) => updateLine(idx, { qty: e.target.value })}
                         inputMode="numeric"
-                        className="input-base !min-h-0 !py-1 !text-sm"
+                        className="input-base !min-h-0 !py-1 !text-center !text-sm"
                         required
                       />
                     </td>
