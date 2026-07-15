@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { SkuLabel } from '@/components/sku-label';
 import { DEFAULT_LABEL_GRID } from '@/lib/skus/label-grid';
 import type { SkuLabelInput } from '@/lib/skus/label';
+import { QzPrintButton } from '@/components/qz-print-button';
 
 export interface SheetItem {
   key: string;
@@ -123,12 +124,21 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
     return () => obs.disconnect();
   }, [items, rowPitchMm]);
 
-  const handlePrint = () => {
+  const handleNativePrint = useCallback(() => {
     const win = previewIframeRef.current?.contentWindow;
     if (!win) return;
     win.focus();
     win.print();
-  };
+  }, []);
+
+  // For QZ Tray: grab the iframe's document HTML (which contains the label
+  // SVGs already fully hydrated). This is byte-for-byte what the native
+  // print path uses too, so the two flows produce identical output.
+  const htmlProvider = useCallback(() => {
+    const doc = previewIframeRef.current?.contentDocument;
+    if (!doc) return null;
+    return `<!doctype html>${doc.documentElement.outerHTML}`;
+  }, []);
 
   return (
     <div className="print-sheet-page">
@@ -141,9 +151,14 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
             <Link href="/skus/print" className="btn-ghost border border-neutral-300 text-sm">
               {t('back')}
             </Link>
-            <button type="button" onClick={handlePrint} className="btn-primary !w-auto px-4">
+            <QzPrintButton
+              role="label"
+              htmlProvider={htmlProvider}
+              onNativePrint={handleNativePrint}
+              className="btn-primary !w-auto px-4"
+            >
               {t('printNow')}
-            </button>
+            </QzPrintButton>
           </div>
         </div>
       </div>

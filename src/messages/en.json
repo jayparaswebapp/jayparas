@@ -1230,8 +1230,35 @@
       }
     }
   },
+  "print": {
+    "sending": "Sending…",
+    "unconfigured": "No printer bound for this role — using browser print. Configure in Admin → Print settings.",
+    "qzUnreachable": "QZ Tray not reachable — using browser print. Install and open QZ Tray on this device."
+  },
   "admin": {
     "title": "Admin",
+    "printSettings": {
+      "tab": "Print settings",
+      "title": "Print settings",
+      "subtitle": "Bind physical printers on THIS device — e.g. TSC for labels, Epson for invoices. Requires QZ Tray running locally.",
+      "labelPrinterLabel": "Label printer (TSC / thermal)",
+      "labelPrinterHint": "Used for /skus/print/… sticker sheets. Point at your TSC label printer.",
+      "invoicePrinterLabel": "Invoice printer (Epson / page)",
+      "invoicePrinterHint": "Used for invoices, credit notes, payment receipts, ledger prints. Point at your A4 / A5 printer.",
+      "pickerPlaceholder": "— Use browser print dialog —",
+      "savedHint": "Settings save instantly to this device. Each PC has its own set.",
+      "installTitle": "QZ Tray is not running on this device",
+      "installHint": "Install QZ Tray once per device, then keep it running in the tray. Prints go direct to the picked printer without a dialog.",
+      "installStep1": "Download QZ Tray from qz.io/download",
+      "installStep2": "Install and start it — you'll see a QZ icon in the system tray",
+      "installStep3": "Return to this page and refresh — printers will appear in the dropdowns",
+      "status": {
+        "probing": "Checking for QZ Tray on this device…",
+        "ok": "QZ Tray connected. Pick a printer for each role below.",
+        "unreachable": "QZ Tray isn't reachable. Prints will fall back to the browser dialog.",
+        "error": "Couldn't reach QZ Tray. Prints will fall back to the browser dialog."
+      }
+    },
     "wipeTab": "Wipe test data",
     "wipe": {
       "title": "Wipe test data",

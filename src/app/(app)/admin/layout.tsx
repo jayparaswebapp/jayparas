@@ -22,6 +22,7 @@ function AdminLayoutView({
   const items = [
     { href: '/admin/users', label: t('users') },
     { href: '/admin/settings', label: t('settings') },
+    { href: '/admin/print-settings', label: tAdmin('printSettings.tab') },
   ];
   if (isSuperAdmin) {
     items.push({ href: '/admin/wipe-test-data', label: tAdmin('wipeTab') });

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { QzPrintButton } from '@/components/qz-print-button';
 
 export function PrintToolbar({ invoiceId }: { invoiceId: string }) {
   const t = useTranslations('billing.invoices.print');
@@ -14,13 +15,7 @@ export function PrintToolbar({ invoiceId }: { invoiceId: string }) {
         >
           ← {t('backButton')}
         </Link>
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="btn-primary !w-auto bg-brand-700 px-4"
-        >
-          {t('printNowButton')}
-        </button>
+        <QzPrintButton role="invoice">{t('printNowButton')}</QzPrintButton>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { QzPrintButton } from '@/components/qz-print-button';
 
 export function PrintToolbar({ returnId }: { returnId: string }) {
   const t = useTranslations('billing.returns.print');
@@ -11,13 +12,7 @@ export function PrintToolbar({ returnId }: { returnId: string }) {
         <Link href={`/billing/returns/${returnId}`} className="btn-ghost border border-neutral-300">
           ← {t('backButton')}
         </Link>
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="btn-primary !w-auto bg-brand-700 px-4"
-        >
-          {t('printNowButton')}
-        </button>
+        <QzPrintButton role="invoice">{t('printNowButton')}</QzPrintButton>
       </div>
     </div>
   );
