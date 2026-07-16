@@ -36,7 +36,9 @@ export default async function PrintSheetPage({
 
   const { data: rows } = await supabase
     .from('skus')
-    .select('id, sku_code, pack_type, design_no, mix_code, design_name, pack_size, price')
+    .select(
+      'id, sku_code, pack_type, design_no, mix_code, design_name, pack_size, rate_unit, price',
+    )
     .in('id', ids)
     .is('deleted_at', null);
 
@@ -54,6 +56,7 @@ export default async function PrintSheetPage({
       mix_code: r.mix_code as string | null,
       design_name: r.design_name as string,
       pack_size: r.pack_size as number,
+      rate_unit: ((r.rate_unit as string) === 'pack' ? 'pack' : 'piece') as 'pack' | 'piece',
       price: Number(r.price),
     };
     for (let i = 0; i < qty; i += 1) {

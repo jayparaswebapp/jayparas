@@ -14,13 +14,15 @@ export default async function SkusLibraryPage() {
   const { data: rows } = await supabase
     .from('skus')
     .select(
-      'id, sku_code, pack_type, design_no, mix_code, design_name, pack_size, price, photo_path, is_active',
+      'id, sku_code, pack_type, design_no, mix_code, design_name, pack_size, rate_unit, price, photo_path, is_active',
     )
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   const skus = (
-    (rows ?? []) as Array<Omit<SkuRow, 'photo_url'> & { photo_path: string | null }>
+    (rows ?? []) as Array<
+      Omit<SkuRow, 'photo_url'> & { photo_path: string | null; rate_unit: string | null }
+    >
   ).map((r) => ({
     id: r.id,
     sku_code: r.sku_code,
@@ -29,6 +31,7 @@ export default async function SkusLibraryPage() {
     mix_code: r.mix_code,
     design_name: r.design_name,
     pack_size: r.pack_size,
+    rate_unit: (r.rate_unit === 'pack' ? 'pack' : 'piece') as 'pack' | 'piece',
     price: Number(r.price),
     is_active: r.is_active,
     photo_url: getSkuPhotoPublicUrl(supabase, r.photo_path),

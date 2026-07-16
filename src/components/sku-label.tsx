@@ -22,7 +22,7 @@ export function SkuLabel({
 }) {
   const name = labelItemName(sku);
   const rate = labelRate(sku.price);
-  const unit = labelUnit(sku.pack_size);
+  const unit = labelUnit(sku.pack_size, sku.rate_unit);
   return (
     <div
       className="sku-label"

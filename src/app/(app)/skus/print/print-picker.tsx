@@ -15,6 +15,7 @@ export interface PickerRow {
   mix_code: string | null;
   design_name: string;
   pack_size: number;
+  rate_unit: 'pack' | 'piece';
   price: number;
   photo_url: string | null;
 }
@@ -130,7 +131,7 @@ export function PrintPicker({ skus, locale }: { skus: PickerRow[]; locale: Local
                     {s.pack_type === 'single'
                       ? `${tCard('designLabel')} ${s.design_no}`
                       : `${tCard('mixLabel')} ${s.mix_code}`}{' '}
-                    · {labelUnit(s.pack_size)} · {formatRupees(s.price, locale)}
+                    · {labelUnit(s.pack_size, s.rate_unit)} · {formatRupees(s.price, locale)}
                   </div>
                   <code className="font-mono text-xs text-neutral-500">{s.sku_code}</code>
                 </div>

@@ -8,14 +8,12 @@ import { requireRole } from '@/lib/users/current';
 import { rpcErrorKey, rpcErrorMessageKey } from '@/lib/rpc/errors';
 import { generateSkuCode } from '@/lib/skus/code';
 
-const PACK_SIZES = [1, 3, 4, 6, 12] as const;
-
 const RowSchema = z.object({
   design_name: z.string().trim().min(1),
-  pack_size: z.coerce
-    .number()
-    .int()
-    .refine((n) => (PACK_SIZES as readonly number[]).includes(n)),
+  // Any positive int is accepted so custom bulk packs (20, 100, 500 …) work
+  // alongside the standard tile options; the same rule the single-create
+  // action uses (see ../actions.ts).
+  pack_size: z.coerce.number().int().min(1).max(9999),
   rate_unit: z.enum(['pack', 'piece']).default('piece'),
   price: z.coerce.number().min(0),
   discount_pct: z.coerce.number().min(0).max(100).default(0),

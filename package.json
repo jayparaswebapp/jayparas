@@ -25,6 +25,7 @@
     "next": "^14.2.18",
     "next-intl": "^3.26.0",
     "qrcode": "^1.5.4",
+    "qz-tray": "^2.2.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.0",

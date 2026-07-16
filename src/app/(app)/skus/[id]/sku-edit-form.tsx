@@ -20,14 +20,19 @@ export interface SkuEditValues {
   discount_pct: string;
   is_discountable: boolean;
   photo_path: string | null;
+  /** Only shown to super_admin; supervisors don't get these fields. */
+  pack_size?: number;
+  rate_unit?: 'pack' | 'piece';
 }
 
 export function SkuEditForm({
   initial,
   photoUrl,
+  canEditLocked = false,
 }: {
   initial: SkuEditValues;
   photoUrl: string | null;
+  canEditLocked?: boolean;
 }) {
   const t = useTranslations('skus.form');
   const tCommon = useTranslations('common.actions');
@@ -37,9 +42,17 @@ export function SkuEditForm({
   const [previewUrl, setPreviewUrl] = useState<string | null>(photoUrl);
   const [discountPct, setDiscountPct] = useState<string>(initial.discount_pct);
   const [isDiscountable, setIsDiscountable] = useState<boolean>(initial.is_discountable);
+  const [packSize, setPackSize] = useState<string>(
+    initial.pack_size !== undefined ? String(initial.pack_size) : '',
+  );
+  const [rateUnit, setRateUnit] = useState<'pack' | 'piece'>(initial.rate_unit ?? 'piece');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [, startTransition] = useTransition();
+
+  const packChanged =
+    canEditLocked &&
+    (Number.parseInt(packSize, 10) !== initial.pack_size || rateUnit !== initial.rate_unit);
 
   async function onFileChange(file: File | null) {
     setUploadError(null);
@@ -91,6 +104,65 @@ export function SkuEditForm({
           className="input-base"
         />
       </div>
+
+      {canEditLocked ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-900">
+            {t('lockedOverrideTitle')}
+          </div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div>
+              <label htmlFor="pack_size" className="label-base">
+                {t('lockedPackSizeLabel')}
+              </label>
+              <input
+                id="pack_size"
+                name="pack_size"
+                type="number"
+                min="1"
+                max="9999"
+                step="1"
+                value={packSize}
+                onChange={(e) => setPackSize(e.target.value.replace(/[^\d]/g, ''))}
+                inputMode="numeric"
+                className="input-base"
+              />
+            </div>
+            <div>
+              <label className="label-base">{t('lockedRateUnitLabel')}</label>
+              <div className="flex items-center gap-3 pt-1">
+                <label className="flex items-center gap-1 text-sm">
+                  <input
+                    type="radio"
+                    name="rate_unit"
+                    value="piece"
+                    checked={rateUnit === 'piece'}
+                    onChange={() => setRateUnit('piece')}
+                    className="accent-brand-700"
+                  />
+                  {t('customRateUnitPiece')}
+                </label>
+                <label className="flex items-center gap-1 text-sm">
+                  <input
+                    type="radio"
+                    name="rate_unit"
+                    value="pack"
+                    checked={rateUnit === 'pack'}
+                    onChange={() => setRateUnit('pack')}
+                    className="accent-brand-700"
+                  />
+                  {t('customRateUnitPack')}
+                </label>
+              </div>
+            </div>
+          </div>
+          {packChanged ? (
+            <p className="mt-2 text-xs text-amber-900">{t('lockedChangeWarning')}</p>
+          ) : (
+            <p className="mt-2 text-xs text-amber-800">{t('lockedOverrideHint')}</p>
+          )}
+        </div>
+      ) : null}
 
       <div>
         <label htmlFor="price" className="label-base">

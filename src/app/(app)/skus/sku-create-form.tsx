@@ -15,7 +15,6 @@ import { QrCode } from '@/components/qr-code';
 import { generateSkuCode } from '@/lib/skus/code';
 import { createSkuAction, type CreateSkuResult } from './actions';
 
-type PackSize = 1 | 3 | 4 | 6 | 12;
 type RateUnit = 'pack' | 'piece';
 
 /**
@@ -24,10 +23,14 @@ type RateUnit = 'pack' | 'piece';
  * (rate × 12 per pack) is captured at create time and never has to be
  * re-derived. See sku_code → packCodeSuffix() in lib/skus/code.ts for the
  * encoded suffix per tile.
+ *
+ * A "Custom" tile below the preset row unlocks arbitrary pack sizes (20, 100,
+ * 500, …) with a rate-unit choice so the same mental model as "1 Doz vs 12
+ * pcs" still applies.
  */
 interface PackTile {
   label: string;
-  pack_size: PackSize;
+  pack_size: number;
   rate_unit: RateUnit;
 }
 
@@ -44,6 +47,8 @@ function tileKey(t: PackTile): string {
   return `${t.pack_size}-${t.rate_unit}`;
 }
 
+const CUSTOM_TILE_KEY = 'custom';
+
 export function SkuCreateForm() {
   const t = useTranslations('skus.form');
   const tErrors = useTranslations('skus.errors');
@@ -51,6 +56,8 @@ export function SkuCreateForm() {
   const [state, formAction] = useFormState<CreateSkuResult | null, FormData>(createSkuAction, null);
 
   const [packTileKey, setPackTileKey] = useState<string | null>(null);
+  const [customSize, setCustomSize] = useState('');
+  const [customRateUnit, setCustomRateUnit] = useState<RateUnit>('piece');
   const [designName, setDesignName] = useState('');
   const [price, setPrice] = useState('');
   const [discountPct, setDiscountPct] = useState('0');
@@ -61,17 +68,26 @@ export function SkuCreateForm() {
   const [uploading, setUploading] = useState(false);
   const [, startTransition] = useTransition();
 
-  const selectedTile = packTileKey
-    ? (PACK_TILES.find((tt) => tileKey(tt) === packTileKey) ?? null)
-    : null;
+  const isCustom = packTileKey === CUSTOM_TILE_KEY;
+  const customSizeNum = Number.parseInt(customSize, 10);
+  const customValid = isCustom && Number.isFinite(customSizeNum) && customSizeNum >= 1;
+  const presetTile =
+    !isCustom && packTileKey
+      ? (PACK_TILES.find((tt) => tileKey(tt) === packTileKey) ?? null)
+      : null;
+  const effectiveTile: PackTile | null = isCustom
+    ? customValid
+      ? { label: '', pack_size: customSizeNum, rate_unit: customRateUnit }
+      : null
+    : presetTile;
 
   let previewCode = '';
-  if (designName && selectedTile) {
+  if (designName && effectiveTile) {
     previewCode = generateSkuCode({
       pack_type: 'single',
       design_name: designName,
-      pack_size: selectedTile.pack_size,
-      rate_unit: selectedTile.rate_unit,
+      pack_size: effectiveTile.pack_size,
+      rate_unit: effectiveTile.rate_unit,
     });
   }
 
@@ -117,10 +133,10 @@ export function SkuCreateForm() {
        * rate_unit are derived from the picked tile.
        */}
       <input type="hidden" name="pack_type" value="single" />
-      {selectedTile ? (
+      {effectiveTile ? (
         <>
-          <input type="hidden" name="pack_size" value={String(selectedTile.pack_size)} />
-          <input type="hidden" name="rate_unit" value={selectedTile.rate_unit} />
+          <input type="hidden" name="pack_size" value={String(effectiveTile.pack_size)} />
+          <input type="hidden" name="rate_unit" value={effectiveTile.rate_unit} />
         </>
       ) : null}
       <input type="hidden" name="photo_path" value={photoPath} />
@@ -147,20 +163,68 @@ export function SkuCreateForm() {
               </button>
             );
           })}
-          {/*
-           * Placeholder tile reserved for a future pack option (e.g. half
-           * dozen, custom size). Disabled and visually muted so staff know
-           * it's not pickable yet but the slot is held.
-           */}
+          {/* Custom tile — opens an inline size + rate-unit input below. */}
           <button
             type="button"
-            disabled
-            aria-disabled="true"
-            className="flex h-16 cursor-not-allowed items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-neutral-400"
+            onClick={() => setPackTileKey(CUSTOM_TILE_KEY)}
+            className={[
+              'flex h-16 items-center justify-center rounded-lg border text-sm font-semibold',
+              isCustom
+                ? 'border-brand-600 bg-brand-100 text-brand-900'
+                : 'border-dashed border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
+            ].join(' ')}
           >
-            ＋
+            {t('packTypeCustom')}
           </button>
         </div>
+        {isCustom ? (
+          <div className="mt-2 grid grid-cols-1 gap-2 rounded-md border border-neutral-200 bg-neutral-50 p-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="custom_size" className="label-base">
+                {t('customSizeLabel')}
+              </label>
+              <input
+                id="custom_size"
+                type="number"
+                min="1"
+                max="9999"
+                step="1"
+                value={customSize}
+                onChange={(e) => setCustomSize(e.target.value.replace(/[^\d]/g, ''))}
+                placeholder="e.g. 20, 100, 500"
+                inputMode="numeric"
+                className="input-base"
+              />
+            </div>
+            <div>
+              <label className="label-base">{t('customRateUnitLabel')}</label>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1 text-sm">
+                  <input
+                    type="radio"
+                    name="custom_rate_unit"
+                    value="piece"
+                    checked={customRateUnit === 'piece'}
+                    onChange={() => setCustomRateUnit('piece')}
+                    className="accent-brand-700"
+                  />
+                  {t('customRateUnitPiece')}
+                </label>
+                <label className="flex items-center gap-1 text-sm">
+                  <input
+                    type="radio"
+                    name="custom_rate_unit"
+                    value="pack"
+                    checked={customRateUnit === 'pack'}
+                    onChange={() => setCustomRateUnit('pack')}
+                    className="accent-brand-700"
+                  />
+                  {t('customRateUnitPack')}
+                </label>
+              </div>
+            </div>
+          </div>
+        ) : null}
         <p className="mt-1 text-xs text-neutral-500">{t('packTypeHint')}</p>
       </div>
 

@@ -9,6 +9,8 @@ import { PageHeader } from '@/components/page-header';
 export const dynamic = 'force-dynamic';
 
 type Status = 'posted' | 'cancelled';
+type SourceType =
+  'manual' | 'invoice' | 'payment' | 'purchase_bill' | 'sales_return' | 'll_wage_payment';
 
 interface EntryRow {
   id: string;
@@ -16,7 +18,7 @@ interface EntryRow {
   entry_date: string;
   narration: string | null;
   status: Status;
-  source_type: string;
+  source_type: SourceType;
 }
 interface LineRow {
   journal_entry_id: string;
@@ -24,32 +26,31 @@ interface LineRow {
   credit: number;
 }
 
-export default async function DayBookPage({
+export default async function JournalListPage({
   searchParams,
 }: {
-  searchParams: { from?: string; to?: string };
+  searchParams: { source?: string; status?: string; from?: string; to?: string };
 }) {
   const user = await requireAppUser();
   const locale = getServerLocale();
+  const source = (searchParams.source ?? '').trim();
+  const status = (searchParams.status ?? '').trim();
+  const from = (searchParams.from ?? '').trim();
+  const to = (searchParams.to ?? '').trim();
   const supabase = createClient();
 
-  // Default window: last 30 days. Day-book is a "recent activity" feed at
-  // this stage; Trial Balance and other point-in-time reports come in phase 3.
-  const today = new Date();
-  const defaultFrom = new Date(today);
-  defaultFrom.setDate(defaultFrom.getDate() - 30);
-  const from = (searchParams.from ?? '').trim() || defaultFrom.toISOString().slice(0, 10);
-  const to = (searchParams.to ?? '').trim() || today.toISOString().slice(0, 10);
-
-  const { data: entriesRaw } = await supabase
+  let q = supabase
     .from('journal_entries')
     .select('id, entry_number, entry_date, narration, status, source_type')
     .is('deleted_at', null)
-    .gte('entry_date', from)
-    .lte('entry_date', to)
     .order('entry_date', { ascending: false })
     .order('created_at', { ascending: false });
+  if (source) q = q.eq('source_type', source);
+  if (status === 'posted' || status === 'cancelled') q = q.eq('status', status);
+  if (from) q = q.gte('entry_date', from);
+  if (to) q = q.lte('entry_date', to);
 
+  const { data: entriesRaw } = await q;
   const entries = (entriesRaw ?? []) as unknown as EntryRow[];
   const entryIds = entries.map((e) => e.id);
 
@@ -71,17 +72,17 @@ export default async function DayBookPage({
   const canWrite = user.role === 'super_admin' || user.role === 'accountant';
 
   return (
-    <DayBookView
+    <JournalListView
       entries={entries}
       sumsByEntry={sumsByEntry}
       canWrite={canWrite}
-      filters={{ from, to }}
+      filters={{ source, status, from, to }}
       locale={locale}
     />
   );
 }
 
-function DayBookView({
+function JournalListView({
   entries,
   sumsByEntry,
   canWrite,
@@ -91,30 +92,19 @@ function DayBookView({
   entries: EntryRow[];
   sumsByEntry: Map<string, { debit: number; credit: number }>;
   canWrite: boolean;
-  filters: { from: string; to: string };
+  filters: { source: string; status: string; from: string; to: string };
   locale: Locale;
 }) {
-  const t = useTranslations('accounting.dayBook');
+  const t = useTranslations('accounting.journal');
   const tCommon = useTranslations('accounting');
+  const hasFilter =
+    filters.source.length + filters.status.length + filters.from.length + filters.to.length > 0;
   const fmtD = (s: string) =>
     new Intl.DateTimeFormat(locale === 'gu' ? 'gu-IN' : 'en-IN', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     }).format(new Date(s));
-
-  const posted = entries.filter((e) => e.status === 'posted');
-  const totals = posted.reduce(
-    (acc, e) => {
-      const s = sumsByEntry.get(e.id);
-      if (s) {
-        acc.debit += s.debit;
-        acc.credit += s.credit;
-      }
-      return acc;
-    },
-    { debit: 0, credit: 0 },
-  );
 
   return (
     <>
@@ -132,44 +122,38 @@ function DayBookView({
 
       <form
         method="get"
-        className="mb-3 flex flex-wrap items-end gap-2 rounded-md border border-neutral-200 bg-white p-3"
+        className="mb-3 grid grid-cols-1 gap-2 rounded-md border border-neutral-200 bg-white p-3 sm:grid-cols-5"
       >
-        <div>
-          <label htmlFor="from" className="label-base">
-            {t('fromLabel')}
-          </label>
-          <input
-            type="date"
-            id="from"
-            name="from"
-            defaultValue={filters.from}
-            className="input-base"
-          />
+        <select name="source" defaultValue={filters.source} className="input-base">
+          <option value="">{t('allSources')}</option>
+          <option value="manual">{tCommon('source.manual')}</option>
+          <option value="invoice">{tCommon('source.invoice')}</option>
+          <option value="payment">{tCommon('source.payment')}</option>
+          <option value="purchase_bill">{tCommon('source.purchase_bill')}</option>
+          <option value="sales_return">{tCommon('source.sales_return')}</option>
+          <option value="ll_wage_payment">{tCommon('source.ll_wage_payment')}</option>
+        </select>
+        <select name="status" defaultValue={filters.status} className="input-base">
+          <option value="">{t('allStatuses')}</option>
+          <option value="posted">{tCommon('statusPosted')}</option>
+          <option value="cancelled">{tCommon('statusCancelled')}</option>
+        </select>
+        <input type="date" name="from" defaultValue={filters.from} className="input-base" />
+        <input type="date" name="to" defaultValue={filters.to} className="input-base" />
+        <div className="flex items-center gap-2">
+          <button type="submit" className="btn-ghost border border-neutral-300">
+            {t('applyButton')}
+          </button>
+          {hasFilter ? (
+            <Link
+              href="/accounting/journal"
+              className="btn-ghost border border-neutral-300 text-sm"
+            >
+              {t('clearButton')}
+            </Link>
+          ) : null}
         </div>
-        <div>
-          <label htmlFor="to" className="label-base">
-            {t('toLabel')}
-          </label>
-          <input type="date" id="to" name="to" defaultValue={filters.to} className="input-base" />
-        </div>
-        <button type="submit" className="btn-ghost border border-neutral-300">
-          {t('applyButton')}
-        </button>
       </form>
-
-      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <Tile
-          label={t('totalDebitLabel')}
-          value={formatRupees(totals.debit, locale)}
-          accent="brand"
-        />
-        <Tile
-          label={t('totalCreditLabel')}
-          value={formatRupees(totals.credit, locale)}
-          accent="brand"
-        />
-        <Tile label={t('entryCountLabel')} value={String(posted.length)} />
-      </div>
 
       <ul className="divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 bg-white">
         {entries.map((e) => {
@@ -191,7 +175,7 @@ function DayBookView({
                   ) : null}
                   {e.source_type !== 'manual' ? (
                     <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-xs text-neutral-700">
-                      {tCommon(`source.${e.source_type}` as 'source.invoice')}
+                      {tCommon(`source.${e.source_type}`)}
                     </span>
                   ) : null}
                   <span className="ml-auto text-xs text-neutral-500">{fmtD(e.entry_date)}</span>
@@ -207,22 +191,11 @@ function DayBookView({
           );
         })}
         {entries.length === 0 ? (
-          <li className="px-4 py-8 text-center text-sm text-neutral-500">{t('empty')}</li>
+          <li className="px-4 py-8 text-center text-sm text-neutral-500">
+            {hasFilter ? t('noMatches') : t('empty')}
+          </li>
         ) : null}
       </ul>
     </>
-  );
-}
-
-function Tile({ label, value, accent }: { label: string; value: string; accent?: 'brand' }) {
-  const cls =
-    accent === 'brand'
-      ? 'border-brand-200 bg-brand-50 text-brand-900'
-      : 'border-neutral-200 bg-white text-neutral-700';
-  return (
-    <div className={`rounded-md border p-3 ${cls}`}>
-      <div className="text-[10px] uppercase tracking-wide opacity-70">{label}</div>
-      <div className="text-lg font-semibold tabular-nums">{value}</div>
-    </div>
   );
 }

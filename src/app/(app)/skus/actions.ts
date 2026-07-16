@@ -8,8 +8,7 @@ import { requireRole } from '@/lib/users/current';
 import { rpcErrorKey, rpcErrorMessageKey } from '@/lib/rpc/errors';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { generateSkuCode } from '@/lib/skus/code';
-
-const PACK_SIZES = [1, 3, 4, 6, 12] as const;
+import { requireAppUser } from '@/lib/users/current';
 
 /**
  * Single is the only pack_type writable from the UI now. Mix is kept as a
@@ -18,6 +17,10 @@ const PACK_SIZES = [1, 3, 4, 6, 12] as const;
  * design_no was retired — the new SKU form combines it into design_name.
  * The Zod schema accepts the field but treats it as optional so bulk-create
  * payloads from older code keep validating.
+ *
+ * pack_size is a positive int with no enum whitelist — the wholesale shop
+ * needs custom sizes (20, 100, 500) for bulk packs on top of the standard
+ * tile options. Anything > 9999 is almost certainly a typo, so we cap there.
  */
 const CreateSchema = z.object({
   pack_type: z.enum(['single', 'mix']).default('single'),
@@ -27,9 +30,8 @@ const CreateSchema = z.object({
   pack_size: z.coerce
     .number()
     .int()
-    .refine((n) => (PACK_SIZES as readonly number[]).includes(n), {
-      message: 'skus.errors.packSizeRequired',
-    }),
+    .min(1, { message: 'skus.errors.packSizeRequired' })
+    .max(9999, { message: 'skus.errors.packSizeRequired' }),
   price: z.coerce.number().min(0, 'skus.errors.priceRequired'),
   discount_pct: z.coerce.number().min(0).max(100).default(0),
   is_discountable: z
@@ -142,6 +144,10 @@ const UpdateSchema = z.object({
     .optional()
     .transform((v) => v === 'on' || v === 'true'),
   photo_path: z.string().optional(),
+  // Super-admin only — locked fields the base update_sku RPC won't touch.
+  // Kept optional so the field is safe to submit as blank for supervisors.
+  pack_size: z.coerce.number().int().min(1).max(9999).optional(),
+  rate_unit: z.enum(['pack', 'piece']).optional(),
 });
 
 export async function updateSkuAction(
@@ -149,6 +155,7 @@ export async function updateSkuAction(
   formData: FormData,
 ): Promise<ActionResult> {
   await requireRole(['super_admin', 'supervisor']);
+  const user = await requireAppUser();
 
   const parsed = UpdateSchema.safeParse({
     id: formData.get('id'),
@@ -157,6 +164,8 @@ export async function updateSkuAction(
     discount_pct: formData.get('discount_pct') ?? 0,
     is_discountable: formData.get('is_discountable') ?? '',
     photo_path: formData.get('photo_path'),
+    pack_size: formData.get('pack_size') || undefined,
+    rate_unit: formData.get('rate_unit') || undefined,
   });
 
   if (!parsed.success) {
@@ -167,6 +176,10 @@ export async function updateSkuAction(
   }
 
   const supabase = createClient();
+
+  // First, run the normal update — design name, price, discount, etc. This
+  // path stays gated by the RPC's SECURITY DEFINER + audit context so
+  // supervisors don't have to worry about role-check logic here.
   const { error } = await supabase.rpc('update_sku', {
     p_id: parsed.data.id,
     p_design_name: parsed.data.design_name,
@@ -176,8 +189,72 @@ export async function updateSkuAction(
     p_discount_pct: parsed.data.discount_pct,
     p_is_discountable: parsed.data.is_discountable,
   });
-
   if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
+
+  // Then, if the request came from a super_admin AND locked fields are being
+  // changed, do a direct table update on pack_size / rate_unit and regenerate
+  // sku_code. We deliberately do this OUTSIDE update_sku so extending that
+  // RPC (used from many places) isn't required just for the super-admin
+  // override. RLS on the skus table only allows super_admin/supervisor
+  // writes; the extra role-check here is belt-and-braces since we know the
+  // caller is one of those two.
+  const wantsLockedChange =
+    user.role === 'super_admin' &&
+    (parsed.data.pack_size !== undefined || parsed.data.rate_unit !== undefined);
+  if (wantsLockedChange) {
+    const { data: current } = await supabase
+      .from('skus')
+      .select('pack_size, rate_unit, design_name, pack_type')
+      .eq('id', parsed.data.id)
+      .maybeSingle();
+    if (current) {
+      const nextPackSize = parsed.data.pack_size ?? (current.pack_size as number);
+      const nextRateUnit =
+        parsed.data.rate_unit ?? ((current.rate_unit as string) === 'pack' ? 'pack' : 'piece');
+      const changed =
+        nextPackSize !== current.pack_size ||
+        nextRateUnit !== ((current.rate_unit as string) === 'pack' ? 'pack' : 'piece');
+      if (changed) {
+        // Only 'single' SKUs have their code driven by pack_size + rate_unit
+        // via generateSkuCode(); mix SKUs use a different encoding that
+        // we're not exposing on the edit form.
+        const nextCode =
+          current.pack_type === 'single'
+            ? generateSkuCode({
+                pack_type: 'single',
+                design_name: parsed.data.design_name,
+                pack_size: nextPackSize,
+                rate_unit: nextRateUnit,
+              })
+            : null;
+        if (nextCode) {
+          // Reject a code collision with another active row before we try
+          // the update — the unique index would trip anyway but a friendly
+          // error is nicer than a raw Postgres one.
+          const { data: dupe } = await supabase
+            .from('skus')
+            .select('id')
+            .eq('sku_code', nextCode)
+            .is('deleted_at', null)
+            .neq('id', parsed.data.id)
+            .maybeSingle();
+          if (dupe) {
+            return { ok: false, messageKey: 'skus.errors.duplicate' };
+          }
+        }
+        const patch: Record<string, unknown> = {
+          pack_size: nextPackSize,
+          rate_unit: nextRateUnit,
+        };
+        if (nextCode) patch.sku_code = nextCode;
+        const { error: lockedErr } = await supabase
+          .from('skus')
+          .update(patch)
+          .eq('id', parsed.data.id);
+        if (lockedErr) return { ok: false, messageKey: rpcErrorMessageKey(lockedErr) };
+      }
+    }
+  }
 
   revalidatePath('/skus');
   revalidatePath(`/skus/${parsed.data.id}`);
