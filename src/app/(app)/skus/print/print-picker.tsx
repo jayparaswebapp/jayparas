@@ -1,11 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { PageHeader } from '@/components/page-header';
 import { formatRupees } from '@/lib/format/locale-shared';
 import { labelUnit } from '@/lib/skus/label';
 import type { Locale } from '@/lib/i18n/config';
+
+type CodeType = 'qr' | 'code128';
+const CODE_TYPE_KEY = 'jp.print.codeType';
 
 export interface PickerRow {
   id: string;
@@ -34,16 +37,23 @@ function matches(r: PickerRow, q: string): boolean {
 }
 
 /**
- * Builds the `/skus/print/sheet?items=...` URL from selected (id, quantity)
- * pairs. Encoded as `id:qty,id:qty` to keep the URL terse — typical orders
- * are 5-20 SKUs at v1, well within URL limits even at modest browsers.
+ * Builds the `/skus/print/sheet?items=...&code=...` URL from selected
+ * (id, quantity) pairs and the chosen barcode style. Items encoded as
+ * `id:qty,id:qty` to keep the URL terse — typical orders are 5-20 SKUs
+ * at v1, well within URL limits even at modest browsers.
  */
-function buildSheetHref(selections: Map<string, number>): string {
+function buildSheetHref(selections: Map<string, number>, codeType: CodeType): string {
   const parts: string[] = [];
   for (const [id, qty] of selections) {
     if (qty > 0) parts.push(`${id}:${qty}`);
   }
-  return `/skus/print/sheet?items=${encodeURIComponent(parts.join(','))}`;
+  const items = encodeURIComponent(parts.join(','));
+  // Only append &code= when the user has explicitly chosen Code128 — QR is
+  // the default the server-side sheet renderer already uses, and skipping
+  // the param keeps existing bookmarks working unchanged.
+  return codeType === 'code128'
+    ? `/skus/print/sheet?items=${items}&code=code128`
+    : `/skus/print/sheet?items=${items}`;
 }
 
 export function PrintPicker({ skus, locale }: { skus: PickerRow[]; locale: Locale }) {
@@ -53,6 +63,28 @@ export function PrintPicker({ skus, locale }: { skus: PickerRow[]; locale: Local
 
   const [query, setQuery] = useState('');
   const [qtys, setQtys] = useState<Map<string, number>>(new Map());
+  // Barcode format for THIS device — persists per device in localStorage so
+  // the shop's label desk (Code128) and the SKU photo bench (QR) can each
+  // stay on their preferred mode without stepping on each other.
+  const [codeType, setCodeType] = useState<CodeType>('qr');
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(CODE_TYPE_KEY);
+      if (saved === 'code128' || saved === 'qr') setCodeType(saved);
+    } catch {
+      // Private-browsing mode — fall back to the QR default.
+    }
+  }, []);
+
+  function pickCodeType(next: CodeType) {
+    setCodeType(next);
+    try {
+      window.localStorage.setItem(CODE_TYPE_KEY, next);
+    } catch {
+      // As above — silently ignore if storage is unavailable.
+    }
+  }
 
   const visible = useMemo(() => {
     const q = normalise(query);
@@ -76,12 +108,14 @@ export function PrintPicker({ skus, locale }: { skus: PickerRow[]; locale: Local
     setQtys(new Map());
   }
 
-  const href = buildSheetHref(qtys);
+  const href = buildSheetHref(qtys, codeType);
   const canOpen = totalSelections > 0;
 
   return (
     <>
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
+
+      <CodeTypeToggle value={codeType} onChange={pickCodeType} />
 
       <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
@@ -179,5 +213,60 @@ export function PrintPicker({ skus, locale }: { skus: PickerRow[]; locale: Local
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * Two-tile toggle between QR and Code128 barcode modes for this print job.
+ * Sits above the search field so the operator picks BEFORE selecting SKUs.
+ * The chosen mode persists in localStorage on this device — set once per
+ * shop workstation and forget.
+ */
+function CodeTypeToggle({
+  value,
+  onChange,
+}: {
+  value: CodeType;
+  onChange: (next: CodeType) => void;
+}) {
+  const t = useTranslations('skus.print.codeType');
+  const tiles: Array<{ key: CodeType; label: string; hint: string }> = [
+    { key: 'qr', label: t('qrTitle'), hint: t('qrHint') },
+    { key: 'code128', label: t('code128Title'), hint: t('code128Hint') },
+  ];
+  return (
+    <div className="mb-3 rounded-md border border-neutral-200 bg-white p-3">
+      <div className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500">
+        {t('title')}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {tiles.map((tile) => {
+          const selected = value === tile.key;
+          return (
+            <button
+              key={tile.key}
+              type="button"
+              onClick={() => onChange(tile.key)}
+              className={
+                selected
+                  ? 'rounded-md border-2 border-brand-600 bg-brand-50 px-3 py-2 text-left'
+                  : 'rounded-md border border-neutral-300 bg-white px-3 py-2 text-left hover:border-neutral-400'
+              }
+            >
+              <div
+                className={
+                  selected
+                    ? 'text-sm font-semibold text-brand-900'
+                    : 'text-sm font-semibold text-neutral-900'
+                }
+              >
+                {tile.label}
+              </div>
+              <div className="text-xs text-neutral-600">{tile.hint}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

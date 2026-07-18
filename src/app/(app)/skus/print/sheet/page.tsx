@@ -25,11 +25,15 @@ function parseItems(raw: string | undefined): Array<{ id: string; qty: number }>
 export default async function PrintSheetPage({
   searchParams,
 }: {
-  searchParams: { items?: string };
+  searchParams: { items?: string; code?: string };
 }) {
   await requireAppUser();
   const parsed = parseItems(searchParams.items);
   if (parsed.length === 0) notFound();
+
+  // Barcode format selected on the picker. QR is the historic default so
+  // any old bookmark without ?code= keeps rendering exactly as before.
+  const codeType: 'qr' | 'code128' = searchParams.code === 'code128' ? 'code128' : 'qr';
 
   const supabase = createClient();
   const ids = parsed.map((p) => p.id);
@@ -66,5 +70,5 @@ export default async function PrintSheetPage({
 
   if (items.length === 0) notFound();
 
-  return <PrintSheet items={items} />;
+  return <PrintSheet items={items} codeType={codeType} />;
 }

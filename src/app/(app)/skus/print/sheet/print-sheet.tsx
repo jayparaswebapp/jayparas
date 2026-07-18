@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { SkuLabel } from '@/components/sku-label';
+import { SkuLabel, type LabelCodeType } from '@/components/sku-label';
 import { DEFAULT_LABEL_GRID } from '@/lib/skus/label-grid';
 import type { SkuLabelInput } from '@/lib/skus/label';
 import { QzPrintButton } from '@/components/qz-print-button';
@@ -76,7 +76,13 @@ function buildPrintHtml(
 </html>`;
 }
 
-export function PrintSheet({ items }: { items: SheetItem[] }) {
+export function PrintSheet({
+  items,
+  codeType = 'qr',
+}: {
+  items: SheetItem[];
+  codeType?: LabelCodeType;
+}) {
   const t = useTranslations('skus.print');
   const rows = chunkRows(items, DEFAULT_LABEL_GRID.columns);
   const sourceRef = useRef<HTMLDivElement>(null);
@@ -185,7 +191,7 @@ export function PrintSheet({ items }: { items: SheetItem[] }) {
             }}
           >
             {row.map((item) => (
-              <SkuLabel key={item.key} sku={item.sku} />
+              <SkuLabel key={item.key} sku={item.sku} codeType={codeType} />
             ))}
           </div>
         ))}
