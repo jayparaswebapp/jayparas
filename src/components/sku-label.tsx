@@ -1,25 +1,47 @@
 import { QrCode } from './qr-code';
 import { DEFAULT_LABEL_GRID, LABEL_FONT } from '@/lib/skus/label-grid';
 import { labelItemName, labelRate, labelUnit, type SkuLabelInput } from '@/lib/skus/label';
+import { code128Svg } from '@/lib/skus/code128';
+
+export type LabelCodeType = 'qr' | 'code128';
 
 /**
- * One physical label cell, 25 × 15 mm. Used identically on the SKU detail
- * page (single label preview), the single-print page (one row = 2 copies),
- * and the bulk sheet (rows of 2-up labels).
+ * One physical label cell, 25 × 15 mm. Same fixed size used everywhere —
+ * SKU detail preview, single-print page, bulk sheet, wherever a sticker is
+ * rendered.
  *
- * Layout: design name spans the full label width on top; below that, rate
- * and unit stack on the left and a square QR sits on the right. Font sizes
- * locked in `LABEL_FONT`. Borders are off by default for print (the sticker
- * cell on the roll is the boundary); we render a light border on-screen so
- * the preview is visible against a white background.
+ * Two content variants are selectable per print job:
+ *
+ *  - **QR mode (default)**: the historic layout — design name at top, rate
+ *    and unit stacked on the left, a 9 mm QR code on the right. Best for
+ *    flat surfaces (rakhi cards, box tops) and 2D-imager scanners.
+ *
+ *  - **Code128 mode**: design name (secondary), a large per-piece / per-pack
+ *    RATE dominates the middle, and a horizontal Code128 barcode spans the
+ *    bottom with the human-readable SKU code beneath. Best for wrapped
+ *    tubes / curved surfaces and cheap 1D-laser USB scanners, which cannot
+ *    read QR at all.
+ *
+ * Font sizes locked in `LABEL_FONT`. Borders off by default for print (the
+ * sticker cell on the roll IS the boundary); a light border renders on
+ * screen so the preview is visible against a white background.
  */
 export function SkuLabel({
   sku,
   showBorder = false,
+  codeType = 'qr',
 }: {
   sku: SkuLabelInput;
   showBorder?: boolean;
+  codeType?: LabelCodeType;
 }) {
+  if (codeType === 'code128') {
+    return <Code128LabelBody sku={sku} showBorder={showBorder} />;
+  }
+  return <QrLabelBody sku={sku} showBorder={showBorder} />;
+}
+
+function QrLabelBody({ sku, showBorder }: { sku: SkuLabelInput; showBorder: boolean }) {
   const name = labelItemName(sku);
   const rate = labelRate(sku.price);
   const unit = labelUnit(sku.pack_size, sku.rate_unit);
@@ -115,6 +137,118 @@ export function SkuLabel({
         >
           <QrCode value={sku.sku_code} size={LABEL_FONT.qrSize} margin={2} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Code128 variant. Same 25 × 15 mm sticker; different vertical stack:
+ *
+ *   [ Design name  — small, secondary                    ]
+ *   [ ₹RATE/- ── large, dominant ── 1 Doz  — small qualifier ]
+ *   [ ▊▍▊▊▍▊▍▍▊▊▍▍▊▍▊▊▊ ── Code128 barcode ── height 3.5 mm ]
+ *   [ SKU-CODE — 5 pt monospace, human-readable            ]
+ *
+ * The rate is the biggest thing on the sticker so staff and customers
+ * clock the price first. The barcode + human-readable code together take
+ * the bottom third — enough for a scanner AND for manual keying if a
+ * scan ever fails.
+ */
+function Code128LabelBody({ sku, showBorder }: { sku: SkuLabelInput; showBorder: boolean }) {
+  const name = labelItemName(sku);
+  const rate = labelRate(sku.price);
+  const unit = labelUnit(sku.pack_size, sku.rate_unit);
+  const barcodeSvg = code128Svg(sku.sku_code, { quietModules: 8 });
+  return (
+    <div
+      className="sku-label"
+      style={{
+        width: DEFAULT_LABEL_GRID.labelWidth,
+        height: DEFAULT_LABEL_GRID.labelHeight,
+        display: 'flex',
+        flexDirection: 'column',
+        // Slightly tighter padding than QR mode — we need to fit four
+        // vertical elements (name, rate row, barcode, code text) inside
+        // 15 mm, and the barcode wants ~3.5 mm on its own.
+        padding: '1mm 1.2mm 0.5mm 1mm',
+        boxSizing: 'border-box',
+        background: 'white',
+        color: '#000',
+        ...(showBorder ? { border: '0.2mm solid #000' } : {}),
+      }}
+    >
+      <div
+        style={{
+          fontSize: '6.5pt',
+          fontWeight: 600,
+          lineHeight: 1,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          width: '100%',
+          color: '#333',
+        }}
+      >
+        {name}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          gap: '1.2mm',
+          marginTop: '0.3mm',
+          marginBottom: '0.4mm',
+        }}
+      >
+        <div
+          style={{
+            fontSize: '14pt',
+            fontWeight: 800,
+            lineHeight: 1,
+            letterSpacing: '-0.02em',
+          }}
+        >
+          {rate}
+        </div>
+        <div
+          style={{
+            fontSize: '6pt',
+            fontWeight: 500,
+            lineHeight: 1,
+            color: '#444',
+            letterSpacing: '0.02em',
+          }}
+        >
+          {unit}
+        </div>
+      </div>
+      <div
+        style={{
+          width: '100%',
+          height: '3.5mm',
+          // Give the SVG a tiny vertical margin above the human-readable
+          // code so bars don't crowd the text.
+          marginTop: 'auto',
+        }}
+        // The SVG is trusted content (encoded server-side from the SKU
+        // code, which is validated by our own RPCs). Setting innerHTML
+        // avoids the React <object>/<img> route which pixel-snaps in
+        // Chromium and can blur bar edges.
+        dangerouslySetInnerHTML={{ __html: barcodeSvg }}
+      />
+      <div
+        style={{
+          fontFamily:
+            'ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace',
+          fontSize: '5pt',
+          letterSpacing: '0.05em',
+          textAlign: 'center',
+          marginTop: '0.2mm',
+          lineHeight: 1,
+        }}
+      >
+        {sku.sku_code}
       </div>
     </div>
   );

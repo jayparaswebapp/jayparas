@@ -1436,6 +1436,13 @@
       "back": "Back",
       "printNow": "Print now",
       "empty": "No printable SKUs.",
+      "codeType": {
+        "title": "Barcode style for this print job",
+        "qrTitle": "QR code",
+        "qrHint": "For flat surfaces and 2D / phone-camera scanners.",
+        "code128Title": "Code128 barcode",
+        "code128Hint": "For wrapped tubes and cheap 1D USB scanners."
+      },
       "setupTitle": "TSC TE244: do this once, then printing works.",
       "setupBody": "Your TSC TE244 driver ships with A4 as the default paper, which is why Chrome prints onto A4 and feeds ~8 blank stickers per click. Add a custom 57 × 15 mm stock to the driver one time:",
       "setupStep1": "1. Windows: Settings → Printers & scanners → TSC TE244 → Printer preferences (or right-click → Printing preferences).",
