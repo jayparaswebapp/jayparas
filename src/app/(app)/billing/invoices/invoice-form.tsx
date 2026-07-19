@@ -10,6 +10,7 @@ import type { Locale } from '@/lib/i18n/config';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { saveInvoiceDraftAction } from './actions';
 import { NewCustomerShortcut } from '../customers/new-customer-shortcut';
+import { ScanButton } from './scan-button';
 
 export type BusinessLine = 'rakhi' | 'kite';
 
@@ -481,6 +482,19 @@ export function InvoiceForm({
             >
               {tForm('scanAddButton')}
             </button>
+            <ScanButton
+              label="Scan"
+              onDetected={(code) => {
+                const sku = skuByCode.get(code.trim().toUpperCase());
+                if (!sku) {
+                  setScanError(`SKU ${code} not found`);
+                  return;
+                }
+                addOrIncrementSku(sku);
+                setScanError(null);
+                setScanValue('');
+              }}
+            />
           </div>
           <datalist id="invoice-sku-suggestions">
             {skus.map((s) => (
