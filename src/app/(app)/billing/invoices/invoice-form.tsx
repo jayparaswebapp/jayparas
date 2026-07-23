@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ServerError } from '@/components/form-status';
 import { formatRupees } from '@/lib/format/locale-shared';
 import type { Locale } from '@/lib/i18n/config';
@@ -60,6 +60,9 @@ export interface CustomerOption {
 export interface SkuOption {
   id: string;
   sku_code: string;
+  /** Short 4-digit id encoded in the Code128 barcode. Null for SKUs created
+   *  before the short-code migration. */
+  short_code?: number | null;
   design_name: string;
   pack_size: number;
   price: number;
@@ -181,6 +184,36 @@ export function InvoiceForm({
     return m;
   }, [skus]);
 
+  /**
+   * New Code128 labels encode a 4-digit short_code; older labels (and the QR
+   * labels, and anything typed by hand) carry the full text sku_code. Both
+   * must keep working — old stickers are already on stock and won't be
+   * reprinted — so scans are resolved against whichever map matches.
+   */
+  const skuByShortCode = useMemo(() => {
+    const m = new Map<string, SkuOption>();
+    for (const s of skus) {
+      if (typeof s.short_code === 'number') {
+        m.set(String(s.short_code).padStart(4, '0'), s);
+      }
+    }
+    return m;
+  }, [skus]);
+
+  const resolveScan = useCallback(
+    (raw: string): SkuOption | undefined => {
+      const code = raw.trim().toUpperCase();
+      if (!code) return undefined;
+      // All-digit payload => new short-code label. Text => legacy sku_code.
+      if (/^\d{1,4}$/.test(code)) {
+        const hit = skuByShortCode.get(code.padStart(4, '0'));
+        if (hit) return hit;
+      }
+      return skuByCode.get(code);
+    },
+    [skuByCode, skuByShortCode],
+  );
+
   const selectedCustomer = useMemo(
     () => customers.find((c) => c.id === customerId) ?? null,
     [customers, customerId],
@@ -242,7 +275,7 @@ export function InvoiceForm({
   function handleScan() {
     const code = scanValue.trim().toUpperCase();
     if (!code) return;
-    const sku = skuByCode.get(code);
+    const sku = resolveScan(code);
     if (!sku) {
       setScanError(`SKU ${code} not found`);
       return;
@@ -485,7 +518,7 @@ export function InvoiceForm({
             <ScanButton
               label="Scan"
               onDetected={(code) => {
-                const sku = skuByCode.get(code.trim().toUpperCase());
+                const sku = resolveScan(code);
                 if (!sku) {
                   setScanError(`SKU ${code} not found`);
                   return;
