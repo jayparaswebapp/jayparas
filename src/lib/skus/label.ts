@@ -31,6 +31,10 @@ export interface SkuLabelInput {
   rate_unit?: RateUnit;
   price: number;
   sku_code: string;
+  /** Short 4-digit numeric id used for the Code128 barcode. Optional so any
+   *  caller that hasn't been migrated still renders (falling back to the
+   *  legacy Set B encoding of sku_code). */
+  short_code?: number | null;
 }
 
 export function labelItemName(sku: SkuLabelInput): string {
