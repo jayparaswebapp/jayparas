@@ -27,7 +27,7 @@ export default async function NewInvoicePage() {
     supabase
       .from('skus')
       .select(
-        'id, sku_code, design_name, pack_size, price, discount_pct, is_discountable, rate_unit',
+        'id, sku_code, short_code, design_name, pack_size, price, discount_pct, is_discountable, rate_unit',
       )
       .eq('is_active', true)
       .is('deleted_at', null)
@@ -43,6 +43,7 @@ export default async function NewInvoicePage() {
   const skus: SkuOption[] = (ss ?? []).map((s) => ({
     id: s.id,
     sku_code: s.sku_code,
+    short_code: (s.short_code as number | null) ?? null,
     design_name: s.design_name,
     pack_size: s.pack_size,
     price: Number(s.price),
