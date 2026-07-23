@@ -135,6 +135,7 @@ const PATTERNS = [
 ] as const;
 
 const START_B = 104;
+const START_C = 105;
 const STOP = 106;
 
 /**
@@ -229,4 +230,92 @@ export function code128Svg(data: string, options: Code128Options = {}): string {
     rects +
     `</svg>`
   );
+}
+
+/**
+ * Encode an EVEN-length digit string using **Code Set C**, which packs two
+ * digits into each 11-module symbol — roughly half the width of Set B for
+ * the same numeric payload.
+ *
+ * Why this exists: the 25 mm sticker leaves ~22.8 mm for the barcode. A
+ * 10-character SKU code in Set B needs 161 modules there, i.e. 0.14 mm per
+ * module — well under the 0.25 mm ISO minimum, and only ~1.1 dots on a
+ * 203 dpi thermal head, so bar widths quantize unevenly and 1D scanners
+ * fail. Four digits in Set C is 77 modules, which prints at a clean
+ * 0.25 mm (exactly 2 printer dots) inside 19.25 mm.
+ */
+function encodeSetCToPattern(digits: string): { pattern: string; moduleCount: number } {
+  if (!/^\d+$/.test(digits)) throw new Error('Code128 Set C: digits only');
+  if (digits.length % 2 !== 0) {
+    throw new Error('Code128 Set C: needs an even number of digits');
+  }
+
+  const values: number[] = [START_C];
+  for (let i = 0; i < digits.length; i += 2) {
+    values.push(Number(digits.slice(i, i + 2)));
+  }
+
+  let sum = values[0]!;
+  for (let i = 1; i < values.length; i += 1) sum += values[i]! * i;
+  values.push(sum % 103);
+  values.push(STOP);
+
+  let out = '';
+  for (let i = 0; i < values.length; i += 1) {
+    const widths = PATTERNS[values[i]!]!;
+    for (let w = 0; w < widths.length; w += 1) {
+      const bit = w % 2 === 0 ? '1' : '0';
+      out += bit.repeat(Number(widths[w]!));
+    }
+  }
+  return { pattern: out, moduleCount: out.length };
+}
+
+/** Shared SVG assembly for both code sets. */
+function patternToSvg(
+  pattern: string,
+  { width, height, quietModules, color }: Required<Code128Options>,
+): string {
+  const total = pattern.length + quietModules * 2;
+  let x = quietModules;
+  let rects = '';
+  let i = 0;
+  while (i < pattern.length) {
+    if (pattern[i] === '1') {
+      let w = 1;
+      while (i + w < pattern.length && pattern[i + w] === '1') w += 1;
+      rects += `<rect x="${x}" y="0" width="${w}" height="100" fill="${color}"/>`;
+      x += w;
+      i += w;
+    } else {
+      x += 1;
+      i += 1;
+    }
+  }
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" ` +
+    `viewBox="0 0 ${total} 100" preserveAspectRatio="none" shape-rendering="crispEdges">` +
+    rects +
+    `</svg>`
+  );
+}
+
+/** Total module count (including quiet zones) for an even-length digit string. */
+export function code128NumericModules(digits: string, quietModules = 10): number {
+  return encodeSetCToPattern(digits).moduleCount + quietModules * 2;
+}
+
+/**
+ * Render an even-length digit string as a Code128 Set C barcode SVG.
+ * Defaults to the spec-minimum 10-module quiet zone on each side.
+ */
+export function code128SvgNumeric(digits: string, options: Code128Options = {}): string {
+  const {
+    width = '100%',
+    height = '100%',
+    quietModules = 10,
+    color = '#000',
+  } = options;
+  const { pattern } = encodeSetCToPattern(digits);
+  return patternToSvg(pattern, { width, height, quietModules, color });
 }
