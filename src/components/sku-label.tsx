@@ -1,7 +1,7 @@
 import { QrCode } from './qr-code';
 import { DEFAULT_LABEL_GRID, LABEL_FONT } from '@/lib/skus/label-grid';
 import { labelItemName, labelRate, labelUnit, type SkuLabelInput } from '@/lib/skus/label';
-import { code128Svg } from '@/lib/skus/code128';
+import { code128Svg, code128SvgNumeric } from '@/lib/skus/code128';
 
 export type LabelCodeType = 'qr' | 'code128';
 
@@ -159,7 +159,20 @@ function Code128LabelBody({ sku, showBorder }: { sku: SkuLabelInput; showBorder:
   const name = labelItemName(sku);
   const rate = labelRate(sku.price);
   const unit = labelUnit(sku.pack_size, sku.rate_unit);
-  const barcodeSvg = code128Svg(sku.sku_code, { quietModules: 8 });
+  const shortCode = sku.short_code;
+  const useShort =
+    typeof shortCode === 'number' && Number.isInteger(shortCode) && shortCode > 0 && shortCode <= 9999;
+
+  // Set C at a FIXED 0.25 mm per module (= exactly 2 dots on a 203 dpi
+  // thermal head, and the ISO/GS1 minimum). 4 digits => 77 modules incl.
+  // quiet zones => 19.25 mm, which fits the 22.8 mm box with margin to
+  // spare. Fixing the width rather than stretching to 100% is the whole
+  // point: a non-integer dots-per-module ratio is what made the old
+  // barcode unreadable on 1D laser guns.
+  const barcodeSvg = useShort
+    ? code128SvgNumeric(String(shortCode).padStart(4, '0'), { quietModules: 10 })
+    : code128Svg(sku.sku_code, { quietModules: 8 });
+  const barcodeWidth = useShort ? '19.25mm' : '100%';
   return (
     <div
       className="sku-label"
@@ -225,7 +238,9 @@ function Code128LabelBody({ sku, showBorder }: { sku: SkuLabelInput; showBorder:
       </div>
       <div
         style={{
-          width: '100%',
+          width: barcodeWidth,
+          marginLeft: 'auto',
+          marginRight: 'auto',
           height: '3.5mm',
           // Give the SVG a tiny vertical margin above the human-readable
           // code so bars don't crowd the text.
