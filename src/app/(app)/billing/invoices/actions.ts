@@ -215,6 +215,28 @@ export async function cancelInvoiceAction(
   redirect(`/billing/invoices/${parsed.data.id}`);
 }
 
+export async function amendInvoiceAction(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireRole(['super_admin', 'supervisor']);
+  const parsed = IdSchema.safeParse({ id: formData.get('id') });
+  if (!parsed.success)
+    return {
+      ok: false,
+      messageKey: parsed.error.issues[0]?.message ?? 'common.errors.invalidInput',
+    };
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc('amend_invoice', { p_id: parsed.data.id });
+  if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
+
+  revalidatePath('/billing/invoices');
+  revalidatePath(`/billing/invoices/${parsed.data.id}`);
+  // Land straight on the editable draft so staff can add the extra goods.
+  redirect(`/billing/invoices/${parsed.data.id}`);
+}
+
 export async function deleteInvoiceDraftAction(
   _prev: ActionResult | null,
   formData: FormData,
