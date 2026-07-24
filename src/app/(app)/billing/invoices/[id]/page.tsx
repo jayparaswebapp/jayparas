@@ -21,6 +21,7 @@ interface InvoiceRow {
   invoice_number: string | null;
   business_line: 'rakhi' | 'kite';
   status: 'draft' | 'issued' | 'cancelled';
+  revision: number | null;
   invoice_date: string;
   due_date: string | null;
   customer_id: string | null;
@@ -71,7 +72,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
   const { data: inv } = await supabase
     .from('invoices')
     .select(
-      'id, invoice_number, business_line, status, invoice_date, due_date, customer_id, place_of_supply, intra_state, notes, terms, subtotal, discount_total, cgst_total, sgst_total, igst_total, packing_charges, delivery_charges, round_off, grand_total, issued_at, cancelled_at, created_at, customer_snapshot, seller_snapshot',
+      'id, invoice_number, business_line, status, revision, invoice_date, due_date, customer_id, place_of_supply, intra_state, notes, terms, subtotal, discount_total, cgst_total, sgst_total, igst_total, packing_charges, delivery_charges, round_off, grand_total, issued_at, cancelled_at, created_at, customer_snapshot, seller_snapshot',
     )
     .eq('id', params.id)
     .is('deleted_at', null)
@@ -234,7 +235,11 @@ function ReadonlyView({
             >
               {tDet('printButton')}
             </Link>
-            {canWrite ? <InvoiceActions id={invoice.id} status={invoice.status} /> : null}
+            {canWrite ? <InvoiceActions
+                id={invoice.id}
+                status={invoice.status}
+                businessLine={invoice.business_line}
+              /> : null}
           </div>
         }
       />
@@ -243,6 +248,11 @@ function ReadonlyView({
         <span className="font-mono text-base font-bold text-neutral-900">
           {invoice.invoice_number ?? t('draftLabel')}
         </span>
+        {invoice.revision && invoice.revision > 0 ? (
+          <span className="ml-2 rounded border border-amber-400 bg-amber-50 px-1.5 py-0.5 text-xs font-semibold text-amber-800">
+            {t('revisedBadge', { n: invoice.revision })}
+          </span>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
