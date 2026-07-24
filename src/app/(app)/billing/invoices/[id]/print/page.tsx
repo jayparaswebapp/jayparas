@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 interface InvoiceRow {
   id: string;
   invoice_number: string | null;
+  revision: number | null;
   business_line: 'rakhi' | 'kite';
   status: 'draft' | 'issued' | 'cancelled';
   invoice_date: string;
@@ -59,7 +60,7 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
   const { data: inv } = await supabase
     .from('invoices')
     .select(
-      'id, invoice_number, business_line, status, invoice_date, place_of_supply, intra_state, notes, terms, subtotal, discount_total, cgst_total, sgst_total, igst_total, packing_charges, delivery_charges, round_off, grand_total, customer_snapshot, seller_snapshot',
+      'id, invoice_number, business_line, status, revision, invoice_date, place_of_supply, intra_state, notes, terms, subtotal, discount_total, cgst_total, sgst_total, igst_total, packing_charges, delivery_charges, round_off, grand_total, customer_snapshot, seller_snapshot',
     )
     .eq('id', params.id)
     .is('deleted_at', null)
@@ -217,6 +218,11 @@ function PrintView({
                   <td className="py-0.5 text-neutral-600">{t('numberLabel')}</td>
                   <td className="py-0.5 font-mono font-semibold">
                     : {invoice.invoice_number ?? '—'}
+                    {invoice.revision && invoice.revision > 0 ? (
+                      <span className="ml-1 border border-black px-1 text-[9px] font-bold uppercase">
+                        {t('revisedMark', { n: invoice.revision })}
+                      </span>
+                    ) : null}
                   </td>
                 </tr>
                 <tr>
