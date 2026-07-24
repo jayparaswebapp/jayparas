@@ -362,7 +362,10 @@
         "interState": "ઇન્ટર-સ્ટેટ",
         "issueConfirm": "આ ઇન્વોઇસ ઇશ્યૂ કરવો છે? ઇશ્યૂ થયા પછી નંબર અને ટોટલ બદલી શકાશે નહીં.",
         "cancelConfirm": "આ ઇન્વોઇસ રદ કરવો છે? નંબર સિરીઝમાં રહેશે.",
-        "deleteConfirm": "આ ડ્રાફ્ટ ડિલીટ કરવો છે? રિવર્સ થઈ શકશે નહીં."
+        "deleteConfirm": "આ ડ્રાફ્ટ ડિલીટ કરવો છે? રિવર્સ થઈ શકશે નહીં.",
+        "amendButton": "બિલ સુધારો",
+        "amendConfirm": "આ બિલ ફરી સુધારવા માટે ખોલવું? બિલ નંબર એ જ રહેશે, અને ફરી પ્રિન્ટ કરતાં તેના પર REVISED લખાશે. ફરી ઇશ્યુ કરતી વખતે હિસાબની એન્ટ્રી આપોઆપ સુધરી જશે.",
+        "revisedBadge": "REVISED {n}"
       },
       "print": {
         "invoiceLabel": "ટેક્સ ઇન્વોઇસ",
@@ -418,7 +421,8 @@
         "forLabel": "For",
         "signatoryLabel": "Authorised Signatory",
         "printNowButton": "પ્રિન્ટ કરો",
-        "backButton": "પાછા"
+        "backButton": "પાછા",
+        "revisedMark": "REVISED {n}"
       },
       "errors": {
         "customerRequired": "ગ્રાહક પસંદ કરો",
@@ -428,7 +432,10 @@
         "notEditable": "માત્ર ડ્રાફ્ટ બદલી કે ડિલીટ થઈ શકે.",
         "companyMissing": "પ્રથમ ઇન્વોઇસ ઇશ્યૂ કરતા પહેલા કંપની ડિટેલ ભરો.",
         "linesRequiredIssue": "લાઇન વગર ઇન્વોઇસ ઇશ્યૂ થઈ શકતો નથી.",
-        "customerMissing": "ઇશ્યૂ કરતા પહેલા ગ્રાહક પસંદ કરો."
+        "customerMissing": "ઇશ્યૂ કરતા પહેલા ગ્રાહક પસંદ કરો.",
+        "notAmendable": "ફક્ત ઇશ્યુ થયેલું બિલ જ સુધારી શકાય.",
+        "amendGstBlocked": "GST (પતંગ) બિલ સુધારી શકાતું નથી. તેના બદલે અલગ બિલ બનાવો.",
+        "totalBelowPaid": "સુધારેલી રકમ આ બિલ સામે મળેલી રકમ કરતાં ઓછી છે. પહેલાં પેમેન્ટ ગોઠવો."
       }
     },
     "payments": {
