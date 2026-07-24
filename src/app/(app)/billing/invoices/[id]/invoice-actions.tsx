@@ -5,16 +5,25 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { ServerError, SubmitButton } from '@/components/form-status';
 import type { ActionResult } from '@/lib/rpc/action-result';
-import { cancelInvoiceAction, deleteInvoiceDraftAction, issueInvoiceAction } from '../actions';
+import {
+  amendInvoiceAction,
+  cancelInvoiceAction,
+  deleteInvoiceDraftAction,
+  issueInvoiceAction,
+} from '../actions';
 
-type Variant = 'issue' | 'cancel' | 'delete';
+type Variant = 'issue' | 'cancel' | 'delete' | 'amend';
 
 export function InvoiceActions({
   id,
   status,
+  businessLine,
 }: {
   id: string;
   status: 'draft' | 'issued' | 'cancelled';
+  /** Amend is deliberately rakhi-only: kite bills carry GST and a tax invoice
+   *  shouldn't be rewritten after issue. */
+  businessLine?: 'rakhi' | 'kite';
 }) {
   const t = useTranslations('billing.invoices.detail');
   const tCommon = useTranslations('common.actions');
@@ -42,13 +51,24 @@ export function InvoiceActions({
           </button>
         </>
       ) : (
-        <button
-          type="button"
-          onClick={() => setOpen('cancel')}
-          className="btn-ghost border border-red-300 text-red-700"
-        >
-          {t('cancelInvoiceButton')}
-        </button>
+        <>
+          {businessLine === 'rakhi' ? (
+            <button
+              type="button"
+              onClick={() => setOpen('amend')}
+              className="btn-ghost border border-neutral-300"
+            >
+              {t('amendButton')}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setOpen('cancel')}
+            className="btn-ghost border border-red-300 text-red-700"
+          >
+            {t('cancelInvoiceButton')}
+          </button>
+        </>
       )}
 
       {open === 'issue' ? (
@@ -57,6 +77,17 @@ export function InvoiceActions({
           message={t('issueConfirm')}
           action={issueInvoiceAction}
           submitLabel={t('issueButton')}
+          submitClassName="btn-primary !w-auto px-4"
+          onClose={() => setOpen(null)}
+          cancelLabel={tCommon('cancel')}
+        />
+      ) : null}
+      {open === 'amend' ? (
+        <ConfirmForm
+          id={id}
+          message={t('amendConfirm')}
+          action={amendInvoiceAction}
+          submitLabel={t('amendButton')}
           submitClassName="btn-primary !w-auto px-4"
           onClose={() => setOpen(null)}
           cancelLabel={tCommon('cancel')}
