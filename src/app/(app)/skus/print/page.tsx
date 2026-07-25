@@ -1,3 +1,4 @@
+import { loadAllSkus } from '@/lib/skus/load-all';
 import { createClient } from '@/lib/supabase/server';
 import { requireAppUser } from '@/lib/users/current';
 import { getServerLocale } from '@/lib/format/locale';
@@ -11,14 +12,11 @@ export default async function PrintPickerPage() {
   const locale = getServerLocale();
   const supabase = createClient();
 
-  const { data: rows } = await supabase
-    .from('skus')
-    .select(
+  const rows = await loadAllSkus(supabase, {
+    columns:
       'id, sku_code, pack_type, design_no, mix_code, design_name, pack_size, rate_unit, price, photo_path, is_active',
-    )
-    .is('deleted_at', null)
-    .eq('is_active', true)
-    .order('design_name', { ascending: true });
+    orderBy: 'design_name',
+  });
 
   const skus = (
     (rows ?? []) as Array<
