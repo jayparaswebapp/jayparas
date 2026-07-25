@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { loadAllSkus } from '@/lib/skus/load-all';
 import { createClient } from '@/lib/supabase/server';
 import { requireAppUser } from '@/lib/users/current';
 import { getServerLocale, formatRupees } from '@/lib/format/locale';
@@ -93,21 +94,28 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
   const canWrite = user.role === 'super_admin' || user.role === 'supervisor';
 
   if (invoice.status === 'draft' && canWrite) {
-    const [{ data: cs }, { data: ss }, { data: company }] = await Promise.all([
+    const [{ data: cs }, ss, { data: company }] = await Promise.all([
       supabase
         .from('billing_customers')
         .select('id, full_name, business_name, city, state')
         .eq('is_active', true)
         .is('deleted_at', null)
         .order('full_name', { ascending: true }),
-      supabase
-        .from('skus')
-        .select(
+      loadAllSkus<{
+        id: string;
+        sku_code: string;
+        short_code: number | null;
+        design_name: string;
+        pack_size: number;
+        price: number | string;
+        discount_pct: number | string | null;
+        is_discountable: boolean | null;
+        rate_unit: string | null;
+      }>(supabase, {
+        columns:
           'id, sku_code, short_code, design_name, pack_size, price, discount_pct, is_discountable, rate_unit',
-        )
-        .eq('is_active', true)
-        .is('deleted_at', null)
-        .order('design_name', { ascending: true }),
+        orderBy: 'design_name',
+      }),
       supabase.from('company_info').select('state').maybeSingle(),
     ]);
 
