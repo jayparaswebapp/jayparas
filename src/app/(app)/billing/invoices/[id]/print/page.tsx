@@ -45,10 +45,13 @@ interface LineRow {
   gst_pct: number;
   line_subtotal: number;
   line_total: number;
-  /** Frozen-at-pick-time snapshot of the SKU. We read is_discountable from
-   *  here (not from the live skus table) so changing a SKU's flag later
-   *  doesn't re-group historical invoices. Manual lines have a null snapshot
-   *  and fall into the non-discountable section. */
+  sku_id: string | null;
+  /** Frozen-at-pick-time snapshot of the SKU. is_discountable is read from
+   *  here first so changing a SKU's flag later doesn't re-group historical
+   *  invoices. But some older/interrupted picks saved a snapshot WITHOUT the
+   *  flag; for those we fall back to the SKU's live flag (see grouping below)
+   *  so a discountable item never lands in the non-discountable section.
+   *  Manual lines (no sku_id, null snapshot) stay non-discountable. */
   sku_snapshot: { is_discountable?: boolean } | null;
 }
 
@@ -72,11 +75,45 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
   const { data: ls } = await supabase
     .from('invoice_lines')
     .select(
-      'id, line_no, description, hsn_code, qty, uom, rate, discount_pct, gst_pct, line_subtotal, line_total, sku_snapshot',
+      'id, line_no, description, hsn_code, qty, uom, rate, discount_pct, gst_pct, line_subtotal, line_total, sku_id, sku_snapshot',
     )
     .eq('invoice_id', params.id)
     .order('line_no', { ascending: true });
   const lines = (ls ?? []) as unknown as LineRow[];
+
+  // Fallback map: some lines saved a snapshot without is_discountable. Look up
+  // the live flag for those SKUs so grouping stays correct. This is read-only
+  // and never changes stored data.
+  const skuIds = Array.from(
+    new Set(lines.map((l) => l.sku_id).filter((v): v is string => !!v)),
+  );
+  const liveDiscountable = new Map<string, boolean>();
+  if (skuIds.length > 0) {
+    const { data: skuRows } = await supabase
+      .from('skus')
+      .select('id, is_discountable')
+      .in('id', skuIds);
+    for (const r of (skuRows ?? []) as { id: string; is_discountable: boolean | null }[]) {
+      liveDiscountable.set(r.id, r.is_discountable === true);
+    }
+  }
+
+  // A line is discountable if its snapshot says so; if the snapshot has no
+  // flag, fall back to the SKU's live flag; otherwise (manual line) it isn't.
+  // Resolve it here (where the live map exists) into a set of line ids the
+  // print view can group by without needing the SKU table itself.
+  const discountableLineIds = new Set<string>(
+    lines
+      .filter((l) => {
+        const snap = (l.sku_snapshot as { is_discountable?: boolean } | null) ?? null;
+        if (typeof snap?.is_discountable === 'boolean') return snap.is_discountable;
+        if (l.sku_id && liveDiscountable.has(l.sku_id)) {
+          return liveDiscountable.get(l.sku_id) === true;
+        }
+        return false;
+      })
+      .map((l) => l.id),
+  );
 
   // Fall back to current company info defaults for terms (when an issued
   // invoice didn't have terms text saved, or when previewing a draft).
@@ -86,7 +123,15 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
     .maybeSingle();
   const terms = invoice.terms ?? company?.default_terms ?? null;
 
-  return <PrintView invoice={invoice} lines={lines} terms={terms} locale={locale} />;
+  return (
+    <PrintView
+      invoice={invoice}
+      lines={lines}
+      discountableLineIds={discountableLineIds}
+      terms={terms}
+      locale={locale}
+    />
+  );
 }
 
 function fmtDate(s: string | null, locale: Locale): string {
@@ -103,11 +148,13 @@ function fmtDate(s: string | null, locale: Locale): string {
 function PrintView({
   invoice,
   lines,
+  discountableLineIds,
   terms,
   locale,
 }: {
   invoice: InvoiceRow;
   lines: LineRow[];
+  discountableLineIds: Set<string>;
   terms: string | null;
   locale: Locale;
 }) {
@@ -260,18 +307,10 @@ function PrintView({
           </thead>
           <tbody>
             {(() => {
-              // Group lines by sku_snapshot.is_discountable. Lines without a
-              // snapshot (manual entries) go in the non-discountable group.
-              const discountable = lines.filter(
-                (l) =>
-                  (l.sku_snapshot as { is_discountable?: boolean } | null)?.is_discountable ===
-                  true,
-              );
-              const nonDiscountable = lines.filter(
-                (l) =>
-                  (l.sku_snapshot as { is_discountable?: boolean } | null)?.is_discountable !==
-                  true,
-              );
+              // Group by the resolved discountable set (snapshot flag with a
+              // live-SKU fallback, computed in the data loader above).
+              const discountable = lines.filter((l) => discountableLineIds.has(l.id));
+              const nonDiscountable = lines.filter((l) => !discountableLineIds.has(l.id));
               const sumLineTotal = (rows: LineRow[]) =>
                 rows.reduce((acc, l) => acc + Number(l.line_total), 0);
               const colCount = 7 + (showHsn ? 1 : 0) + (showGst ? 1 : 0) + 1;
