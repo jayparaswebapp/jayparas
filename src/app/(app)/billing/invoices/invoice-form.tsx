@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useFormState } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ServerError } from '@/components/form-status';
@@ -375,7 +376,7 @@ export function InvoiceForm({
   // --- Crash-safe local autosave -------------------------------------------
   // Mirror the whole in-progress bill to the device's own storage so a crash,
   // refresh, new deploy, or dropped connection can never lose it.
-  const { recovered, clearDraft, markSubmitting, markSaveFailed } = useInvoiceDraft(
+  const { recovered, clearDraft } = useInvoiceDraft(
     initial.id,
     {
       businessLine,
@@ -393,10 +394,17 @@ export function InvoiceForm({
   // Show a "Restore / Discard" banner when a draft was recovered on load.
   const [showRecovery, setShowRecovery] = useState<boolean>(!!recovered);
 
-  // If a save comes back as an error, keep the draft (don't clear on unmount).
+  // Clear the local backup ONLY when the server confirms the save, then go to
+  // the target it returned. On any failure `state.ok` is false and we do
+  // nothing, so the draft (and every line the user typed) stays put for a
+  // retry. This is the fix for a dropped connection wiping a long bill.
+  const router = useRouter();
   useEffect(() => {
-    if (state && state.ok === false) markSaveFailed();
-  }, [state, markSaveFailed]);
+    if (state && state.ok === true) {
+      clearDraft();
+      router.push(state.redirectTo ?? '/billing/invoices');
+    }
+  }, [state, clearDraft, router]);
 
   function restoreDraft() {
     if (!recovered) return;
@@ -418,7 +426,7 @@ export function InvoiceForm({
   }
 
   return (
-    <form action={formAction} onSubmit={() => markSubmitting()} className="space-y-6">
+    <form action={formAction} className="space-y-6">
       {/* Ctrl/Cmd + A opens the "New customer" form in a new tab so the
        * in-progress invoice draft on this tab is preserved. Same-tab
        * navigation would risk losing unsaved header/line edits. */}
