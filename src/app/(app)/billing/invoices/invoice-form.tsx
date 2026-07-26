@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ServerError } from '@/components/form-status';
 import { formatRupees } from '@/lib/format/locale-shared';
 import type { Locale } from '@/lib/i18n/config';
@@ -11,6 +11,7 @@ import type { ActionResult } from '@/lib/rpc/action-result';
 import { saveInvoiceDraftAction } from './actions';
 import { NewCustomerShortcut } from '../customers/new-customer-shortcut';
 import { ScanButton } from './scan-button';
+import { useInvoiceDraft } from './use-invoice-draft';
 
 export type BusinessLine = 'rakhi' | 'kite';
 
@@ -371,13 +372,91 @@ export function InvoiceForm({
     ],
   );
 
+  // --- Crash-safe local autosave -------------------------------------------
+  // Mirror the whole in-progress bill to the device's own storage so a crash,
+  // refresh, new deploy, or dropped connection can never lose it.
+  const { recovered, clearDraft, markSubmitting, markSaveFailed } = useInvoiceDraft(
+    initial.id,
+    {
+      businessLine,
+      customerId,
+      placeOfSupply,
+      invoiceDate,
+      notes,
+      terms,
+      packingCharges,
+      deliveryCharges,
+      lines,
+    },
+  );
+
+  // Show a "Restore / Discard" banner when a draft was recovered on load.
+  const [showRecovery, setShowRecovery] = useState<boolean>(!!recovered);
+
+  // If a save comes back as an error, keep the draft (don't clear on unmount).
+  useEffect(() => {
+    if (state && state.ok === false) markSaveFailed();
+  }, [state, markSaveFailed]);
+
+  function restoreDraft() {
+    if (!recovered) return;
+    setBusinessLine(recovered.businessLine);
+    setCustomerId(recovered.customerId);
+    setPlaceOfSupply(recovered.placeOfSupply);
+    setInvoiceDate(recovered.invoiceDate);
+    setNotes(recovered.notes);
+    setTerms(recovered.terms);
+    setPackingCharges(recovered.packingCharges);
+    setDeliveryCharges(recovered.deliveryCharges);
+    setLines(recovered.lines.length ? recovered.lines : [{ ...EMPTY_LINE }]);
+    setShowRecovery(false);
+  }
+
+  function discardRecovery() {
+    clearDraft();
+    setShowRecovery(false);
+  }
+
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={formAction} onSubmit={() => markSubmitting()} className="space-y-6">
       {/* Ctrl/Cmd + A opens the "New customer" form in a new tab so the
        * in-progress invoice draft on this tab is preserved. Same-tab
        * navigation would risk losing unsaved header/line edits. */}
       <NewCustomerShortcut openInNewTab />
       <input type="hidden" name="payload" value={payload} />
+
+      {/* Crash-recovery banner: shown when an unsaved bill was found on this
+       * device. Buttons are type="button" so they never submit the form. */}
+      {showRecovery && recovered ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4">
+          <p className="text-sm font-medium text-amber-900">
+            અધૂરું બિલ મળ્યું · Unsaved bill found
+          </p>
+          <p className="mt-1 text-xs text-amber-800">
+            A bill you were making on this device was saved automatically
+            {recovered.savedAt
+              ? ` (${new Date(recovered.savedAt).toLocaleString()})`
+              : ''}
+            . Restore it, or discard to start fresh.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={restoreDraft}
+              className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100"
+            >
+              પાછું લાવો · Restore
+            </button>
+            <button
+              type="button"
+              onClick={discardRecovery}
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100"
+            >
+              કાઢી નાખો · Discard
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {/* Header */}
       <section className="space-y-4 rounded-lg border border-neutral-200 bg-white p-4">
