@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { BusinessLine, InvoiceLineValues } from './invoice-form';
 
 // A faithful snapshot of everything the user has typed into the invoice form.
@@ -50,8 +50,10 @@ function readDraft(invoiceId: string | undefined): InvoiceDraft | null {
 // - Mirrors the live form to localStorage (debounced) on every change.
 // - Exposes any draft recovered on first mount so the form can offer
 //   Restore / Discard.
-// - Clears the stored draft only after a SUCCESSFUL save (which redirects away
-//   and unmounts the form). A failed save keeps the draft, so nothing is lost.
+// - Clears the stored draft ONLY when the server confirms a successful save.
+//   Every other outcome — a failed save, a reload, a dropped connection, the
+//   phone sleeping — keeps the draft. "Keep unless we are certain it saved" is
+//   the only safe default for data the shop cannot afford to re-enter.
 export function useInvoiceDraft(
   invoiceId: string | undefined,
   snapshot: InvoiceDraftSnapshot,
@@ -59,10 +61,6 @@ export function useInvoiceDraft(
   // The draft found on first mount (if any). Held in state so the banner is
   // stable even as the user starts editing.
   const [recovered] = useState<InvoiceDraft | null>(() => readDraft(invoiceId));
-
-  // Flips true the moment the form is submitted, back to false if that save
-  // comes back as an error. Read on unmount to decide whether to clear.
-  const submittedRef = useRef(false);
 
   const snapshotJson = JSON.stringify(snapshot);
 
@@ -93,29 +91,5 @@ export function useInvoiceDraft(
     }
   }, [invoiceId]);
 
-  // Call the instant the form is submitted (before the network request goes).
-  const markSubmitting = useCallback(() => {
-    submittedRef.current = true;
-  }, []);
-
-  // Call if the save returned an error, so the draft is kept for a retry.
-  const markSaveFailed = useCallback(() => {
-    submittedRef.current = false;
-  }, []);
-
-  // A successful save redirects away, unmounting this form. Clear the draft
-  // then, but ONLY if a submit was in flight and had not failed.
-  useEffect(() => {
-    return () => {
-      if (submittedRef.current) {
-        try {
-          window.localStorage.removeItem(keyFor(invoiceId));
-        } catch {
-          // ignore
-        }
-      }
-    };
-  }, [invoiceId]);
-
-  return { recovered, clearDraft, markSubmitting, markSaveFailed };
+  return { recovered, clearDraft };
 }
