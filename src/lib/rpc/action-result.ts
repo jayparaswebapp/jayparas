@@ -1,4 +1,6 @@
-export type ActionResult = { ok: true } | { ok: false; messageKey: string };
+export type ActionResult =
+  | { ok: true; redirectTo?: string }
+  | { ok: false; messageKey: string };
 
 export const ACTION_OK: ActionResult = { ok: true };
 
