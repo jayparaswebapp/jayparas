@@ -168,7 +168,10 @@ export async function saveInvoiceDraftAction(
   }
 
   revalidatePath('/billing/invoices');
-  redirect(invoiceId ? `/billing/invoices/${invoiceId}` : '/billing/invoices');
+  return {
+    ok: true,
+    redirectTo: invoiceId ? `/billing/invoices/${invoiceId}` : '/billing/invoices',
+  };
 }
 
 const IdSchema = z.object({ id: z.string().uuid() });
