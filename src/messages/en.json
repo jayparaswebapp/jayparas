@@ -293,6 +293,8 @@
       "empty": "No invoices yet.",
       "noMatches": "No invoices match the filters.",
       "draftLabel": "Draft",
+      "exportExcelButton": "Export to Excel",
+      "exportHint": "Downloads every bill matching the filters as one Excel file — Kite (GST) and Rakhi (no GST) on separate sheets.",
       "form": {
         "createTitle": "New invoice",
         "editTitle": "Edit draft invoice",
@@ -353,6 +355,7 @@
         "deleteDraftButton": "Delete draft",
         "editButton": "Edit",
         "printButton": "Print",
+        "exportExcelButton": "Excel",
         "metaIssued": "Issued",
         "metaCancelled": "Cancelled",
         "metaCreated": "Created",
