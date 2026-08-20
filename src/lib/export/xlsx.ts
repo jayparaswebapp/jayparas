@@ -1,226 +1,226 @@
 /**
  * Zero-dependency multi-sheet .xlsx writer.
-  *
-   * We generate the Excel file by hand instead of pulling in a library
-    * (SheetJS/ExcelJS): the repo ships a committed lockfile and Vercel installs
-     * frozen, so adding a dependency through the GitHub web editor would break the
-      * build. This module imports only Node's built-in zlib and produces a real
-       * OOXML workbook that Excel and Google Sheets open cleanly — multiple sheets,
-        * bold cells, per-column widths, and numbers stored as numbers so totals and
-         * pivots work. Validated against openpyxl (sheets, Gujarati text, numeric
-          * cells, bold headers all round-trip).
-           */
-           import { deflateRawSync } from 'node:zlib';
+ *
+ * We generate the Excel file by hand instead of pulling in a library
+ * (SheetJS/ExcelJS): the repo ships a committed lockfile and Vercel installs
+ * frozen, so adding a dependency through the GitHub web editor would break the
+ * build. This module imports only Node's built-in zlib and produces a real
+ * OOXML workbook that Excel and Google Sheets open cleanly — multiple sheets,
+ * bold cells, per-column widths, and numbers stored as numbers so totals and
+ * pivots work. Validated against openpyxl (sheets, Gujarati text, numeric
+ * cells, bold headers all round-trip).
+ */
+import { deflateRawSync } from 'node:zlib';
 
-           export type Cell =
-             | { v: string; t: 's'; b?: boolean }
-               | { v: number; t: 'n'; b?: boolean }
-                 | null;
+export type Cell =
+  | { v: string; t: 's'; b?: boolean }
+  | { v: number; t: 'n'; b?: boolean }
+  | null;
 
-                 export interface Sheet {
-                   /** Tab name. Excel caps this at 31 chars and forbids : \ / ? * [ ] */
-                     name: string;
-                       rows: Cell[][];
-                         /** Optional column widths (in Excel "character" units), left to right. */
-                           colWidths?: number[];
-                           }
+export interface Sheet {
+  /** Tab name. Excel caps this at 31 chars and forbids : \ / ? * [ ] */
+  name: string;
+  rows: Cell[][];
+  /** Optional column widths (in Excel "character" units), left to right. */
+  colWidths?: number[];
+}
 
-                           /** String cell; pass bold=true for a header. */
-                           export const txt = (v: string | null | undefined, bold = false): Cell => ({
-                             v: v ?? '',
-                               t: 's',
-                                 b: bold,
-                                 });
-                                 /** Number cell; pass bold=true to emphasise (e.g. a total). */
-                                 export const num = (v: number | null | undefined, bold = false): Cell => ({
-                                   v: Number.isFinite(v as number) ? (v as number) : 0,
-                                     t: 'n',
-                                       b: bold,
-                                       });
+/** String cell; pass bold=true for a header. */
+export const txt = (v: string | null | undefined, bold = false): Cell => ({
+  v: v ?? '',
+  t: 's',
+  b: bold,
+});
+/** Number cell; pass bold=true to emphasise (e.g. a total). */
+export const num = (v: number | null | undefined, bold = false): Cell => ({
+  v: Number.isFinite(v as number) ? (v as number) : 0,
+  t: 'n',
+  b: bold,
+});
 
-                                       // Backwards-compatible aliases (H = bold header, S = string, N = number).
-                                       export const H = (v: string): Cell => txt(v, true);
-                                       export const S = (v: string | null | undefined): Cell => txt(v);
-                                       export const N = (v: number): Cell => num(v);
+// Backwards-compatible aliases (H = bold header, S = string, N = number).
+export const H = (v: string): Cell => txt(v, true);
+export const S = (v: string | null | undefined): Cell => txt(v);
+export const N = (v: number): Cell => num(v);
 
-                                       // ---------- CRC32 ----------
-                                       const CRC_TABLE = (() => {
-                                         const t = new Uint32Array(256);
-                                           for (let n = 0; n < 256; n += 1) {
-                                               let c = n;
-                                                   for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-                                                       t[n] = c >>> 0;
-                                                         }
-                                                           return t;
-                                                           })();
+// ---------- CRC32 ----------
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n += 1) {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
 
-                                                           function crc32(buf: Buffer): number {
-                                                             let c = 0xffffffff;
-                                                               for (let i = 0; i < buf.length; i += 1) {
-                                                                   const byte = buf[i] ?? 0;
-                                                                       c = (CRC_TABLE[(c ^ byte) & 0xff] ?? 0) ^ (c >>> 8);
-                                                                         }
-                                                                           return (c ^ 0xffffffff) >>> 0;
-                                                                           }
+function crc32(buf: Buffer): number {
+  let c = 0xffffffff;
+  for (let i = 0; i < buf.length; i += 1) {
+    const byte = buf[i] ?? 0;
+    c = (CRC_TABLE[(c ^ byte) & 0xff] ?? 0) ^ (c >>> 8);
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
 
-                                                                           // ---------- minimal ZIP (deflate) ----------
-                                                                           interface ZipEntry {
-                                                                             name: string;
-                                                                               data: Buffer;
-                                                                               }
+// ---------- minimal ZIP (deflate) ----------
+interface ZipEntry {
+  name: string;
+  data: Buffer;
+}
 
-                                                                               function zip(files: ZipEntry[]): Buffer {
-                                                                                 const parts: Buffer[] = [];
-                                                                                   const central: Buffer[] = [];
-                                                                                     let offset = 0;
-                                                                                       for (const f of files) {
-                                                                                           const nameBuf = Buffer.from(f.name, 'utf8');
-                                                                                               const data = f.data;
-                                                                                                   const comp = deflateRawSync(data);
-                                                                                                       const crc = crc32(data);
-                                                                                                       
-                                                                                                           const local = Buffer.alloc(30);
-                                                                                                               local.writeUInt32LE(0x04034b50, 0);
-                                                                                                                   local.writeUInt16LE(20, 4);
-                                                                                                                       local.writeUInt16LE(0x0800, 6); // UTF-8 filenames
-                                                                                                                           local.writeUInt16LE(8, 8); // deflate
-                                                                                                                               local.writeUInt16LE(0, 10);
-                                                                                                                                   local.writeUInt16LE(0, 12);
-                                                                                                                                       local.writeUInt32LE(crc, 14);
-                                                                                                                                           local.writeUInt32LE(comp.length, 18);
-                                                                                                                                               local.writeUInt32LE(data.length, 22);
-                                                                                                                                                   local.writeUInt16LE(nameBuf.length, 26);
-                                                                                                                                                       local.writeUInt16LE(0, 28);
-                                                                                                                                                           parts.push(local, nameBuf, comp);
-                                                                                                                                                           
-                                                                                                                                                               const cen = Buffer.alloc(46);
-                                                                                                                                                                   cen.writeUInt32LE(0x02014b50, 0);
-                                                                                                                                                                       cen.writeUInt16LE(20, 4);
-                                                                                                                                                                           cen.writeUInt16LE(20, 6);
-                                                                                                                                                                               cen.writeUInt16LE(0x0800, 8); // UTF-8
-                                                                                                                                                                                   cen.writeUInt16LE(8, 10);
-                                                                                                                                                                                       cen.writeUInt16LE(0, 12);
-                                                                                                                                                                                           cen.writeUInt16LE(0, 14);
-                                                                                                                                                                                               cen.writeUInt32LE(crc, 16);
-                                                                                                                                                                                                   cen.writeUInt32LE(comp.length, 20);
-                                                                                                                                                                                                       cen.writeUInt32LE(data.length, 24);
-                                                                                                                                                                                                           cen.writeUInt16LE(nameBuf.length, 28);
-                                                                                                                                                                                                               cen.writeUInt16LE(0, 30);
-                                                                                                                                                                                                                   cen.writeUInt16LE(0, 32);
-                                                                                                                                                                                                                       cen.writeUInt16LE(0, 34);
-                                                                                                                                                                                                                           cen.writeUInt16LE(0, 36);
-                                                                                                                                                                                                                               cen.writeUInt32LE(0, 38);
-                                                                                                                                                                                                                                   cen.writeUInt32LE(offset, 42);
-                                                                                                                                                                                                                                       central.push(cen, nameBuf);
-                                                                                                                                                                                                                                       
-                                                                                                                                                                                                                                           offset += local.length + nameBuf.length + comp.length;
-                                                                                                                                                                                                                                             }
-                                                                                                                                                                                                                                             
-                                                                                                                                                                                                                                               const centralStart = offset;
-                                                                                                                                                                                                                                                 const centralSize = central.reduce((a, b) => a + b.length, 0);
-                                                                                                                                                                                                                                                   const end = Buffer.alloc(22);
-                                                                                                                                                                                                                                                     end.writeUInt32LE(0x06054b50, 0);
-                                                                                                                                                                                                                                                       end.writeUInt16LE(files.length, 8);
-                                                                                                                                                                                                                                                         end.writeUInt16LE(files.length, 10);
-                                                                                                                                                                                                                                                           end.writeUInt32LE(centralSize, 12);
-                                                                                                                                                                                                                                                             end.writeUInt32LE(centralStart, 16);
-                                                                                                                                                                                                                                                             
-                                                                                                                                                                                                                                                               return Buffer.concat([...parts, ...central, end]);
-                                                                                                                                                                                                                                                               }
-                                                                                                                                                                                                                                                               
-                                                                                                                                                                                                                                                               // ---------- XLSX parts ----------
-                                                                                                                                                                                                                                                               function esc(s: string): string {
-                                                                                                                                                                                                                                                                 return s
-                                                                                                                                                                                                                                                                     .replace(/&/g, '&amp;')
-                                                                                                                                                                                                                                                                         .replace(/</g, '&lt;')
-                                                                                                                                                                                                                                                                             .replace(/>/g, '&gt;')
-                                                                                                                                                                                                                                                                                 .replace(/"/g, '&quot;');
-                                                                                                                                                                                                                                                                                 }
-                                                                                                                                                                                                                                                                                 
-                                                                                                                                                                                                                                                                                 function colRef(n: number): string {
-                                                                                                                                                                                                                                                                                   let s = '';
-                                                                                                                                                                                                                                                                                     let x = n + 1;
-                                                                                                                                                                                                                                                                                       while (x > 0) {
-                                                                                                                                                                                                                                                                                           const r = (x - 1) % 26;
-                                                                                                                                                                                                                                                                                               s = String.fromCharCode(65 + r) + s;
-                                                                                                                                                                                                                                                                                                   x = Math.floor((x - 1) / 26);
-                                                                                                                                                                                                                                                                                                     }
-                                                                                                                                                                                                                                                                                                       return s;
-                                                                                                                                                                                                                                                                                                       }
-                                                                                                                                                                                                                                                                                                       
-                                                                                                                                                                                                                                                                                                       function safeSheetName(name: string, fallback: string): string {
-                                                                                                                                                                                                                                                                                                         const cleaned = name.replace(/[:\\/?*[\]]/g, ' ').trim();
-                                                                                                                                                                                                                                                                                                           return (cleaned || fallback).slice(0, 31);
-                                                                                                                                                                                                                                                                                                           }
-                                                                                                                                                                                                                                                                                                           
-                                                                                                                                                                                                                                                                                                           function colsXml(widths?: number[]): string {
-                                                                                                                                                                                                                                                                                                             if (!widths || widths.length === 0) return '';
-                                                                                                                                                                                                                                                                                                               const cols = widths
-                                                                                                                                                                                                                                                                                                                   .map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`)
-                                                                                                                                                                                                                                                                                                                       .join('');
-                                                                                                                                                                                                                                                                                                                         return `<cols>${cols}</cols>`;
-                                                                                                                                                                                                                                                                                                                         }
-                                                                                                                                                                                                                                                                                                                         
-                                                                                                                                                                                                                                                                                                                         function sheetXml(sheet: Sheet): string {
-                                                                                                                                                                                                                                                                                                                           let body = '';
-                                                                                                                                                                                                                                                                                                                             sheet.rows.forEach((row, r) => {
-                                                                                                                                                                                                                                                                                                                                 let cells = '';
-                                                                                                                                                                                                                                                                                                                                     row.forEach((cell, c) => {
-                                                                                                                                                                                                                                                                                                                                           if (!cell) return;
-                                                                                                                                                                                                                                                                                                                                                 const ref = colRef(c) + (r + 1);
-                                                                                                                                                                                                                                                                                                                                                       const style = cell.b ? ' s="1"' : '';
-                                                                                                                                                                                                                                                                                                                                                             if (cell.t === 'n') {
-                                                                                                                                                                                                                                                                                                                                                                     cells += `<c r="${ref}"${style}><v>${cell.v}</v></c>`;
-                                                                                                                                                                                                                                                                                                                                                                           } else {
-                                                                                                                                                                                                                                                                                                                                                                                   cells += `<c r="${ref}"${style} t="inlineStr"><is><t xml:space="preserve">${esc(cell.v)}</t></is></c>`;
-                                                                                                                                                                                                                                                                                                                                                                                         }
-                                                                                                                                                                                                                                                                                                                                                                                             });
-                                                                                                                                                                                                                                                                                                                                                                                                 body += `<row r="${r + 1}">${cells}</row>`;
-                                                                                                                                                                                                                                                                                                                                                                                                   });
-                                                                                                                                                                                                                                                                                                                                                                                                     return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${colsXml(sheet.colWidths)}<sheetData>${body}</sheetData></worksheet>`;
-                                                                                                                                                                                                                                                                                                                                                                                                     }
-                                                                                                                                                                                                                                                                                                                                                                                                     
-                                                                                                                                                                                                                                                                                                                                                                                                     const CONTENT_TYPES = (n: number) =>
-                                                                                                                                                                                                                                                                                                                                                                                                       `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${Array.from({ length: n }, (_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
-                                                                                                                                                                                                                                                                                                                                                                                                       
-                                                                                                                                                                                                                                                                                                                                                                                                       const ROOT_RELS =
-                                                                                                                                                                                                                                                                                                                                                                                                         `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
-                                                                                                                                                                                                                                                                                                                                                                                                         
-                                                                                                                                                                                                                                                                                                                                                                                                         const STYLES =
-                                                                                                                                                                                                                                                                                                                                                                                                           `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><color theme="1"/><name val="Calibri"/></font><font><b/><sz val="11"/><color theme="1"/><name val="Calibri"/></font></fonts><fills count="1"><fill><patternFill patternType="none"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
-                                                                                                                                                                                                                                                                                                                                                                                                           
-                                                                                                                                                                                                                                                                                                                                                                                                           /** Build an .xlsx workbook from one or more sheets. Returns the raw bytes. */
-                                                                                                                                                                                                                                                                                                                                                                                                           export function buildWorkbook(sheets: Sheet[]): Buffer {
-                                                                                                                                                                                                                                                                                                                                                                                                             const named = sheets.map((s, i) => ({
-                                                                                                                                                                                                                                                                                                                                                                                                                 name: safeSheetName(s.name, `Sheet${i + 1}`),
-                                                                                                                                                                                                                                                                                                                                                                                                                     rows: s.rows,
-                                                                                                                                                                                                                                                                                                                                                                                                                         colWidths: s.colWidths,
-                                                                                                                                                                                                                                                                                                                                                                                                                           }));
-                                                                                                                                                                                                                                                                                                                                                                                                                           
-                                                                                                                                                                                                                                                                                                                                                                                                                             const files: ZipEntry[] = [];
-                                                                                                                                                                                                                                                                                                                                                                                                                               files.push({ name: '[Content_Types].xml', data: Buffer.from(CONTENT_TYPES(named.length), 'utf8') });
-                                                                                                                                                                                                                                                                                                                                                                                                                                 files.push({ name: '_rels/.rels', data: Buffer.from(ROOT_RELS, 'utf8') });
-                                                                                                                                                                                                                                                                                                                                                                                                                                   files.push({
-                                                                                                                                                                                                                                                                                                                                                                                                                                       name: 'xl/workbook.xml',
-                                                                                                                                                                                                                                                                                                                                                                                                                                           data: Buffer.from(
-                                                                                                                                                                                                                                                                                                                                                                                                                                                 `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${named.map((s, i) => `<sheet name="${esc(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                       'utf8',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                           ),
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                               files.push({
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                   name: 'xl/_rels/workbook.xml.rels',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                       data: Buffer.from(
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                             `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${named.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${named.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   'utf8',
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ),
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           files.push({ name: 'xl/styles.xml', data: Buffer.from(STYLES, 'utf8') });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             named.forEach((s, i) => {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: Buffer.from(sheetXml(s), 'utf8') });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   });
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     return zip(files);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     /** Alias kept for callers that import buildXlsx. */
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     export const buildXlsx = buildWorkbook;
+function zip(files: ZipEntry[]): Buffer {
+  const parts: Buffer[] = [];
+  const central: Buffer[] = [];
+  let offset = 0;
+  for (const f of files) {
+    const nameBuf = Buffer.from(f.name, 'utf8');
+    const data = f.data;
+    const comp = deflateRawSync(data);
+    const crc = crc32(data);
+
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(0x0800, 6); // UTF-8 filenames
+    local.writeUInt16LE(8, 8); // deflate
+    local.writeUInt16LE(0, 10);
+    local.writeUInt16LE(0, 12);
+    local.writeUInt32LE(crc, 14);
+    local.writeUInt32LE(comp.length, 18);
+    local.writeUInt32LE(data.length, 22);
+    local.writeUInt16LE(nameBuf.length, 26);
+    local.writeUInt16LE(0, 28);
+    parts.push(local, nameBuf, comp);
+
+    const cen = Buffer.alloc(46);
+    cen.writeUInt32LE(0x02014b50, 0);
+    cen.writeUInt16LE(20, 4);
+    cen.writeUInt16LE(20, 6);
+    cen.writeUInt16LE(0x0800, 8); // UTF-8
+    cen.writeUInt16LE(8, 10);
+    cen.writeUInt16LE(0, 12);
+    cen.writeUInt16LE(0, 14);
+    cen.writeUInt32LE(crc, 16);
+    cen.writeUInt32LE(comp.length, 20);
+    cen.writeUInt32LE(data.length, 24);
+    cen.writeUInt16LE(nameBuf.length, 28);
+    cen.writeUInt16LE(0, 30);
+    cen.writeUInt16LE(0, 32);
+    cen.writeUInt16LE(0, 34);
+    cen.writeUInt16LE(0, 36);
+    cen.writeUInt32LE(0, 38);
+    cen.writeUInt32LE(offset, 42);
+    central.push(cen, nameBuf);
+
+    offset += local.length + nameBuf.length + comp.length;
+  }
+
+  const centralStart = offset;
+  const centralSize = central.reduce((a, b) => a + b.length, 0);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(files.length, 8);
+  end.writeUInt16LE(files.length, 10);
+  end.writeUInt32LE(centralSize, 12);
+  end.writeUInt32LE(centralStart, 16);
+
+  return Buffer.concat([...parts, ...central, end]);
+}
+
+// ---------- XLSX parts ----------
+function esc(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function colRef(n: number): string {
+  let s = '';
+  let x = n + 1;
+  while (x > 0) {
+    const r = (x - 1) % 26;
+    s = String.fromCharCode(65 + r) + s;
+    x = Math.floor((x - 1) / 26);
+  }
+  return s;
+}
+
+function safeSheetName(name: string, fallback: string): string {
+  const cleaned = name.replace(/[:\\/?*[\]]/g, ' ').trim();
+  return (cleaned || fallback).slice(0, 31);
+}
+
+function colsXml(widths?: number[]): string {
+  if (!widths || widths.length === 0) return '';
+  const cols = widths
+    .map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`)
+    .join('');
+  return `<cols>${cols}</cols>`;
+}
+
+function sheetXml(sheet: Sheet): string {
+  let body = '';
+  sheet.rows.forEach((row, r) => {
+    let cells = '';
+    row.forEach((cell, c) => {
+      if (!cell) return;
+      const ref = colRef(c) + (r + 1);
+      const style = cell.b ? ' s="1"' : '';
+      if (cell.t === 'n') {
+        cells += `<c r="${ref}"${style}><v>${cell.v}</v></c>`;
+      } else {
+        cells += `<c r="${ref}"${style} t="inlineStr"><is><t xml:space="preserve">${esc(cell.v)}</t></is></c>`;
+      }
+    });
+    body += `<row r="${r + 1}">${cells}</row>`;
+  });
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">${colsXml(sheet.colWidths)}<sheetData>${body}</sheetData></worksheet>`;
+}
+
+const CONTENT_TYPES = (n: number) =>
+  `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>${Array.from({ length: n }, (_, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`;
+
+const ROOT_RELS =
+  `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+
+const STYLES =
+  `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><color theme="1"/><name val="Calibri"/></font><font><b/><sz val="11"/><color theme="1"/><name val="Calibri"/></font></fonts><fills count="1"><fill><patternFill patternType="none"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+
+/** Build an .xlsx workbook from one or more sheets. Returns the raw bytes. */
+export function buildWorkbook(sheets: Sheet[]): Buffer {
+  const named = sheets.map((s, i) => ({
+    name: safeSheetName(s.name, `Sheet${i + 1}`),
+    rows: s.rows,
+    colWidths: s.colWidths,
+  }));
+
+  const files: ZipEntry[] = [];
+  files.push({ name: '[Content_Types].xml', data: Buffer.from(CONTENT_TYPES(named.length), 'utf8') });
+  files.push({ name: '_rels/.rels', data: Buffer.from(ROOT_RELS, 'utf8') });
+  files.push({
+    name: 'xl/workbook.xml',
+    data: Buffer.from(
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${named.map((s, i) => `<sheet name="${esc(s.name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('')}</sheets></workbook>`,
+      'utf8',
+    ),
+  });
+  files.push({
+    name: 'xl/_rels/workbook.xml.rels',
+    data: Buffer.from(
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${named.map((_, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('')}<Relationship Id="rId${named.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
+      'utf8',
+    ),
+  });
+  files.push({ name: 'xl/styles.xml', data: Buffer.from(STYLES, 'utf8') });
+  named.forEach((s, i) => {
+    files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: Buffer.from(sheetXml(s), 'utf8') });
+  });
+
+  return zip(files);
+}
+
+/** Alias kept for callers that import buildXlsx. */
+export const buildXlsx = buildWorkbook;
