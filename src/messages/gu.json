@@ -293,6 +293,8 @@
       "empty": "હજુ કોઈ ઇન્વોઇસ નથી.",
       "noMatches": "ફિલ્ટર સાથે મેળ ખાતો કોઈ ઇન્વોઇસ નથી.",
       "draftLabel": "ડ્રાફ્ટ",
+      "exportExcelButton": "એક્સેલમાં એક્સપોર્ટ કરો",
+      "exportHint": "ફિલ્ટરને મેચ થતા બધા બિલ એક જ એક્સેલ ફાઇલ તરીકે ડાઉનલોડ થાય છે — કાઇટ (GST) અને રાખડી (GST વગર) અલગ શીટ પર.",
       "form": {
         "createTitle": "નવો ઇન્વોઇસ",
         "editTitle": "ડ્રાફ્ટ ઇન્વોઇસ બદલો",
@@ -352,6 +354,7 @@
         "deleteDraftButton": "ડ્રાફ્ટ ડિલીટ કરો",
         "editButton": "ફેરફાર કરો",
         "printButton": "પ્રિન્ટ",
+        "exportExcelButton": "એક્સેલ",
         "metaIssued": "ઇશ્યૂ",
         "metaCancelled": "રદ",
         "metaCreated": "બનાવ્યું",
