@@ -87,6 +87,14 @@ function InvoicesView({
   locale: Locale;
 }) {
   const t = useTranslations('billing.invoices');
+  const exportParams = new URLSearchParams();
+  if (filters.q) exportParams.set('q', filters.q);
+  if (filters.line) exportParams.set('line', filters.line);
+  if (filters.status) exportParams.set('status', filters.status);
+  if (filters.from) exportParams.set('from', filters.from);
+  if (filters.to) exportParams.set('to', filters.to);
+  const exportQuery = exportParams.toString();
+  const exportHref = `/billing/invoices/export${exportQuery ? `?${exportQuery}` : ''}`;
   const hasFilter =
     filters.q.length > 0 ||
     filters.line.length > 0 ||
@@ -140,6 +148,13 @@ function InvoicesView({
               {t('clearButton')}
             </Link>
           ) : null}
+          <a
+            href={exportHref}
+            className="btn-ghost ml-auto border border-emerald-300 text-emerald-800"
+            title={t('exportHint')}
+          >
+            {t('exportExcelButton')}
+          </a>
         </div>
       </form>
 
