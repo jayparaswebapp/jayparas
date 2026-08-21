@@ -38,14 +38,14 @@ interface InvoiceRow {
   round_off: number;
   grand_total: number;
   customer_snapshot: Record<string, string | null> | null;
-  customer: { full_name: string; business_name: string | null; gstin: string | null } | null;
+  customer: { full_name: string; business_name: string | null; gstin: string | null; city: string | null } | null;
 }
 
 const PAGE_SIZE = 1000;
 const MAX_PAGES = 50; // 50k bills hard stop — same guard style as loadAllSkus
 
 const SELECT =
-  'invoice_number, revision, business_line, status, invoice_date, place_of_supply, subtotal, discount_total, taxable_total, packing_charges, delivery_charges, cgst_total, sgst_total, igst_total, round_off, grand_total, customer_snapshot, customer:billing_customers(full_name, business_name, gstin)';
+  'invoice_number, revision, business_line, status, invoice_date, place_of_supply, subtotal, discount_total, taxable_total, packing_charges, delivery_charges, cgst_total, sgst_total, igst_total, round_off, grand_total, customer_snapshot, customer:billing_customers(full_name, business_name, gstin, city)';
 
 /** Load every matching invoice, paging past the 1000-row PostgREST cap. */
 async function loadInvoices(
@@ -104,6 +104,10 @@ function customerGstin(row: InvoiceRow): string {
   return row.customer_snapshot?.gstin ?? row.customer?.gstin ?? '';
 }
 
+function customerCity(row: InvoiceRow): string {
+  return row.customer_snapshot?.city ?? row.customer?.city ?? '';
+}
+
 function fmtDate(s: string): string {
   // YYYY-MM-DD -> DD-MM-YYYY (kept as text; unambiguous for the CA)
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
@@ -121,21 +125,21 @@ const n = (v: unknown) => Number(v) || 0;
 function kiteSheet(rows: InvoiceRow[]): Sheet {
   const header: Cell[] = [
     txt('Invoice No', true), txt('Date', true), txt('Status', true), txt('Customer', true),
-    txt('GSTIN', true), txt('Place of Supply', true),
+    txt('City', true), txt('GSTIN', true), txt('Place of Supply', true),
     txt('Subtotal', true), txt('Discount', true), txt('Taxable', true),
     txt('Packing', true), txt('Delivery', true),
     txt('CGST', true), txt('SGST', true), txt('IGST', true), txt('Round Off', true), txt('Grand Total', true),
   ];
   const body: Cell[][] = rows.map((r) => [
     txt(invoiceNo(r)), txt(fmtDate(r.invoice_date)), txt(r.status), txt(customerLabel(r)),
-    txt(customerGstin(r)), txt(r.place_of_supply ?? ''),
+    txt(customerCity(r)), txt(customerGstin(r)), txt(r.place_of_supply ?? ''),
     num(n(r.subtotal)), num(n(r.discount_total)), num(n(r.taxable_total)),
     num(n(r.packing_charges)), num(n(r.delivery_charges)),
     num(n(r.cgst_total)), num(n(r.sgst_total)), num(n(r.igst_total)), num(n(r.round_off)), num(n(r.grand_total)),
   ]);
   const sum = (k: keyof InvoiceRow) => rows.reduce((a, r) => a + n(r[k]), 0);
   const total: Cell[] = [
-    txt('TOTAL', true), null, null, null, null, null,
+    txt('TOTAL', true), null, null, null, null, null, null,
     num(sum('subtotal'), true), num(sum('discount_total'), true), num(sum('taxable_total'), true),
     num(sum('packing_charges'), true), num(sum('delivery_charges'), true),
     num(sum('cgst_total'), true), num(sum('sgst_total'), true), num(sum('igst_total'), true),
@@ -143,7 +147,7 @@ function kiteSheet(rows: InvoiceRow[]): Sheet {
   ];
   return {
     name: 'Kite (Tax Invoice)',
-    colWidths: [16, 12, 10, 30, 18, 16, 11, 10, 11, 10, 10, 10, 10, 10, 10, 12],
+    colWidths: [16, 12, 10, 30, 16, 18, 16, 11, 10, 11, 10, 10, 10, 10, 10, 10, 12],
     rows: rows.length ? [header, ...body, total] : [header],
   };
 }
@@ -152,26 +156,26 @@ function kiteSheet(rows: InvoiceRow[]): Sheet {
 function rakhiSheet(rows: InvoiceRow[]): Sheet {
   const header: Cell[] = [
     txt('Invoice No', true), txt('Date', true), txt('Status', true), txt('Customer', true),
-    txt('Place of Supply', true),
+    txt('City', true), txt('Place of Supply', true),
     txt('Subtotal', true), txt('Discount', true), txt('Taxable', true),
     txt('Packing', true), txt('Delivery', true), txt('Round Off', true), txt('Grand Total', true),
   ];
   const body: Cell[][] = rows.map((r) => [
     txt(invoiceNo(r)), txt(fmtDate(r.invoice_date)), txt(r.status), txt(customerLabel(r)),
-    txt(r.place_of_supply ?? ''),
+    txt(customerCity(r)), txt(r.place_of_supply ?? ''),
     num(n(r.subtotal)), num(n(r.discount_total)), num(n(r.taxable_total)),
     num(n(r.packing_charges)), num(n(r.delivery_charges)), num(n(r.round_off)), num(n(r.grand_total)),
   ]);
   const sum = (k: keyof InvoiceRow) => rows.reduce((a, r) => a + n(r[k]), 0);
   const total: Cell[] = [
-    txt('TOTAL', true), null, null, null, null,
+    txt('TOTAL', true), null, null, null, null, null,
     num(sum('subtotal'), true), num(sum('discount_total'), true), num(sum('taxable_total'), true),
     num(sum('packing_charges'), true), num(sum('delivery_charges'), true),
     num(sum('round_off'), true), num(sum('grand_total'), true),
   ];
   return {
     name: 'Rakhi (Bill of Supply)',
-    colWidths: [16, 12, 10, 30, 16, 11, 10, 11, 10, 10, 10, 12],
+    colWidths: [16, 12, 10, 30, 16, 16, 11, 10, 11, 10, 10, 10, 12],
     rows: rows.length ? [header, ...body, total] : [header],
   };
 }
