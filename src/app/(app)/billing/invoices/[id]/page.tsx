@@ -243,6 +243,12 @@ function ReadonlyView({
             >
               {tDet('printButton')}
             </Link>
+            <a
+              href={`/billing/invoices/${invoice.id}/export`}
+              className="btn-ghost border border-emerald-300 text-emerald-800"
+            >
+              {tDet('exportExcelButton')}
+            </a>
             {canWrite ? <InvoiceActions
                 id={invoice.id}
                 status={invoice.status}
