@@ -69,7 +69,32 @@ const SaveSchema = z.object({
     )
     .transform((v) => (v === '' ? null : v)),
   is_active: z.coerce.boolean(),
+  price_tier: z.enum(['A', 'B', 'C']),
 });
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Reads the per-company kite discount boxes (`kite_disc_<companyId>`).
+ * Blank / 0 boxes are dropped (missing = 0%). Returns null if any box is
+ * not a number between 0 and 100.
+ */
+function readKiteDiscounts(
+  formData: FormData,
+): { company_id: string; discount_pct: number }[] | null {
+  const out: { company_id: string; discount_pct: number }[] = [];
+  for (const [key, raw] of formData.entries()) {
+    if (!key.startsWith('kite_disc_')) continue;
+    const companyId = key.slice('kite_disc_'.length);
+    if (!UUID_RE.test(companyId)) return null;
+    const text = String(raw).trim();
+    if (text === '') continue;
+    const pct = Number(text);
+    if (!Number.isFinite(pct) || pct < 0 || pct > 100) return null;
+    if (pct > 0) out.push({ company_id: companyId, discount_pct: Math.round(pct * 100) / 100 });
+  }
+  return out;
+}
 
 export async function saveBillingCustomerAction(
   _prev: ActionResult | null,
@@ -93,6 +118,7 @@ export async function saveBillingCustomerAction(
     notes: formData.get('notes') ?? '',
     group_id: formData.get('group_id') ?? '',
     is_active: formData.get('is_active') === 'on',
+    price_tier: formData.get('price_tier') ?? 'C',
   });
 
   if (!parsed.success) {
@@ -102,10 +128,18 @@ export async function saveBillingCustomerAction(
     };
   }
 
+  // Validate discounts BEFORE saving the party, so a bad % never leaves a
+  // half-saved party behind.
+  const kiteDiscounts = readKiteDiscounts(formData);
+  if (!kiteDiscounts) {
+    return { ok: false, messageKey: 'billing.customers.errors.invalidKiteDiscount' };
+  }
+
   const supabase = createClient();
+  let customerId = parsed.data.id ?? null;
 
   if (!parsed.data.id) {
-    const { error } = await supabase.rpc('create_billing_customer', {
+    const { data: created, error } = await supabase.rpc('create_billing_customer', {
       p_full_name: parsed.data.full_name,
       p_business_name: parsed.data.business_name,
       p_mobile: parsed.data.mobile,
@@ -122,6 +156,7 @@ export async function saveBillingCustomerAction(
       p_reason: '',
     });
     if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
+    customerId = (created as { id?: string } | null)?.id ?? null;
   } else {
     const { error } = await supabase.rpc('update_billing_customer', {
       p_id: parsed.data.id,
@@ -142,6 +177,21 @@ export async function saveBillingCustomerAction(
       p_reason: '',
     });
     if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
+  }
+
+  if (customerId) {
+    const { error: pricingError } = await supabase.rpc('set_customer_kite_pricing', {
+      p_customer_id: customerId,
+      p_price_tier: parsed.data.price_tier,
+      p_discounts: kiteDiscounts,
+      p_reason: '',
+    });
+    if (pricingError) {
+      // Party itself is saved. Send the user to its edit page so a retry
+      // doesn't try to create the same party twice.
+      revalidatePath('/billing/customers');
+      redirect(`/billing/customers/${customerId}?kitePricingError=1`);
+    }
   }
 
   revalidatePath('/billing/customers');
