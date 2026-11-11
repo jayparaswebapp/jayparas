@@ -154,7 +154,10 @@ const RPC_TO_I18N: Record<RpcErrorKey, string> = {
   not_found: 'common.errors.notFound',
   self_modification_forbidden: 'common.errors.cannotModifySelf',
   centre_manager_locations_exist: 'common.errors.centreManagerLocationsExist',
-  setting_locked: 'common.errors.settingLocked',
+   setting_locked: 'common.errors.settingLocked',
+  company_name_taken: 'billing.kiteSetup.errors.companyNameTaken',
+  company_in_use: 'billing.kiteSetup.errors.companyInUse',
+  group_in_use: 'billing.kiteSetup.errors.groupInUse',
   invalid_input: 'common.errors.invalidInput',
 };
 
