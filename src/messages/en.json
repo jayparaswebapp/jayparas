@@ -267,6 +267,10 @@
         "defaultTermsLabel": "Default invoice terms / footer",
         "defaultDueDaysLabel": "Default credit period (days)"
       },
+      "errors": {
+        "legalNameRequired": "Legal name is required"
+      }
+    },
     "kiteSetup": {
       "title": "Kite setup",
       "subtitle": "Companies and product groups for kite billing. Each product group belongs to one company; party discounts are set per company.",
@@ -294,11 +298,7 @@
         "companyInUse": "This company still has product groups. Move or delete them first.",
         "groupInUse": "This product group still has products. Move them to another group first."
       }
-    },
-    "company": {
-        "legalNameRequired": "Legal name is required"
-      }
-    },
+     },
     "invoices": {
       "title": "Invoices",
       "subtitle": "Sales invoices for both business lines. Drafts can be edited freely; issued invoices are locked.",
