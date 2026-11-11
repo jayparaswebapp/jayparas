@@ -12,7 +12,8 @@ export default function BillingLayout({ children }: { children: ReactNode }) {
         items={[
           { href: '/billing/invoices', label: t('invoicesTitle') },
           { href: '/billing/customers', label: t('customersTitle') },
-          { href: '/billing/groups', label: t('groupsTitle') },
+                { href: '/billing/groups', label: t('groupsTitle') },
+          { href: '/billing/kite-setup', label: t('kiteSetupTitle') },
           { href: '/billing/payments', label: t('paymentsTitle') },
           { href: '/billing/returns', label: t('returnsTitle') },
           { href: '/billing/ledger', label: t('ledgerTitle') },
