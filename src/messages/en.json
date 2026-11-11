@@ -100,6 +100,8 @@
       "customersHint": "Buyer master with GSTIN, address and mobile.",
       "groupsTitle": "Customer groups",
       "groupsHint": "Route buckets inside a city for delivery runs.",
+      "kiteSetupTitle": "Kite setup",
+      "kiteSetupHint": "Companies and product groups for kite discounts.",
       "invoicesTitle": "Invoices",
       "invoicesHint": "Sales invoices with line items and tax.",
       "paymentsTitle": "Payments received",
@@ -265,7 +267,35 @@
         "defaultTermsLabel": "Default invoice terms / footer",
         "defaultDueDaysLabel": "Default credit period (days)"
       },
+    "kiteSetup": {
+      "title": "Kite setup",
+      "subtitle": "Companies and product groups for kite billing. Each product group belongs to one company; party discounts are set per company.",
+      "companiesTitle": "Companies",
+      "companiesHint": "Used only for discounts. Each party gets its own % for each company.",
+      "companyNamePlaceholder": "New company name",
+      "noCompanies": "No companies yet.",
+      "groupsInCompany": "{count} product groups",
+      "groupsTitle": "Product groups",
+      "groupsHint": "Shown on the kite bill. Every product in a group gets that group's company.",
+      "groupNamePlaceholder": "New product group name",
+      "companySelectPlaceholder": "Select company",
+      "addCompanyFirst": "Add a company first, then you can add product groups.",
+      "noGroups": "No product groups yet.",
+      "productsInGroup": "{count} products",
+      "changeCompanyWarning": "Changing the company changes the discount for every product in this group on new bills.",
+      "addButton": "Add",
+      "activeLabel": "Active",
+      "inactive": "Inactive",
       "errors": {
+        "nameRequired": "Name is required.",
+        "companyRequired": "Select a company.",
+        "companyNameTaken": "A company with this name already exists.",
+        "groupNameTaken": "A product group with this name already exists.",
+        "companyInUse": "This company still has product groups. Move or delete them first.",
+        "groupInUse": "This product group still has products. Move them to another group first."
+      }
+    },
+    "company": {
         "legalNameRequired": "Legal name is required"
       }
     },
