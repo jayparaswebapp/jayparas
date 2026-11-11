@@ -5,6 +5,7 @@ const SECTIONS = [
   { key: 'invoices', href: '/billing/invoices' },
   { key: 'customers', href: '/billing/customers' },
   { key: 'groups', href: '/billing/groups' },
+  { key: 'kiteSetup', href: '/billing/kite-setup' },
   { key: 'payments', href: '/billing/payments' },
   { key: 'returns', href: '/billing/returns' },
   { key: 'company', href: '/billing/company' },
