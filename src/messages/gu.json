@@ -1478,8 +1478,19 @@
         "mrp": "MRP (₹)",
         "discount": "ડિસ્ક %",
         "discountable": "ડિસ્ક?",
-        "discountableHint": "ઇન્વોઇસમાં ડિસ્કાઉન્ટેબલ ગ્રુપ (રાખડી = ✓, કિડ્સ = ખાલી)",
-        "printQty": "પ્રિન્ટ qty"
+               "discountableHint": "ઇન્વોઇસમાં ડિસ્કાઉન્ટેબલ ગ્રુપ (રાખડી = ✓, કિડ્સ = ખાલી)",
+        "printQty": "પ્રિન્ટ qty",
+        "productGroup": "Product group",
+        "productGroupHint": "Kite only. Empty = rakhi product. New rows copy the group from the row above."
+      },
+      "productGroupNone": "— Rakhi —"
+    },
+    "productGroup": {
+      "label": "Product group (kite only)",
+      "none": "— None (Rakhi product) —",
+      "hint": "Pick a group only for kite products. The discount company comes from the group. Leave empty for rakhi.",
+      "errors": {
+        "notFound": "That product group no longer exists. Pick another one."
       }
     },
     "label": {
