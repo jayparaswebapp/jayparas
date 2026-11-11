@@ -78,6 +78,9 @@ export const RPC_ERROR_KEYS = [
   'self_modification_forbidden',
   'centre_manager_locations_exist',
   'setting_locked',
+  'company_name_taken',
+  'company_in_use',
+  'group_in_use',
   'invalid_input',
 ] as const;
 
