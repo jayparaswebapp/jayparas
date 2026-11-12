@@ -9,6 +9,11 @@ import { rpcErrorKey, rpcErrorMessageKey } from '@/lib/rpc/errors';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { generateSkuCode } from '@/lib/skus/code';
 import { requireAppUser } from '@/lib/users/current';
+import {
+  parseProductGroupId,
+  productGroupsExist,
+  setSkuProductGroup,
+} from '@/lib/skus/product-groups';
 
 /**
  * Single is the only pack_type writable from the UI now. Mix is kept as a
@@ -72,6 +77,11 @@ export async function createSkuAction(
     };
   }
 
+  // Product group: '' = rakhi, a group id = kite. Checked BEFORE the SKU is
+  // created so a bad pick never leaves a half-saved product.
+  const productGroupId = parseProductGroupId(formData.get('product_group_id'));
+  if (productGroupId === undefined) return { ok: false, messageKey: 'common.errors.invalidInput' };
+
   // Mix is the legacy path — current UI only emits 'single' but accept 'mix'
   // for backward-compatible bulk callers, requiring mix_code.
   if (parsed.data.pack_type === 'mix' && !parsed.data.mix_code) {
@@ -94,6 +104,9 @@ export async function createSkuAction(
         });
 
   const supabase = createClient();
+  if (productGroupId && !(await productGroupsExist(supabase, [productGroupId]))) {
+    return { ok: false, messageKey: 'skus.productGroup.errors.notFound' };
+  }
   const { data, error } = await supabase.rpc('create_sku', {
     p_sku_code: sku_code,
     p_pack_type: parsed.data.pack_type,
@@ -129,6 +142,12 @@ export async function createSkuAction(
 
   const row = data as { id?: string } | null;
   if (!row?.id) return { ok: false, messageKey: 'common.errors.unknownError' };
+
+  if (productGroupId) {
+    // SKU already exists at this point; if tagging fails it stays rakhi and
+    // can be fixed from its edit page, so we still go to the detail page.
+    await setSkuProductGroup(supabase, [row.id], productGroupId);
+  }
 
   revalidatePath('/skus');
   redirect(`/skus/${row.id}?created=1`);
@@ -175,7 +194,13 @@ export async function updateSkuAction(
     };
   }
 
+  const productGroupId = parseProductGroupId(formData.get('product_group_id'));
+  if (productGroupId === undefined) return { ok: false, messageKey: 'common.errors.invalidInput' };
+
   const supabase = createClient();
+  if (productGroupId && !(await productGroupsExist(supabase, [productGroupId]))) {
+    return { ok: false, messageKey: 'skus.productGroup.errors.notFound' };
+  }
 
   // First, run the normal update — design name, price, discount, etc. This
   // path stays gated by the RPC's SECURITY DEFINER + audit context so
@@ -190,6 +215,17 @@ export async function updateSkuAction(
     p_is_discountable: parsed.data.is_discountable,
   });
   if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
+
+  // Kite/rakhi tag + product group. Only sent by forms that show the picker,
+  // so older callers without the field don't reset a kite SKU to rakhi.
+  if (formData.has('product_group_id')) {
+    const { error: groupError } = await setSkuProductGroup(
+      supabase,
+      [parsed.data.id],
+      productGroupId,
+    );
+    if (groupError) return { ok: false, messageKey: rpcErrorMessageKey(groupError) };
+  }
 
   // Then, if the request came from a super_admin AND locked fields are being
   // changed, do a direct table update on pack_size / rate_unit and regenerate
