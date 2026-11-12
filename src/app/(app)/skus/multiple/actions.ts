@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/users/current';
 import { rpcErrorKey, rpcErrorMessageKey } from '@/lib/rpc/errors';
 import { generateSkuCode } from '@/lib/skus/code';
+import { productGroupsExist, setSkuProductGroup } from '@/lib/skus/product-groups';
 
 const RowSchema = z.object({
   design_name: z.string().trim().min(1),
@@ -19,6 +20,8 @@ const RowSchema = z.object({
   discount_pct: z.coerce.number().min(0).max(100).default(0),
   is_discountable: z.boolean().default(false),
   print_qty: z.coerce.number().int().min(0).default(0),
+  // null = rakhi product; a group id = kite product.
+  product_group_id: z.string().uuid().nullable().default(null),
 });
 
 const PayloadSchema = z.object({
@@ -51,6 +54,12 @@ export async function createMultipleSkusAction(
   }
 
   const supabase = createClient();
+
+  // Check every picked product group exists BEFORE inserting anything.
+  const groupIds = parsed.data.rows.map((r) => r.product_group_id).filter((g): g is string => !!g);
+  if (!(await productGroupsExist(supabase, groupIds))) {
+    return { ok: false, messageKey: 'skus.productGroup.errors.notFound' };
+  }
 
   // Pre-compute every row's deterministic sku_code, then run two duplicate
   // checks BEFORE inserting anything. Without this, an inserted-and-then-
@@ -106,6 +115,8 @@ export async function createMultipleSkusAction(
   // Build [{ id, print_qty }] from successful inserts so we can redirect to
   // the print sheet with exactly the labels the user asked for.
   const printItems: Array<{ id: string; qty: number }> = [];
+  // product_group_id → created SKU ids, tagged as kite after the loop.
+  const kiteByGroup = new Map<string, string[]>();
 
   for (const { idx: i, row, sku_code } of rowsWithCodes) {
     const { data, error } = await supabase.rpc('create_sku', {
@@ -141,6 +152,18 @@ export async function createMultipleSkusAction(
     if (row.print_qty > 0) {
       printItems.push({ id: inserted.id, qty: row.print_qty });
     }
+    if (row.product_group_id) {
+      const list = kiteByGroup.get(row.product_group_id) ?? [];
+      list.push(inserted.id);
+      kiteByGroup.set(row.product_group_id, list);
+    }
+  }
+
+  // Tag kite SKUs with their product group (one call per group). The SKUs
+  // already exist here, so we still continue to the print sheet; any that
+  // failed to tag stay rakhi and can be fixed from their edit page.
+  for (const [groupId, skuIds] of kiteByGroup) {
+    await setSkuProductGroup(supabase, skuIds, groupId);
   }
 
   revalidatePath('/skus');
