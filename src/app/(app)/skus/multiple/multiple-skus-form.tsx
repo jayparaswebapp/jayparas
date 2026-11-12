@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import type { ProductGroupOption } from '@/lib/skus/product-groups';
 import { createMultipleSkusAction, type CreateMultipleResult } from './actions';
 
 /**
@@ -41,6 +42,8 @@ interface RowValues {
   discount_pct: string;
   is_discountable: boolean;
   print_qty: string;
+  /** '' = rakhi product; a group id = kite product. */
+  product_group_id: string;
 }
 
 /**
@@ -86,7 +89,7 @@ function parsePackKey(raw: string | undefined): {
   return { key: '1', ...empty };
 }
 
-function emptyRow(): RowValues {
+function emptyRow(product_group_id = ''): RowValues {
   return {
     design_name: '',
     pack_key: '1',
@@ -96,6 +99,7 @@ function emptyRow(): RowValues {
     discount_pct: '0',
     is_discountable: false,
     print_qty: '0',
+    product_group_id,
   };
 }
 
@@ -123,6 +127,7 @@ function parsePastedRows(raw: string): RowValues[] {
       discount_pct: cleaned[3] ?? '0',
       is_discountable: parseFlag(cleaned[4]),
       print_qty: cleaned[5] ?? '0',
+      product_group_id: '',
     });
   }
   return out;
@@ -133,7 +138,7 @@ function num(s: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-export function MultipleSkusForm() {
+export function MultipleSkusForm({ productGroups = [] }: { productGroups?: ProductGroupOption[] }) {
   const t = useTranslations('skus.multiple');
   const tCommon = useTranslations('common');
   // Root translator so we can resolve any full dotted key like
@@ -175,6 +180,7 @@ export function MultipleSkusForm() {
             discount_pct: num(r.discount_pct),
             is_discountable: r.is_discountable,
             print_qty: num(r.print_qty),
+            product_group_id: r.product_group_id || null,
           };
         }),
       }),
@@ -185,8 +191,10 @@ export function MultipleSkusForm() {
     setRows((curr) => curr.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
   }
 
+  // New rows copy the product group of the last row, so a batch of kite
+  // products only needs the group set once.
   function addRow() {
-    setRows((curr) => [...curr, emptyRow()]);
+    setRows((curr) => [...curr, emptyRow(curr[curr.length - 1]?.product_group_id ?? '')]);
   }
   function removeRow(idx: number) {
     setRows((curr) => (curr.length <= 1 ? curr : curr.filter((_, i) => i !== idx)));
@@ -196,7 +204,8 @@ export function MultipleSkusForm() {
   }
 
   function handleParse() {
-    const parsed = parsePastedRows(paste);
+    const lastGroup = rows[rows.length - 1]?.product_group_id ?? '';
+    const parsed = parsePastedRows(paste).map((r) => ({ ...r, product_group_id: lastGroup }));
     if (parsed.length === 0) return;
     // If the current sheet is just one empty starter row, replace it; else
     // append, so accidentally pasting twice doesn't wipe what was typed.
@@ -283,6 +292,9 @@ export function MultipleSkusForm() {
               <tr>
                 <th className="px-2 py-2">#</th>
                 <th className="px-2 py-2">{t('col.designName')}</th>
+                <th className="px-2 py-2" title={t('col.productGroupHint')}>
+                  {t('col.productGroup')}
+                </th>
                 <th className="px-2 py-2">{t('col.pack')}</th>
                 <th className="px-2 py-2">{t('col.mrp')}</th>
                 <th className="px-2 py-2">{t('col.discount')}</th>
@@ -304,6 +316,22 @@ export function MultipleSkusForm() {
                       onChange={(e) => updateRow(idx, { design_name: e.target.value })}
                       placeholder={t('placeholders.designName')}
                     />
+                  </td>
+                  <td className="px-1 py-1">
+                    <select
+                      className="input-base !min-h-0 !py-1 !text-sm"
+                      value={r.product_group_id}
+                      onChange={(e) => updateRow(idx, { product_group_id: e.target.value })}
+                      aria-label={t('col.productGroup')}
+                    >
+                      <option value="">{t('productGroupNone')}</option>
+                      {productGroups.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                          {g.company_name ? ` — ${g.company_name}` : ''}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td className="px-1 py-1">
                     <div className="space-y-1">
