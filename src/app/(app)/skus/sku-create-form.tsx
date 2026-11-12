@@ -13,6 +13,8 @@ import {
 import { ServerError, SubmitButton } from '@/components/form-status';
 import { QrCode } from '@/components/qr-code';
 import { generateSkuCode } from '@/lib/skus/code';
+import { ProductGroupSelect } from '@/components/product-group-select';
+import type { ProductGroupOption } from '@/lib/skus/product-groups';
 import { createSkuAction, type CreateSkuResult } from './actions';
 
 type RateUnit = 'pack' | 'piece';
@@ -49,7 +51,7 @@ function tileKey(t: PackTile): string {
 
 const CUSTOM_TILE_KEY = 'custom';
 
-export function SkuCreateForm() {
+export function SkuCreateForm({ productGroups = [] }: { productGroups?: ProductGroupOption[] }) {
   const t = useTranslations('skus.form');
   const tErrors = useTranslations('skus.errors');
   const tCommon = useTranslations('common.actions');
@@ -238,10 +240,12 @@ export function SkuCreateForm() {
           value={designName}
           onChange={(e) => setDesignName(e.target.value)}
           required
-          placeholder={t('designNamePlaceholder')}
+               placeholder={t('designNamePlaceholder')}
           className="input-base"
         />
       </div>
+
+      <ProductGroupSelect groups={productGroups} />
 
       <div>
         <label htmlFor="price" className="label-base">
