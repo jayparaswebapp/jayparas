@@ -9,6 +9,7 @@ import { labelUnit } from '@/lib/skus/label';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/badges';
 import { QrCode } from '@/components/qr-code';
+import { loadProductGroupOptions, type ProductGroupOption } from '@/lib/skus/product-groups';
 import { SkuEditForm } from './sku-edit-form';
 import { SkuActiveToggle } from './sku-active-toggle';
 
@@ -28,6 +29,7 @@ interface SkuRecord {
   is_discountable: boolean;
   photo_path: string | null;
   is_active: boolean;
+  product_group_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -46,7 +48,7 @@ export default async function SkuDetailPage({
   const { data: row } = await supabase
     .from('skus')
     .select(
-      'id, sku_code, pack_type, design_no, mix_code, design_name, pack_size, rate_unit, price, discount_pct, is_discountable, photo_path, is_active, created_at, updated_at',
+      'id, sku_code, pack_type, design_no, mix_code, design_name, pack_size, rate_unit, price, discount_pct, is_discountable, photo_path, is_active, product_group_id, created_at, updated_at',
     )
     .eq('id', params.id)
     .is('deleted_at', null)
@@ -68,6 +70,7 @@ export default async function SkuDetailPage({
     is_discountable: Boolean(row.is_discountable),
     photo_path: row.photo_path,
     is_active: row.is_active,
+    product_group_id: row.product_group_id ?? null,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -76,9 +79,13 @@ export default async function SkuDetailPage({
   const canEdit = user.role === 'super_admin' || user.role === 'supervisor';
   const canToggleActive = user.role === 'super_admin';
   const canEditLocked = user.role === 'super_admin';
+  const productGroups = canEdit
+    ? await loadProductGroupOptions(supabase, sku.product_group_id)
+    : [];
 
   return (
     <SkuDetailView
+      productGroups={productGroups}
       sku={sku}
       photoUrl={photoUrl}
       canEdit={canEdit}
@@ -98,7 +105,9 @@ function SkuDetailView({
   canEditLocked,
   justCreated,
   locale,
+  productGroups,
 }: {
+  productGroups: ProductGroupOption[];
   sku: SkuRecord;
   photoUrl: string | null;
   canEdit: boolean;
@@ -196,9 +205,11 @@ function SkuDetailView({
               photo_path: sku.photo_path,
               pack_size: sku.pack_size,
               rate_unit: sku.rate_unit,
+              product_group_id: sku.product_group_id,
             }}
             photoUrl={photoUrl}
             canEditLocked={canEditLocked}
+            productGroups={productGroups}
           />
         </div>
       ) : null}
