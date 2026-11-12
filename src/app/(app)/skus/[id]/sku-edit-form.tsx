@@ -11,6 +11,8 @@ import {
 } from '@/lib/storage/sku-photos';
 import { ServerError, SubmitButton } from '@/components/form-status';
 import type { ActionResult } from '@/lib/rpc/action-result';
+import { ProductGroupSelect } from '@/components/product-group-select';
+import type { ProductGroupOption } from '@/lib/skus/product-groups';
 import { updateSkuAction } from '../actions';
 
 export interface SkuEditValues {
@@ -23,16 +25,20 @@ export interface SkuEditValues {
   /** Only shown to super_admin; supervisors don't get these fields. */
   pack_size?: number;
   rate_unit?: 'pack' | 'piece';
+  /** null = rakhi product; a group id = kite product. */
+  product_group_id?: string | null;
 }
 
 export function SkuEditForm({
   initial,
   photoUrl,
   canEditLocked = false,
+  productGroups = [],
 }: {
   initial: SkuEditValues;
   photoUrl: string | null;
   canEditLocked?: boolean;
+  productGroups?: ProductGroupOption[];
 }) {
   const t = useTranslations('skus.form');
   const tCommon = useTranslations('common.actions');
@@ -99,11 +105,13 @@ export function SkuEditForm({
         <input
           id="design_name"
           name="design_name"
-          defaultValue={initial.design_name}
+                  defaultValue={initial.design_name}
           required
           className="input-base"
         />
       </div>
+
+      <ProductGroupSelect groups={productGroups} defaultValue={initial.product_group_id} />
 
       {canEditLocked ? (
         <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
