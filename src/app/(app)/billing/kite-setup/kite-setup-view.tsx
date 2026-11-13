@@ -23,6 +23,8 @@ export interface GroupRow {
   name: string;
   company_id: string;
   is_active: boolean;
+  hsn_code?: string;
+  gst_pct?: number;
   sku_count: number;
 }
 
@@ -211,6 +213,41 @@ function CompanySelect({
   );
 }
 
+/** Default HSN + GST % for the group; auto-filled onto kite bill lines. */
+function HsnGstFields({ hsn, gst }: { hsn?: string; gst?: number }) {
+  const t = useTranslations('billing.kiteSetup');
+  return (
+    <div>
+      <div className="flex gap-2">
+        <input
+          name="hsn_code"
+          defaultValue={hsn ?? ''}
+          maxLength={10}
+          placeholder={t('hsnPlaceholder')}
+          aria-label={t('hsnLabel')}
+          className="input-base flex-1 font-mono"
+        />
+        <div className="flex items-center gap-1">
+          <input
+            name="gst_pct"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            max={28}
+            step="0.01"
+            defaultValue={gst ? String(gst) : ''}
+            placeholder={t('gstPlaceholder')}
+            aria-label={t('gstLabel')}
+            className="input-base !w-24 text-right"
+          />
+          <span className="text-sm text-neutral-600">%</span>
+        </div>
+      </div>
+      <p className="mt-1 text-xs text-neutral-500">{t('hsnGstHint')}</p>
+    </div>
+  );
+}
+
 function AddGroupForm({ companies }: { companies: CompanyRow[] }) {
   const t = useTranslations('billing.kiteSetup');
   const formRef = useRef<HTMLFormElement>(null);
@@ -226,6 +263,7 @@ function AddGroupForm({ companies }: { companies: CompanyRow[] }) {
     <form ref={formRef} action={formAction} className="space-y-2">
       <input type="hidden" name="is_active" value="on" />
       <input name="name" required placeholder={t('groupNamePlaceholder')} className="input-base" />
+      <HsnGstFields />
       <div className="flex gap-2">
         <div className="flex-1">
           <CompanySelect companies={companies.filter((c) => c.is_active)} />
@@ -268,6 +306,10 @@ function GroupItem({
           <div className="text-sm text-neutral-700">{companyName}</div>
           <div className="text-xs text-neutral-500">
             {t('productsInGroup', { count: row.sku_count })}
+            {' · '}
+            {row.hsn_code ? `HSN ${row.hsn_code}` : t('noHsn')}
+            {' · '}
+            {t('gstShort', { pct: row.gst_pct ?? 0 })}
           </div>
         </div>
         <button
@@ -287,6 +329,7 @@ function GroupItem({
         <input type="hidden" name="id" value={row.id} />
         <input name="name" required defaultValue={row.name} className="input-base" />
         <CompanySelect companies={companies} defaultValue={row.company_id} />
+        <HsnGstFields hsn={row.hsn_code} gst={row.gst_pct} />
         {row.sku_count > 0 ? (
           <p className="text-xs text-amber-700">{t('changeCompanyWarning')}</p>
         ) : null}
