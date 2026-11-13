@@ -281,8 +281,17 @@
         "companyNameTaken": "A company with this name already exists.",
         "groupNameTaken": "A product group with this name already exists.",
         "companyInUse": "This company still has product groups. Move or delete them first.",
-        "groupInUse": "This product group still has products. Move them to another group first."
-      }
+          "groupInUse": "This product group still has products. Move them to another group first.",
+        "hsnInvalid": "HSN can be at most 10 characters.",
+        "gstInvalid": "GST % must be between 0 and 28."
+      },
+      "hsnLabel": "Default HSN",
+      "hsnPlaceholder": "Default HSN (e.g. 9503)",
+      "gstLabel": "Default GST %",
+      "gstPlaceholder": "GST",
+      "hsnGstHint": "Filled in automatically on kite bill lines. Changing these later never changes bills already made.",
+      "noHsn": "no HSN",
+      "gstShort": "GST {pct}%"
     },
     "company": {
       "title": "કંપની ડિટેલ",     "subtitle": "દરેક ઇન્વોઇસ પર છપાતી સેલર બ્લોક. પ્રથમ ઇન્વોઇસ ઇશ્યૂ કરતા પહેલા ભરો.",
@@ -354,7 +363,10 @@
         "removeLineLabel": "દૂર કરો",
         "scanLabel": "SKU કોડ સ્કેન / ટાઇપ કરો",
         "scanPlaceholder": "દા.ત. SUPER-101-03",
-        "scanHint": "Enter દબાવો. એ જ SKU ફરી સ્કેન કરો તો જથ્થો તેના પૅક-સાઇઝ જેટલો વધશે.",
+             "scanHint": "Enter દબાવો. એ જ SKU ફરી સ્કેન કરો તો જથ્થો તેના પૅક-સાઇઝ જેટલો વધશે.",
+        "switchLineConfirm": "{count} line(s) on this bill are the other type and will be removed. Continue?",
+        "scanIsKiteProduct": "This is a Kite product — switch the bill to Kite.",
+        "scanIsRakhiProduct": "This is a Rakhi product — switch the bill to Rakhi.",
         "scanAddButton": "ઉમેરો",
         "snoColumn": "#",
         "itemColumn": "આઇટમ",
