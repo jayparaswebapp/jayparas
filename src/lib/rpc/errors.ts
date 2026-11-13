@@ -81,6 +81,9 @@ export const RPC_ERROR_KEYS = [
   'company_name_taken',
   'company_in_use',
   'group_in_use',
+  'order_locked',
+  'order_not_ready',
+  'order_nothing_packed',
   'invalid_input',
 ] as const;
 
@@ -154,10 +157,13 @@ const RPC_TO_I18N: Record<RpcErrorKey, string> = {
   not_found: 'common.errors.notFound',
   self_modification_forbidden: 'common.errors.cannotModifySelf',
   centre_manager_locations_exist: 'common.errors.centreManagerLocationsExist',
-   setting_locked: 'common.errors.settingLocked',
+  setting_locked: 'common.errors.settingLocked',
   company_name_taken: 'billing.kiteSetup.errors.companyNameTaken',
   company_in_use: 'billing.kiteSetup.errors.companyInUse',
   group_in_use: 'billing.kiteSetup.errors.groupInUse',
+  order_locked: 'orders.errors.orderLocked',
+  order_not_ready: 'orders.errors.notReady',
+  order_nothing_packed: 'orders.errors.nothingPacked',
   invalid_input: 'common.errors.invalidInput',
 };
 

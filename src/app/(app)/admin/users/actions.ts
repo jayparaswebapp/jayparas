@@ -10,7 +10,13 @@ import { rpcErrorMessageKey } from '@/lib/rpc/errors';
 import { mobileToSyntheticEmail } from '@/lib/auth/synthetic-email';
 import type { ActionResult } from '@/lib/rpc/action-result';
 
-const RoleEnum = z.enum(['super_admin', 'supervisor', 'centre_manager', 'accountant']);
+const RoleEnum = z.enum([
+  'super_admin',
+  'supervisor',
+  'centre_manager',
+  'accountant',
+  'order_staff',
+]);
 
 const CreateSchema = z.object({
   full_name: z.string().trim().min(1, 'admin.users.errors.fullNameRequired'),

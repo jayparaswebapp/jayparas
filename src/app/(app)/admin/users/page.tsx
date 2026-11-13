@@ -12,7 +12,7 @@ interface UserRow {
   id: string;
   full_name: string;
   mobile: string;
-  role: 'super_admin' | 'supervisor' | 'centre_manager' | 'accountant';
+  role: 'super_admin' | 'supervisor' | 'centre_manager' | 'accountant' | 'order_staff';
   is_active: boolean;
   deleted_at: string | null;
   centre_manager_locations: Array<{

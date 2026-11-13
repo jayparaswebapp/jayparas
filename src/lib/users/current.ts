@@ -2,7 +2,8 @@ import 'server-only';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
-export type UserRole = 'super_admin' | 'supervisor' | 'centre_manager' | 'accountant';
+export type UserRole =
+  'super_admin' | 'supervisor' | 'centre_manager' | 'accountant' | 'order_staff';
 
 export interface CurrentAppUser {
   id: string;

@@ -81,6 +81,12 @@
     "sectionTitle": "Departments",
     "setupTitle": "Setup & tools",
     "comingSoon": "This department is being scaffolded. Work can start here in parallel with other teams.",
+    "orders": {
+      "title": "Orders",
+      "hint": "Take orders, pack them, then turn them into bills.",
+      "listTitle": "Orders",
+      "newTitle": "New order"
+    },
     "jobWork": {
       "title": "Job Work Management",
       "hint": "Issue raw-material packets, track SLA, receive finished rakhis."
@@ -171,7 +177,8 @@
     "super_admin": "Super-admin",
     "supervisor": "Supervisor",
     "centre_manager": "Centre manager",
-    "accountant": "Accountant"
+    "accountant": "Accountant",
+    "order_staff": "Order staff"
   },
   "billing": {
     "customers": {
@@ -208,7 +215,7 @@
         "pincodePlaceholder": "6-digit pincode",
         "groupLabel": "Route group (optional)",
         "groupPlaceholder": "— None —",
-            "groupHint": "Customers in the same group sit on the same road and can be covered together on a delivery run.",
+        "groupHint": "Customers in the same group sit on the same road and can be covered together on a delivery run.",
         "notesLabel": "Notes (optional)",
         "isActiveLabel": "Active",
         "kitePricingTitle": "Kite pricing",
@@ -223,13 +230,13 @@
         "kitePricingSaveFailed": "The party was saved, but the kite pricing was not. Check the % values and save again."
       },
       "errors": {
-        "invalidKiteDiscount": "Kite discount must be a number between 0 and 100.",
         "fullNameRequired": "Contact name is required",
         "invalidMobile": "Enter a 10-digit Indian mobile number",
         "invalidEmail": "Enter a valid email address",
         "invalidGstin": "GSTIN must be 15 characters (e.g. 24ABCDE1234F1Z5)",
         "invalidPan": "PAN must be 10 characters (e.g. ABCDE1234F)",
-        "invalidPincode": "Pincode must be 6 digits"
+        "invalidPincode": "Pincode must be 6 digits",
+        "invalidKiteDiscount": "Kite discount must be a number between 0 and 100."
       }
     },
     "groups": {
@@ -254,32 +261,6 @@
       "errors": {
         "nameRequired": "Group name is required",
         "cityRequired": "City is required"
-      }
-    },
-    "company": {
-      "title": "Company info",
-      "subtitle": "Seller block printed on every invoice. Edit before issuing your first invoice.",
-      "saveButton": "Save",
-      "form": {
-        "legalNameLabel": "Legal name",
-        "addressLine1Label": "Address line 1",
-        "addressLine2Label": "Address line 2",
-        "cityLabel": "City",
-        "stateLabel": "State",
-        "pincodeLabel": "Pincode",
-        "gstinLabel": "GSTIN",
-        "gstinHint": "Required for the kite (GST) business line.",
-        "panLabel": "PAN",
-        "mobileLabel": "Mobile",
-        "emailLabel": "Email",
-        "bankNameLabel": "Bank name",
-        "bankAccountNoLabel": "Account number",
-        "bankIfscLabel": "IFSC",
-        "defaultTermsLabel": "Default invoice terms / footer",
-        "defaultDueDaysLabel": "Default credit period (days)"
-      },
-      "errors": {
-        "legalNameRequired": "Legal name is required"
       }
     },
     "kiteSetup": {
@@ -307,7 +288,7 @@
         "companyNameTaken": "A company with this name already exists.",
         "groupNameTaken": "A product group with this name already exists.",
         "companyInUse": "This company still has product groups. Move or delete them first.",
-             "groupInUse": "This product group still has products. Move them to another group first.",
+        "groupInUse": "This product group still has products. Move them to another group first.",
         "hsnInvalid": "HSN can be at most 10 characters.",
         "gstInvalid": "GST % must be between 0 and 28."
       },
@@ -318,7 +299,33 @@
       "hsnGstHint": "Filled in automatically on kite bill lines. Changing these later never changes bills already made.",
       "noHsn": "no HSN",
       "gstShort": "GST {pct}%"
-     },
+    },
+    "company": {
+      "title": "Company info",
+      "subtitle": "Seller block printed on every invoice. Edit before issuing your first invoice.",
+      "saveButton": "Save",
+      "form": {
+        "legalNameLabel": "Legal name",
+        "addressLine1Label": "Address line 1",
+        "addressLine2Label": "Address line 2",
+        "cityLabel": "City",
+        "stateLabel": "State",
+        "pincodeLabel": "Pincode",
+        "gstinLabel": "GSTIN",
+        "gstinHint": "Required for the kite (GST) business line.",
+        "panLabel": "PAN",
+        "mobileLabel": "Mobile",
+        "emailLabel": "Email",
+        "bankNameLabel": "Bank name",
+        "bankAccountNoLabel": "Account number",
+        "bankIfscLabel": "IFSC",
+        "defaultTermsLabel": "Default invoice terms / footer",
+        "defaultDueDaysLabel": "Default credit period (days)"
+      },
+      "errors": {
+        "legalNameRequired": "Legal name is required"
+      }
+    },
     "invoices": {
       "title": "Invoices",
       "subtitle": "Sales invoices for both business lines. Drafts can be edited freely; issued invoices are locked.",
@@ -365,10 +372,7 @@
         "removeLineLabel": "Remove",
         "scanLabel": "Scan / type SKU code",
         "scanPlaceholder": "e.g. SUPER-101-03",
-          "scanHint": "Scan a code, or start typing a design name and pick from the suggestions. Press Enter to add. Scanning the same SKU again increases its qty by its pack size.",
-        "switchLineConfirm": "{count} line(s) on this bill are the other type and will be removed. Continue?",
-        "scanIsKiteProduct": "This is a Kite product — switch the bill to Kite.",
-        "scanIsRakhiProduct": "This is a Rakhi product — switch the bill to Rakhi.",
+        "scanHint": "Scan a code, or start typing a design name and pick from the suggestions. Press Enter to add. Scanning the same SKU again increases its qty by its pack size.",
         "scanAddButton": "Add",
         "snoColumn": "#",
         "itemColumn": "Item",
@@ -400,7 +404,10 @@
         "grandTotalLabel": "Grand total",
         "saveDraftButton": "Save draft",
         "saveAndIssueButton": "Save & Issue",
-        "cancelButton": "Cancel"
+        "cancelButton": "Cancel",
+        "switchLineConfirm": "{count} line(s) on this bill are the other type and will be removed. Continue?",
+        "scanIsKiteProduct": "This is a Kite product — switch the bill to Kite.",
+        "scanIsRakhiProduct": "This is a Rakhi product — switch the bill to Rakhi."
       },
       "detail": {
         "issueButton": "Issue",
@@ -830,6 +837,73 @@
           "signatoryLabel": "Authorised Signatory"
         }
       }
+    }
+  },
+  "orders": {
+    "title": "Orders",
+    "subtitle": "Taken by staff, packed, then billed.",
+    "newButton": "New order",
+    "empty": "No orders here.",
+    "tabs": {
+      "open": "Open",
+      "new": "New",
+      "packing": "Packing",
+      "ready": "Ready",
+      "partial": "Partly billed",
+      "billed": "Billed",
+      "cancelled": "Cancelled"
+    },
+    "status": {
+      "new": "New",
+      "packing": "Packing",
+      "ready": "Ready",
+      "partial": "Partly billed",
+      "billed": "Billed",
+      "cancelled": "Cancelled"
+    },
+    "form": {
+      "createTitle": "New order",
+      "editTitle": "Edit order",
+      "rakhi": "Rakhi",
+      "kite": "Kite",
+      "party": "Party",
+      "partyPlaceholder": "Select party",
+      "scanLabel": "Scan / type product code",
+      "scanPlaceholder": "Scan or type a code / design name",
+      "scanHint": "Scan or pick a product and press Enter. Scanning it again adds one more pack.",
+      "scanNotFound": "Product {code} not found.",
+      "scanIsKiteProduct": "This is a Kite product — switch the order to Kite.",
+      "scanIsRakhiProduct": "This is a Rakhi product — switch the order to Rakhi.",
+      "switchLineConfirm": "Switching Rakhi/Kite removes the items already added. Continue?",
+      "add": "Add",
+      "qty": "Qty",
+      "remove": "Remove",
+      "noLines": "No items yet. Scan or type a product above.",
+      "notes": "Notes (optional)",
+      "estimatedTotal": "Estimated total",
+      "save": "Save order",
+      "saving": "Saving…",
+      "cancel": "Cancel"
+    },
+    "detail": {
+      "edit": "Edit order",
+      "item": "Item",
+      "rate": "Rate",
+      "disc": "Disc %",
+      "ordered": "Ordered",
+      "billed": "Billed",
+      "pending": "Pending",
+      "bills": "Bills from this order",
+      "cancelOrder": "Cancel order",
+      "keepOrder": "Keep order",
+      "cancelConfirm": "Cancel this order? It can't be packed or billed after this."
+    },
+    "errors": {
+      "partyRequired": "Select a party.",
+      "linesRequired": "Add at least one item.",
+      "orderLocked": "This order can't be changed at this stage.",
+      "notReady": "This order isn't marked Ready yet.",
+      "nothingPacked": "Nothing is packed on this order yet."
     }
   },
   "accounting": {
@@ -1553,14 +1627,6 @@
       },
       "productGroupNone": "— Rakhi —"
     },
-    "productGroup": {
-      "label": "Product group (kite only)",
-      "none": "— None (Rakhi product) —",
-      "hint": "Pick a group only for kite products. The discount company comes from the group. Leave empty for rakhi.",
-      "errors": {
-        "notFound": "That product group no longer exists. Pick another one."
-      }
-    },
     "label": {
       "brand": "Jai Paras",
       "designLine": "Design: {number} — {name}",
@@ -1577,6 +1643,14 @@
       "photoWrongType": "Photo must be JPEG, PNG or WebP",
       "duplicate": "A SKU with this design and pack already exists.",
       "duplicateOpenLink": "Open existing SKU"
+    },
+    "productGroup": {
+      "label": "Product group (kite only)",
+      "none": "— None (Rakhi product) —",
+      "hint": "Pick a group only for kite products. The discount company comes from the group. Leave empty for rakhi.",
+      "errors": {
+        "notFound": "That product group no longer exists. Pick another one."
+      }
     }
   }
 }

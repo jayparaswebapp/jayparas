@@ -8,9 +8,16 @@ import { ServerError, SubmitButton } from '@/components/form-status';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { createAppUserAction, updateAppUserAction } from './actions';
 
-export type AppUserRole = 'super_admin' | 'supervisor' | 'centre_manager' | 'accountant';
+export type AppUserRole =
+  'super_admin' | 'supervisor' | 'centre_manager' | 'accountant' | 'order_staff';
 
-const ROLE_OPTIONS: AppUserRole[] = ['super_admin', 'supervisor', 'centre_manager', 'accountant'];
+const ROLE_OPTIONS: AppUserRole[] = [
+  'super_admin',
+  'supervisor',
+  'centre_manager',
+  'accountant',
+  'order_staff',
+];
 
 export interface UserFormValues {
   id?: string;

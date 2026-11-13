@@ -7,6 +7,7 @@ import { signOutAction } from '@/lib/auth/login';
 export const dynamic = 'force-dynamic';
 
 const DEPARTMENTS = [
+  { key: 'orders', href: '/orders' },
   { key: 'jobWork', href: '/job-work' },
   { key: 'barcode', href: '/barcodes' },
   { key: 'billing', href: '/billing' },
@@ -77,6 +78,9 @@ function DashboardView({ name, role }: { name: string; role: string }) {
   const tShortcuts = useTranslations('dashboard.shortcuts');
   const tRoles = useTranslations('roles');
   const canSeeAdmin = role === 'super_admin';
+  // Order staff only work in Orders; hide sections they can't open.
+  const isOrderStaff = role === 'order_staff';
+  const departments = isOrderStaff ? DEPARTMENTS.filter((d) => d.key === 'orders') : DEPARTMENTS;
   return (
     <main className="flex min-h-screen flex-col bg-neutral-50">
       <Header />
@@ -91,7 +95,7 @@ function DashboardView({ name, role }: { name: string; role: string }) {
           {tDept('sectionTitle')}
         </h2>
         <ul className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {DEPARTMENTS.map((dept) => (
+          {departments.map((dept) => (
             <li key={dept.key}>
               <Link
                 href={dept.href}
@@ -106,35 +110,41 @@ function DashboardView({ name, role }: { name: string; role: string }) {
           ))}
         </ul>
 
-        <h2 className="mt-10 text-sm font-medium uppercase tracking-wide text-neutral-500">
-          {tDept('setupTitle')}
-        </h2>
-        <ul className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <li>
-            <Link
-              href="/master-data/locations"
-              className="hover:border-brand-300 block rounded-lg border border-neutral-200 bg-white p-4 transition hover:bg-brand-50/30"
-            >
-              <div className="text-base font-semibold text-neutral-900">
-                {tShortcuts('masterData')}
-              </div>
-              <div className="mt-0.5 text-sm text-neutral-600">{tShortcuts('masterDataHint')}</div>
-            </Link>
-          </li>
-          {canSeeAdmin ? (
-            <li>
-              <Link
-                href="/admin/users"
-                className="hover:border-brand-300 block rounded-lg border border-neutral-200 bg-white p-4 transition hover:bg-brand-50/30"
-              >
-                <div className="text-base font-semibold text-neutral-900">
-                  {tShortcuts('admin')}
-                </div>
-                <div className="mt-0.5 text-sm text-neutral-600">{tShortcuts('adminHint')}</div>
-              </Link>
-            </li>
-          ) : null}
-        </ul>
+        {isOrderStaff ? null : (
+          <>
+            <h2 className="mt-10 text-sm font-medium uppercase tracking-wide text-neutral-500">
+              {tDept('setupTitle')}
+            </h2>
+            <ul className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <li>
+                <Link
+                  href="/master-data/locations"
+                  className="hover:border-brand-300 block rounded-lg border border-neutral-200 bg-white p-4 transition hover:bg-brand-50/30"
+                >
+                  <div className="text-base font-semibold text-neutral-900">
+                    {tShortcuts('masterData')}
+                  </div>
+                  <div className="mt-0.5 text-sm text-neutral-600">
+                    {tShortcuts('masterDataHint')}
+                  </div>
+                </Link>
+              </li>
+              {canSeeAdmin ? (
+                <li>
+                  <Link
+                    href="/admin/users"
+                    className="hover:border-brand-300 block rounded-lg border border-neutral-200 bg-white p-4 transition hover:bg-brand-50/30"
+                  >
+                    <div className="text-base font-semibold text-neutral-900">
+                      {tShortcuts('admin')}
+                    </div>
+                    <div className="mt-0.5 text-sm text-neutral-600">{tShortcuts('adminHint')}</div>
+                  </Link>
+                </li>
+              ) : null}
+            </ul>
+          </>
+        )}
 
         <form action={signOutAction} className="mt-10">
           <button type="submit" className="btn-ghost border border-neutral-300">

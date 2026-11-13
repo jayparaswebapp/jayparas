@@ -81,6 +81,12 @@
     "sectionTitle": "વિભાગો",
     "setupTitle": "સેટઅપ અને સાધનો",
     "comingSoon": "આ વિભાગ બની રહ્યો છે. અન્ય ટીમો સાથે સમાંતર કામ અહીંથી શરૂ થઈ શકે છે.",
+    "orders": {
+      "title": "Orders",
+      "hint": "Take orders, pack them, then turn them into bills.",
+      "listTitle": "Orders",
+      "newTitle": "New order"
+    },
     "jobWork": {
       "title": "જોબ-વર્ક મેનેજમેન્ટ",
       "hint": "કાચા માલના પૅકેટ ઇશ્યૂ કરો, SLA ટ્રૅક કરો, તૈયાર રાખડી રિસીવ કરો."
@@ -99,7 +105,7 @@
       "customersTitle": "ગ્રાહકો",
       "customersHint": "ગ્રાહકનું માસ્ટર — GSTIN, સરનામું, મોબાઇલ.",
       "groupsTitle": "ગ્રાહક ગ્રુપ",
-          "groupsHint": "ડિલિવરી રૂટ માટે શહેરની અંદર બકેટ.",
+      "groupsHint": "ડિલિવરી રૂટ માટે શહેરની અંદર બકેટ.",
       "kiteSetupTitle": "Kite setup",
       "kiteSetupHint": "Companies and product groups for kite discounts.",
       "invoicesTitle": "ઇન્વોઇસ",
@@ -171,7 +177,8 @@
     "super_admin": "સુપર-એડમિન",
     "supervisor": "સુપરવાઈઝર",
     "centre_manager": "સેન્ટર મેનેજર",
-    "accountant": "એકાઉન્ટન્ટ"
+    "accountant": "એકાઉન્ટન્ટ",
+    "order_staff": "Order staff"
   },
   "billing": {
     "customers": {
@@ -208,7 +215,7 @@
         "pincodePlaceholder": "6 અંકનો પિનકોડ",
         "groupLabel": "રૂટ ગ્રુપ (વૈકલ્પિક)",
         "groupPlaceholder": "— કોઈ નહીં —",
-             "groupHint": "એક જ ગ્રુપના ગ્રાહકો એક જ રોડ પર છે — ડિલિવરી રન માં સાથે કવર થઈ શકે.",
+        "groupHint": "એક જ ગ્રુપના ગ્રાહકો એક જ રોડ પર છે — ડિલિવરી રન માં સાથે કવર થઈ શકે.",
         "notesLabel": "નોંધ (વૈકલ્પિક)",
         "isActiveLabel": "સક્રિય",
         "kitePricingTitle": "Kite pricing",
@@ -223,13 +230,13 @@
         "kitePricingSaveFailed": "The party was saved, but the kite pricing was not. Check the % values and save again."
       },
       "errors": {
-        "invalidKiteDiscount": "Kite discount must be a number between 0 and 100.",
         "fullNameRequired": "સંપર્કનું નામ જરૂરી છે",
         "invalidMobile": "10 અંકનો ભારતીય મોબાઇલ નંબર દાખલ કરો",
         "invalidEmail": "માન્ય ઇમેઇલ સરનામું દાખલ કરો",
         "invalidGstin": "GSTIN 15 અક્ષરનો હોવો જોઈએ (દા.ત. 24ABCDE1234F1Z5)",
         "invalidPan": "PAN 10 અક્ષરનો હોવો જોઈએ (દા.ત. ABCDE1234F)",
-        "invalidPincode": "પિનકોડ 6 અંકનો હોવો જોઈએ"
+        "invalidPincode": "પિનકોડ 6 અંકનો હોવો જોઈએ",
+        "invalidKiteDiscount": "Kite discount must be a number between 0 and 100."
       }
     },
     "groups": {
@@ -253,7 +260,7 @@
       },
       "errors": {
         "nameRequired": "ગ્રુપનું નામ જરૂરી છે",
-         "cityRequired": "શહેર જરૂરી છે"
+        "cityRequired": "શહેર જરૂરી છે"
       }
     },
     "kiteSetup": {
@@ -281,7 +288,7 @@
         "companyNameTaken": "A company with this name already exists.",
         "groupNameTaken": "A product group with this name already exists.",
         "companyInUse": "This company still has product groups. Move or delete them first.",
-          "groupInUse": "This product group still has products. Move them to another group first.",
+        "groupInUse": "This product group still has products. Move them to another group first.",
         "hsnInvalid": "HSN can be at most 10 characters.",
         "gstInvalid": "GST % must be between 0 and 28."
       },
@@ -294,7 +301,8 @@
       "gstShort": "GST {pct}%"
     },
     "company": {
-      "title": "કંપની ડિટેલ",     "subtitle": "દરેક ઇન્વોઇસ પર છપાતી સેલર બ્લોક. પ્રથમ ઇન્વોઇસ ઇશ્યૂ કરતા પહેલા ભરો.",
+      "title": "કંપની ડિટેલ",
+      "subtitle": "દરેક ઇન્વોઇસ પર છપાતી સેલર બ્લોક. પ્રથમ ઇન્વોઇસ ઇશ્યૂ કરતા પહેલા ભરો.",
       "saveButton": "સાચવો",
       "form": {
         "legalNameLabel": "કાનૂની નામ",
@@ -363,10 +371,7 @@
         "removeLineLabel": "દૂર કરો",
         "scanLabel": "SKU કોડ સ્કેન / ટાઇપ કરો",
         "scanPlaceholder": "દા.ત. SUPER-101-03",
-             "scanHint": "Enter દબાવો. એ જ SKU ફરી સ્કેન કરો તો જથ્થો તેના પૅક-સાઇઝ જેટલો વધશે.",
-        "switchLineConfirm": "{count} line(s) on this bill are the other type and will be removed. Continue?",
-        "scanIsKiteProduct": "This is a Kite product — switch the bill to Kite.",
-        "scanIsRakhiProduct": "This is a Rakhi product — switch the bill to Rakhi.",
+        "scanHint": "Enter દબાવો. એ જ SKU ફરી સ્કેન કરો તો જથ્થો તેના પૅક-સાઇઝ જેટલો વધશે.",
         "scanAddButton": "ઉમેરો",
         "snoColumn": "#",
         "itemColumn": "આઇટમ",
@@ -398,7 +403,10 @@
         "grandTotalLabel": "ગ્રાન્ડ ટોટલ",
         "saveDraftButton": "ડ્રાફ્ટ સાચવો",
         "saveAndIssueButton": "સાચવો અને ઇશ્યૂ કરો",
-        "cancelButton": "રદ"
+        "cancelButton": "રદ",
+        "switchLineConfirm": "{count} line(s) on this bill are the other type and will be removed. Continue?",
+        "scanIsKiteProduct": "This is a Kite product — switch the bill to Kite.",
+        "scanIsRakhiProduct": "This is a Rakhi product — switch the bill to Rakhi."
       },
       "detail": {
         "issueButton": "ઇશ્યૂ કરો",
@@ -828,6 +836,73 @@
           "signatoryLabel": "Authorised Signatory"
         }
       }
+    }
+  },
+  "orders": {
+    "title": "Orders",
+    "subtitle": "Taken by staff, packed, then billed.",
+    "newButton": "New order",
+    "empty": "No orders here.",
+    "tabs": {
+      "open": "Open",
+      "new": "New",
+      "packing": "Packing",
+      "ready": "Ready",
+      "partial": "Partly billed",
+      "billed": "Billed",
+      "cancelled": "Cancelled"
+    },
+    "status": {
+      "new": "New",
+      "packing": "Packing",
+      "ready": "Ready",
+      "partial": "Partly billed",
+      "billed": "Billed",
+      "cancelled": "Cancelled"
+    },
+    "form": {
+      "createTitle": "New order",
+      "editTitle": "Edit order",
+      "rakhi": "Rakhi",
+      "kite": "Kite",
+      "party": "Party",
+      "partyPlaceholder": "Select party",
+      "scanLabel": "Scan / type product code",
+      "scanPlaceholder": "Scan or type a code / design name",
+      "scanHint": "Scan or pick a product and press Enter. Scanning it again adds one more pack.",
+      "scanNotFound": "Product {code} not found.",
+      "scanIsKiteProduct": "This is a Kite product — switch the order to Kite.",
+      "scanIsRakhiProduct": "This is a Rakhi product — switch the order to Rakhi.",
+      "switchLineConfirm": "Switching Rakhi/Kite removes the items already added. Continue?",
+      "add": "Add",
+      "qty": "Qty",
+      "remove": "Remove",
+      "noLines": "No items yet. Scan or type a product above.",
+      "notes": "Notes (optional)",
+      "estimatedTotal": "Estimated total",
+      "save": "Save order",
+      "saving": "Saving…",
+      "cancel": "Cancel"
+    },
+    "detail": {
+      "edit": "Edit order",
+      "item": "Item",
+      "rate": "Rate",
+      "disc": "Disc %",
+      "ordered": "Ordered",
+      "billed": "Billed",
+      "pending": "Pending",
+      "bills": "Bills from this order",
+      "cancelOrder": "Cancel order",
+      "keepOrder": "Keep order",
+      "cancelConfirm": "Cancel this order? It can't be packed or billed after this."
+    },
+    "errors": {
+      "partyRequired": "Select a party.",
+      "linesRequired": "Add at least one item.",
+      "orderLocked": "This order can't be changed at this stage.",
+      "notReady": "This order isn't marked Ready yet.",
+      "nothingPacked": "Nothing is packed on this order yet."
     }
   },
   "accounting": {
@@ -1490,20 +1565,12 @@
         "mrp": "MRP (₹)",
         "discount": "ડિસ્ક %",
         "discountable": "ડિસ્ક?",
-               "discountableHint": "ઇન્વોઇસમાં ડિસ્કાઉન્ટેબલ ગ્રુપ (રાખડી = ✓, કિડ્સ = ખાલી)",
+        "discountableHint": "ઇન્વોઇસમાં ડિસ્કાઉન્ટેબલ ગ્રુપ (રાખડી = ✓, કિડ્સ = ખાલી)",
         "printQty": "પ્રિન્ટ qty",
         "productGroup": "Product group",
         "productGroupHint": "Kite only. Empty = rakhi product. New rows copy the group from the row above."
       },
       "productGroupNone": "— Rakhi —"
-    },
-    "productGroup": {
-      "label": "Product group (kite only)",
-      "none": "— None (Rakhi product) —",
-      "hint": "Pick a group only for kite products. The discount company comes from the group. Leave empty for rakhi.",
-      "errors": {
-        "notFound": "That product group no longer exists. Pick another one."
-      }
     },
     "label": {
       "brand": "જય પારસ",
@@ -1521,6 +1588,14 @@
       "photoWrongType": "ફોટો JPEG, PNG કે WebP હોવો જોઈએ",
       "duplicate": "આ ડિઝાઇન અને પૅક માટે SKU પહેલેથી છે.",
       "duplicateOpenLink": "જૂનો SKU ખોલો"
+    },
+    "productGroup": {
+      "label": "Product group (kite only)",
+      "none": "— None (Rakhi product) —",
+      "hint": "Pick a group only for kite products. The discount company comes from the group. Leave empty for rakhi.",
+      "errors": {
+        "notFound": "That product group no longer exists. Pick another one."
+      }
     }
   }
 }
