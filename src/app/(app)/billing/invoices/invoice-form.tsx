@@ -388,4 +388,313 @@ export function InvoiceForm({
       const qty = num(l.qty);
       const rate = num(l.rate);
       const disc = num(l.discount_pct);
-      const
+       const lineSubtotal = round2(qty * rate * (1 - disc / 100));
+      const lineDiscount = round2(qty * rate * (disc / 100));
+      subtotal += lineSubtotal;
+      discount += lineDiscount;
+      if (showGst) {
+        const gstPct = num(l.gst_pct);
+        if (gstPct > 0) {
+          const tax = round2(lineSubtotal * (gstPct / 100));
+          if (intraState) {
+            const half = round2(tax / 2);
+            cgst += half;
+            sgst += tax - half;
+          } else {
+            igst += tax;
+          }
+        }
+      }
+    }
+    const packing = num(packingCharges);
+    const delivery = num(deliveryCharges);
+    const extras = round2(packing + delivery);
+    const sum = round2(subtotal + cgst + sgst + igst + extras);
+    const grand = Math.round(sum);
+    const round = round2(grand - sum);
+    return { subtotal, discount, cgst, sgst, igst, packing, delivery, extras, round, grand };
+  }, [lines, showGst, intraState, packingCharges, deliveryCharges]);
+
+  const payload = useMemo(
+    () =>
+      JSON.stringify({
+        header: {
+          id: initial.id,
+          business_line: businessLine,
+          customer_id: customerId || null,
+          invoice_date: invoiceDate,
+          place_of_supply: placeOfSupply || undefined,
+          notes: notes || undefined,
+          terms: terms || undefined,
+          packing_charges: num(packingCharges),
+          delivery_charges: num(deliveryCharges),
+        },
+        lines: lines.map((l) => ({
+          sku_id: l.sku_id || null,
+          sku_snapshot: l.sku_snapshot,
+          description: l.description || (l.sku_snapshot?.design_name ?? '—'),
+          hsn_code: l.hsn_code || null,
+          qty: num(l.qty),
+          uom: l.uom || 'Pcs',
+          rate: num(l.rate),
+          discount_pct: num(l.discount_pct),
+          gst_pct: showGst ? num(l.gst_pct) : 0,
+        })),
+      }),
+    [
+      initial.id,
+      businessLine,
+      customerId,
+      invoiceDate,
+      placeOfSupply,
+      notes,
+      terms,
+      packingCharges,
+      deliveryCharges,
+      lines,
+      showGst,
+    ],
+  );
+
+  // --- Crash-safe local autosave -------------------------------------------
+  // Mirror the whole in-progress bill to the device's own storage so a crash,
+  // refresh, new deploy, or dropped connection can never lose it.
+  const { recovered, clearDraft } = useInvoiceDraft(initial.id, {
+    businessLine,
+    customerId,
+    placeOfSupply,
+    invoiceDate,
+    notes,
+    terms,
+    packingCharges,
+    deliveryCharges,
+    lines,
+  });
+
+  // Show a "Restore / Discard" banner when a draft was recovered on load.
+  const [showRecovery, setShowRecovery] = useState<boolean>(!!recovered);
+
+  // Clear the local backup ONLY when the server confirms the save, then go to
+  // the target it returned. On any failure `state.ok` is false and we do
+  // nothing, so the draft (and every line the user typed) stays put for a
+  // retry. This is the fix for a dropped connection wiping a long bill.
+  const router = useRouter();
+  useEffect(() => {
+    if (state && state.ok === true) {
+      clearDraft();
+      router.push(state.redirectTo ?? '/billing/invoices');
+    }
+  }, [state, clearDraft, router]);
+
+  function restoreDraft() {
+    if (!recovered) return;
+    setBusinessLine(recovered.businessLine);
+    setCustomerId(recovered.customerId);
+    setPlaceOfSupply(recovered.placeOfSupply);
+    setInvoiceDate(recovered.invoiceDate);
+    setNotes(recovered.notes);
+    setTerms(recovered.terms);
+    setPackingCharges(recovered.packingCharges);
+    setDeliveryCharges(recovered.deliveryCharges);
+    setLines(recovered.lines.length ? recovered.lines : [{ ...EMPTY_LINE }]);
+    setShowRecovery(false);
+  }
+
+  function discardRecovery() {
+    clearDraft();
+    setShowRecovery(false);
+  }
+
+  return (
+    <form action={formAction} className="space-y-6">
+      {/* Ctrl/Cmd + A opens the "New customer" form in a new tab so the
+       * in-progress invoice draft on this tab is preserved. Same-tab
+       * navigation would risk losing unsaved header/line edits. */}
+      <NewCustomerShortcut openInNewTab />
+      <input type="hidden" name="payload" value={payload} />
+
+      {/* Crash-recovery banner: shown when an unsaved bill was found on this
+       * device. Buttons are type="button" so they never submit the form. */}
+      {showRecovery && recovered ? (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4">
+          <p className="text-sm font-medium text-amber-900">
+            અધૂરું બિલ મળ્યું · Unsaved bill found
+          </p>
+          <p className="mt-1 text-xs text-amber-800">
+            A bill you were making on this device was saved automatically
+            {recovered.savedAt ? ` (${new Date(recovered.savedAt).toLocaleString()})` : ''}. Restore
+            it, or discard to start fresh.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={restoreDraft}
+              className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100"
+            >
+              પાછું લાવો · Restore
+            </button>
+            <button
+              type="button"
+              onClick={discardRecovery}
+              className="rounded-md px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100"
+            >
+              કાઢી નાખો · Discard
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Header */}
+      <section className="space-y-4 rounded-lg border border-neutral-200 bg-white p-4">
+        <h2 className="text-sm font-medium uppercase tracking-wide text-neutral-500">
+          {tForm('headerSection')}
+        </h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className="label-base">{t('businessLineLabel')}</label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => changeBusinessLine('rakhi')}
+                className={`btn-ghost border ${businessLine === 'rakhi' ? 'border-brand-700 bg-brand-50 text-brand-900' : 'border-neutral-300'}`}
+              >
+                {t('businessLineRakhi')}
+              </button>
+              <button
+                type="button"
+                onClick={() => changeBusinessLine('kite')}
+                className={`btn-ghost border ${businessLine === 'kite' ? 'border-brand-700 bg-brand-50 text-brand-900' : 'border-neutral-300'}`}
+              >
+                {t('businessLineKite')}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="invoice_date" className="label-base">
+              {tForm('invoiceDateLabel')}
+            </label>
+            <input
+              id="invoice_date"
+              type="date"
+              value={invoiceDate}
+              onChange={(e) => setInvoiceDate(e.target.value)}
+              required
+              className="input-base"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label htmlFor="customer_id" className="label-base">
+              {tForm('customerLabel')}
+            </label>
+            <select
+              id="customer_id"
+              value={customerId}
+              onChange={(e) => onCustomerChange(e.target.value)}
+              className="input-base"
+              required
+            >
+              <option value="">{tForm('customerPickerPlaceholder')}</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-neutral-500">{tForm('customerShortcutHint')}</p>
+            {selectedCustomer ? (
+              <p className="mt-1 text-xs text-neutral-600">
+                {selectedCustomer.city ? (
+                  <>
+                    <span className="font-medium">{tForm('customerCityLabel')}:</span>{' '}
+                    {selectedCustomer.city}
+                  </>
+                ) : (
+                  <span className="text-amber-700">{tForm('customerCityMissing')}</span>
+                )}
+                {selectedCustomer.state ? ` · ${selectedCustomer.state}` : null}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="sm:col-span-2">
+            <label htmlFor="place_of_supply" className="label-base">
+              {tForm('placeOfSupplyLabel')}
+            </label>
+            <input
+              id="place_of_supply"
+              value={placeOfSupply}
+              onChange={(e) => setPlaceOfSupply(e.target.value)}
+              className="input-base"
+            />
+            <p className="mt-1 text-xs text-neutral-500">{tForm('placeOfSupplyHint')}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Scan + add */}
+      <section className="space-y-3 rounded-lg border border-neutral-200 bg-white p-4">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-neutral-500">
+            {tForm('linesSection')}
+          </h2>
+          <button
+            type="button"
+            onClick={addBlankLine}
+            className="btn-ghost border border-neutral-300 text-sm"
+          >
+            {tForm('addLineButton')}
+          </button>
+        </div>
+
+        <div className="rounded-md border border-dashed border-neutral-300 bg-neutral-50 p-3">
+          <label htmlFor="scan_code" className="label-base">
+            {tForm('scanLabel')}
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="scan_code"
+              ref={scanInputRef}
+              value={scanValue}
+              onChange={(e) => setScanValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleScan();
+                }
+              }}
+              placeholder={tForm('scanPlaceholder')}
+              className="input-base flex-1 font-mono"
+              // Native browser autocomplete against a datalist of every SKU.
+              // Typing "Dor" filters the dropdown to design names starting
+              // with Dori; picking one drops the SKU code straight into the
+              // input, and Enter fires handleScan() as usual.
+              list="invoice-sku-suggestions"
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              onClick={handleScan}
+              className="btn-ghost border border-neutral-300"
+            >
+              {tForm('scanAddButton')}
+            </button>
+            <ScanButton
+              label="Scan"
+              onDetected={(code) => {
+                const sku = resolveScan(code);
+                if (!sku) {
+                  setScanError(`SKU ${code} not found`);
+                  return;
+                }
+                if (!checkLine(sku)) return;
+                addOrIncrementSku(sku);
+                setScanError(null);
+                setScanValue('');
+              }}
+            />
+          </div>
+          <datalist id="invoice-sku-suggestions">
+            {lineSkus.map((s) => (
+              <option key={s.id} value={s.sku_code}>
