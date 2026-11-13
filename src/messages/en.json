@@ -307,8 +307,17 @@
         "companyNameTaken": "A company with this name already exists.",
         "groupNameTaken": "A product group with this name already exists.",
         "companyInUse": "This company still has product groups. Move or delete them first.",
-        "groupInUse": "This product group still has products. Move them to another group first."
-      }
+             "groupInUse": "This product group still has products. Move them to another group first.",
+        "hsnInvalid": "HSN can be at most 10 characters.",
+        "gstInvalid": "GST % must be between 0 and 28."
+      },
+      "hsnLabel": "Default HSN",
+      "hsnPlaceholder": "Default HSN (e.g. 9503)",
+      "gstLabel": "Default GST %",
+      "gstPlaceholder": "GST",
+      "hsnGstHint": "Filled in automatically on kite bill lines. Changing these later never changes bills already made.",
+      "noHsn": "no HSN",
+      "gstShort": "GST {pct}%"
      },
     "invoices": {
       "title": "Invoices",
@@ -356,7 +365,10 @@
         "removeLineLabel": "Remove",
         "scanLabel": "Scan / type SKU code",
         "scanPlaceholder": "e.g. SUPER-101-03",
-        "scanHint": "Scan a code, or start typing a design name and pick from the suggestions. Press Enter to add. Scanning the same SKU again increases its qty by its pack size.",
+          "scanHint": "Scan a code, or start typing a design name and pick from the suggestions. Press Enter to add. Scanning the same SKU again increases its qty by its pack size.",
+        "switchLineConfirm": "{count} line(s) on this bill are the other type and will be removed. Continue?",
+        "scanIsKiteProduct": "This is a Kite product — switch the bill to Kite.",
+        "scanIsRakhiProduct": "This is a Rakhi product — switch the bill to Rakhi.",
         "scanAddButton": "Add",
         "snoColumn": "#",
         "itemColumn": "Item",
