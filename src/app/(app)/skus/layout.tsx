@@ -32,7 +32,7 @@ export default function SkusLayout({ children }: { children: ReactNode }) {
           { href: '/skus/print', label: t('skusPrint') },
         ]}
       />
-      <main className="mx-auto w-full max-w-screen-md flex-1 px-4 py-6">{children}</main>
+           <main className="mx-auto w-full max-w-screen-md flex-1 xl:max-w-screen-xl px-4 py-6">{children}</main>
     </div>
   );
 }
