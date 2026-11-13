@@ -896,7 +896,9 @@
       "bills": "Bills from this order",
       "cancelOrder": "Cancel order",
       "keepOrder": "Keep order",
-      "cancelConfirm": "Cancel this order? It can't be packed or billed after this."
+      "cancelConfirm": "Cancel this order? It can't be packed or billed after this.",
+      "packed": "Packed",
+      "readyBanner": "Packed and Ready — waiting for billing."
     },
     "errors": {
       "partyRequired": "Select a party.",
@@ -904,6 +906,18 @@
       "orderLocked": "This order can't be changed at this stage.",
       "notReady": "This order isn't marked Ready yet.",
       "nothingPacked": "Nothing is packed on this order yet."
+    },
+    "packing": {
+      "title": "Packing",
+      "hint": "Tick each item as it goes in the box. Lower the qty if less is available — the rest stays pending.",
+      "tickAll": "Tick all",
+      "clearAll": "Clear",
+      "pendingLabel": "To pack: {qty} {uom}",
+      "short": "Short {qty} → stays pending",
+      "packedQty": "Packed qty",
+      "summary": "{packed} of {total} items packed",
+      "save": "Save packing",
+      "markReady": "Mark Ready"
     }
   },
   "accounting": {

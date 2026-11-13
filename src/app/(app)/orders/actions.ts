@@ -89,3 +89,40 @@ export async function cancelOrderAction(
   revalidatePath(`/orders/${parsed.data.id}`);
   return { ok: true, redirectTo: `/orders/${parsed.data.id}` };
 }
+
+const PackingSchema = z.object({
+  id: z.string().uuid(),
+  lines: z.array(z.object({ line_id: z.string().uuid(), qty_packed: z.number().min(0) })).max(500),
+  mark_ready: z.boolean(),
+});
+
+export async function saveOrderPackingAction(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireRole(ORDER_ROLES);
+  let lines: unknown;
+  try {
+    lines = JSON.parse(String(formData.get('lines') ?? '[]'));
+  } catch {
+    return { ok: false, messageKey: 'common.errors.invalidInput' };
+  }
+  const parsed = PackingSchema.safeParse({
+    id: formData.get('id'),
+    lines,
+    mark_ready: formData.get('mark_ready') === '1',
+  });
+  if (!parsed.success) return { ok: false, messageKey: 'common.errors.invalidInput' };
+
+  const supabase = createClient();
+  const { error } = await supabase.rpc('save_order_packing', {
+    p_id: parsed.data.id,
+    p_lines: parsed.data.lines,
+    p_mark_ready: parsed.data.mark_ready,
+  });
+  if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
+
+  revalidatePath('/orders');
+  revalidatePath(`/orders/${parsed.data.id}`);
+  return { ok: true };
+}

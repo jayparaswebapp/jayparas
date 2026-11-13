@@ -12,6 +12,7 @@ import { loadOrderFormData, ORDER_ROLES, type OrderStatus } from '@/lib/orders/l
 import { OrderForm, type OrderFormValues } from '../order-form';
 import { OrderStatusBadge } from '../status-badge';
 import { CancelOrderButton } from './cancel-order-button';
+import { PackingPanel } from './packing-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -174,6 +175,9 @@ function DetailView({
       : order.customer.full_name
     : '—';
   const canEdit = order.status === 'new';
+  // Packing is open until the order is fully billed or cancelled.
+  const canPack = ['new', 'packing', 'ready', 'partial'].includes(order.status);
+  const showPacked = ['packing', 'ready'].includes(order.status);
   const canCancel =
     ['new', 'packing', 'ready'].includes(order.status) &&
     lines.every((l) => Number(l.qty_billed) === 0);
@@ -206,6 +210,26 @@ function DetailView({
         </span>
       </div>
 
+      {order.status === 'ready' ? (
+        <div className="mb-4 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+          {tD('readyBanner')}
+        </div>
+      ) : null}
+
+      {canPack ? (
+        <PackingPanel
+          orderId={order.id}
+          lines={lines.map((l) => ({
+            id: l.id,
+            description: l.description,
+            uom: l.uom,
+            qty_ordered: Number(l.qty_ordered),
+            qty_billed: Number(l.qty_billed),
+            qty_packed: Number(l.qty_packed),
+          }))}
+        />
+      ) : null}
+
       <div className="mb-4 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
         <table className="w-full text-sm">
           <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
@@ -216,6 +240,7 @@ function DetailView({
               <th className="px-3 py-2 text-right">{tD('disc')}</th>
               {kite ? <th className="px-3 py-2 text-right">GST</th> : null}
               <th className="px-3 py-2 text-right">{tD('ordered')}</th>
+              {showPacked ? <th className="px-3 py-2 text-right">{tD('packed')}</th> : null}
               <th className="px-3 py-2 text-right">{tD('billed')}</th>
               <th className="px-3 py-2 text-right">{tD('pending')}</th>
             </tr>
@@ -237,6 +262,11 @@ function DetailView({
                   <td className="px-3 py-2 text-right tabular-nums">
                     {Number(l.qty_ordered)} {l.uom}
                   </td>
+                  {showPacked ? (
+                    <td className="px-3 py-2 text-right font-medium tabular-nums text-emerald-700">
+                      {Number(l.qty_packed)}
+                    </td>
+                  ) : null}
                   <td className="px-3 py-2 text-right tabular-nums">{Number(l.qty_billed)}</td>
                   <td
                     className={`px-3 py-2 text-right font-medium tabular-nums ${
