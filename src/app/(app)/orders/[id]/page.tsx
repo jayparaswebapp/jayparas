@@ -31,7 +31,8 @@ interface OrderRow {
   notes: string | null;
   estimated_total: number;
   created_at: string;
-  parent: { id: string; order_number: string } | null;
+  parent_order_id: string | null;
+  parent?: { id: string; order_number: string } | null;
   customer: { full_name: string; business_name: string | null; city: string | null } | null;
   creator: { full_name: string } | null;
 }
@@ -83,7 +84,7 @@ export default async function OrderDetailPage({
   const { data: o } = await supabase
     .from('orders')
     .select(
-      'id, order_number, business_line, customer_id, status, notes, estimated_total, created_at, parent:orders!orders_parent_order_id_fkey(id, order_number), customer:billing_customers(full_name, business_name, city), creator:app_users(full_name)',
+      'id, order_number, business_line, customer_id, status, notes, estimated_total, created_at, parent_order_id, customer:billing_customers(full_name, business_name, city), creator:app_users(full_name)',
     )
     .eq('id', params.id)
     .is('deleted_at', null)
@@ -111,6 +112,14 @@ export default async function OrderDetailPage({
       .order('created_at', { ascending: true }),
   ]);
   const pendingOrders = (cs ?? []) as unknown as LinkedOrder[];
+  if (order.parent_order_id) {
+    const { data: parent } = await supabase
+      .from('orders')
+      .select('id, order_number')
+      .eq('id', order.parent_order_id)
+      .maybeSingle();
+    order.parent = parent ?? null;
+  }
   const lines = (ls ?? []) as unknown as LineRow[];
   const bills = ((bs ?? []) as unknown as BillRow[]).flatMap((b) => (b.invoice ? [b.invoice] : []));
 
