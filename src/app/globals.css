@@ -41,5 +41,32 @@
   body:has(.print-clean) header,
   body:has(.print-clean) nav {
     display: none !important;
+
+    
   }
+}
+
+/* Bill line editor: compact boxes so MRP / Disc % / GST % / Qty always show
+   their full value, even when the Item column takes the extra width. */
+.invoice-lines input {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.invoice-lines input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.invoice-lines input[type='number']::-webkit-inner-spin-button,
+.invoice-lines input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.invoice-lines input[inputmode='numeric'] {
+  min-width: 4.5rem;
+}
+.invoice-lines input[inputmode='decimal'] {
+  min-width: 5.5rem;
+}
+.invoice-lines input:not([type]) {
+  min-width: 4.5rem;
 }
