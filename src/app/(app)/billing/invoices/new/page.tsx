@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { loadAllSkus } from '@/lib/skus/load-all';
+import { loadKitePricing, type KitePricing } from '@/lib/billing/kite-pricing';
 import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/users/current';
 import { getServerLocale } from '@/lib/format/locale';
@@ -18,7 +19,7 @@ export default async function NewInvoicePage() {
   const locale = getServerLocale();
   const supabase = createClient();
 
-  const [{ data: cs }, ss, { data: company }] = await Promise.all([
+  const [{ data: cs }, ss, { data: company }, kitePricing] = await Promise.all([
     supabase
       .from('billing_customers')
       .select('id, full_name, business_name, city, state')
@@ -26,21 +27,24 @@ export default async function NewInvoicePage() {
       .is('deleted_at', null)
       .order('full_name', { ascending: true }),
     loadAllSkus<{
-        id: string;
-        sku_code: string;
-        short_code: number | null;
-        design_name: string;
-        pack_size: number;
-        price: number | string;
-        discount_pct: number | string | null;
-        is_discountable: boolean | null;
-        rate_unit: string | null;
-      }>(supabase, {
+      id: string;
+      sku_code: string;
+      short_code: number | null;
+      design_name: string;
+      pack_size: number;
+      price: number | string;
+      discount_pct: number | string | null;
+      is_discountable: boolean | null;
+      rate_unit: string | null;
+      business_line: string | null;
+      product_group_id: string | null;
+    }>(supabase, {
       columns:
-        'id, sku_code, short_code, design_name, pack_size, price, discount_pct, is_discountable, rate_unit',
+        'id, sku_code, short_code, design_name, pack_size, price, discount_pct, is_discountable, rate_unit, business_line, product_group_id',
       orderBy: 'design_name',
     }),
     supabase.from('company_info').select('state').maybeSingle(),
+    loadKitePricing(supabase),
   ]);
 
   const customers: CustomerOption[] = (cs ?? []).map((c) => {
@@ -58,6 +62,8 @@ export default async function NewInvoicePage() {
     discount_pct: Number(s.discount_pct ?? 0),
     is_discountable: Boolean(s.is_discountable),
     rate_unit: (s.rate_unit === 'pack' ? 'pack' : 'piece') as 'pack' | 'piece',
+    business_line: (s.business_line === 'kite' ? 'kite' : 'rakhi') as 'rakhi' | 'kite',
+    product_group_id: s.product_group_id ?? null,
   }));
 
   const initial: InvoiceFormValues = {
@@ -78,6 +84,7 @@ export default async function NewInvoicePage() {
       customers={customers}
       skus={skus}
       sellerState={company?.state ?? null}
+      kitePricing={kitePricing}
       locale={locale}
     />
   );
@@ -88,12 +95,14 @@ function NewView({
   customers,
   skus,
   sellerState,
+  kitePricing,
   locale,
 }: {
   initial: InvoiceFormValues;
   customers: CustomerOption[];
   skus: SkuOption[];
   sellerState: string | null;
+  kitePricing: KitePricing;
   locale: 'en' | 'gu';
 }) {
   const t = useTranslations('billing.invoices.form');
@@ -105,6 +114,7 @@ function NewView({
         customers={customers}
         skus={skus}
         sellerState={sellerState}
+        kitePricing={kitePricing}
         locale={locale}
       />
     </>
