@@ -20,7 +20,7 @@ export default function BillingLayout({ children }: { children: ReactNode }) {
           { href: '/billing/company', label: t('companyTitle') },
         ]}
       />
-      <main className="mx-auto w-full max-w-screen-md flex-1 px-4 py-6">{children}</main>
+          <main className="mx-auto w-full max-w-screen-md flex-1 xl:max-w-screen-xl px-4 py-6">{children}</main>
     </div>
   );
 }
