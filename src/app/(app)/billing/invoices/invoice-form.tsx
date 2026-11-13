@@ -698,3 +698,334 @@ export function InvoiceForm({
           <datalist id="invoice-sku-suggestions">
             {lineSkus.map((s) => (
               <option key={s.id} value={s.sku_code}>
+                {s.design_name}
+              </option>
+            ))}
+          </datalist>
+          {scanError ? (
+            <p className="mt-1 text-xs text-red-700">{scanError}</p>
+          ) : (
+            <p className="mt-1 text-xs text-neutral-500">{tForm('scanHint')}</p>
+          )}
+        </div>
+
+        {/*
+         * Spreadsheet line editor — one row per item. Item picker is the SKU
+         * dropdown showing just the design name; once a SKU is picked the
+         * row's description / HSN / pack snapshot fields fill in invisibly
+         * (they ride into invoice_lines and onto the printed copy without
+         * cluttering the entry screen). HSN and GST % columns appear only on
+         * the kite line; rakhi invoices hide them so the row fits cleanly.
+         */}
+        {/* Bounded-height scroll container so long invoices don't push the
+         * totals / Save button below the fold. As lines are added, an effect
+         * above scrolls this box to the bottom so the newly-added row is
+         * always visible. Max-height is 60vh — plenty for 10+ rows on a
+         * laptop, and mobile still gets to scroll the outer page normally. */}
+        <div
+          ref={linesContainerRef}
+          className="max-h-[60vh] overflow-auto rounded-md border border-neutral-200 bg-white"
+        >
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-neutral-50 text-[10px] uppercase tracking-wide text-neutral-500">
+              <tr>
+                <th className="w-8 px-2 py-2">{tForm('snoColumn')}</th>
+                {/* ITEM: capped so long design names truncate inside the
+                 * select instead of stretching the whole table and starving
+                 * the QTY column. */}
+                <th className="min-w-[14rem] px-2 py-2 text-left">{tForm('itemColumn')}</th>
+                {/* QTY: bumped from w-16 to w-20 so 3-digit quantities are
+                 * fully visible alongside the number-spinner arrows. */}
+                <th className="w-20 px-1 py-2">{tForm('qtyLabel')}</th>
+                <th className="w-14 px-1 py-2">{tForm('uomLabel')}</th>
+                {showGst ? (
+                  <th className="w-20 px-1 py-2 text-left font-mono">{tForm('hsnLabel')}</th>
+                ) : null}
+                <th className="w-20 px-1 py-2 text-right">{tForm('mrpLabel')}</th>
+                <th className="w-16 px-1 py-2 text-right">{tForm('discountColumn')}</th>
+                {showGst ? (
+                  <th className="w-16 px-1 py-2 text-right">{tForm('gstLabel')}</th>
+                ) : null}
+                <th className="w-20 px-1 py-2 text-right">{tForm('rateColumn')}</th>
+                <th className="w-24 px-1 py-2 text-right">{tForm('totalColumn')}</th>
+                <th className="w-6 px-1 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {lines.map((l, idx) => {
+                const qty = num(l.qty);
+                const rate = num(l.rate);
+                const disc = num(l.discount_pct);
+                const effectiveRate = round2(rate * (1 - disc / 100));
+                const lineSubtotal = round2(qty * effectiveRate);
+                const lineTax = showGst ? round2((lineSubtotal * num(l.gst_pct)) / 100) : 0;
+                const lineTotal = round2(lineSubtotal + lineTax);
+                return (
+                  <tr key={idx} className="border-t border-neutral-100 align-middle">
+                    <td className="px-2 py-1 text-center text-xs text-neutral-400">{idx + 1}</td>
+                    <td className="min-w-[14rem] px-1 py-1">
+                      <select
+                        value={l.sku_id ?? ''}
+                        onChange={(e) => pickSkuForLine(idx, e.target.value)}
+                        className="input-base !min-h-0 !w-full !min-w-0 !max-w-full !py-1 !text-sm"
+                        required
+                      >
+                        <option value="">{tForm('skuNone')}</option>
+                        {lineSkus.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.design_name}
+                          </option>
+                        ))}
+                      </select>
+                      {showGst && groupNameForLine(l) ? (
+                        <div className="mt-0.5 truncate px-1 text-[11px] text-neutral-500">
+                          {groupNameForLine(l)}
+                        </div>
+                      ) : null}
+                    </td>
+                    <td className="px-1 py-1">
+                      <input
+                        type="number"
+                        step="1"
+                        min="0"
+                        value={l.qty}
+                        onChange={(e) => updateLine(idx, { qty: e.target.value })}
+                        inputMode="numeric"
+                        className="input-base !min-h-0 !py-1 !text-center !text-sm"
+                        required
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <input
+                        value={l.uom}
+                        onChange={(e) => updateLine(idx, { uom: e.target.value })}
+                        className="input-base !min-h-0 !py-1 !text-sm"
+                      />
+                    </td>
+                    {showGst ? (
+                      <td className="px-1 py-1">
+                        <input
+                          value={l.hsn_code}
+                          onChange={(e) => updateLine(idx, { hsn_code: e.target.value })}
+                          className="input-base !min-h-0 !py-1 !font-mono !text-sm"
+                        />
+                      </td>
+                    ) : null}
+                    <td className="px-1 py-1">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={l.rate}
+                        onChange={(e) => updateLine(idx, { rate: e.target.value })}
+                        inputMode="decimal"
+                        className="input-base !min-h-0 !py-1 !text-right !text-sm"
+                        required
+                      />
+                    </td>
+                    <td className="px-1 py-1">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={l.discount_pct}
+                        onChange={(e) => updateLine(idx, { discount_pct: e.target.value })}
+                        inputMode="decimal"
+                        className="input-base !min-h-0 !py-1 !text-right !text-sm"
+                      />
+                    </td>
+                    {showGst ? (
+                      <td className="px-1 py-1">
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          max="100"
+                          value={l.gst_pct}
+                          onChange={(e) => updateLine(idx, { gst_pct: e.target.value })}
+                          inputMode="decimal"
+                          className="input-base !min-h-0 !py-1 !text-right !text-sm"
+                        />
+                      </td>
+                    ) : null}
+                    <td className="px-2 py-1 text-right text-sm tabular-nums text-neutral-700">
+                      {effectiveRate.toFixed(2)}
+                    </td>
+                    <td className="px-2 py-1 text-right text-sm font-semibold tabular-nums">
+                      {lineTotal.toFixed(2)}
+                    </td>
+                    <td className="px-1 py-1 text-center">
+                      <button
+                        type="button"
+                        onClick={() => removeLine(idx)}
+                        className="text-neutral-400 hover:text-red-600"
+                        aria-label={tForm('removeLineLabel')}
+                      >
+                        ×
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Notes / terms */}
+      <section className="grid grid-cols-1 gap-4 rounded-lg border border-neutral-200 bg-white p-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="notes" className="label-base">
+            {tForm('notesLabel')}
+          </label>
+          <textarea
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            className="input-base resize-y"
+          />
+        </div>
+        <div>
+          <label htmlFor="terms" className="label-base">
+            {tForm('termsLabel')}
+          </label>
+          <textarea
+            id="terms"
+            value={terms}
+            onChange={(e) => setTerms(e.target.value)}
+            rows={3}
+            className="input-base resize-y"
+          />
+        </div>
+      </section>
+
+      {/* Extras */}
+      <section className="grid grid-cols-1 gap-4 rounded-lg border border-neutral-200 bg-white p-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="packing_charges" className="label-base">
+            {tForm('packingChargesLabel')}
+          </label>
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-lg text-neutral-500">
+              ₹
+            </span>
+            <input
+              id="packing_charges"
+              type="number"
+              step="0.01"
+              min="0"
+              value={packingCharges}
+              onChange={(e) => setPackingCharges(e.target.value)}
+              inputMode="decimal"
+              className="input-base pl-8"
+            />
+          </div>
+        </div>
+        <div>
+          <label htmlFor="delivery_charges" className="label-base">
+            {tForm('deliveryChargesLabel')}
+          </label>
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-lg text-neutral-500">
+              ₹
+            </span>
+            <input
+              id="delivery_charges"
+              type="number"
+              step="0.01"
+              min="0"
+              value={deliveryCharges}
+              onChange={(e) => setDeliveryCharges(e.target.value)}
+              inputMode="decimal"
+              className="input-base pl-8"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Totals */}
+      <section className="rounded-lg border border-neutral-200 bg-white p-4">
+        <h2 className="mb-2 text-sm font-medium uppercase tracking-wide text-neutral-500">
+          {tForm('totalsSection')}
+        </h2>
+        <dl className="ml-auto grid max-w-sm grid-cols-2 gap-y-1 text-sm">
+          <dt className="text-neutral-600">{tForm('subtotalLabel')}</dt>
+          <dd className="text-right text-neutral-900">{formatRupees(totals.subtotal, locale)}</dd>
+          {/*
+           * No aggregated "Discount" row: each line already shows the
+           * post-discount Rate column, so a separate total would
+           * double-count from the customer's perspective. Per-line discount
+           * math still runs (it drives the Rate column and the saved
+           * line_subtotal); we just don't surface a section-total here.
+           */}
+          {showGst && totals.cgst > 0 ? (
+            <>
+              <dt className="text-neutral-600">{tForm('cgstLabel')}</dt>
+              <dd className="text-right text-neutral-900">{formatRupees(totals.cgst, locale)}</dd>
+              <dt className="text-neutral-600">{tForm('sgstLabel')}</dt>
+              <dd className="text-right text-neutral-900">{formatRupees(totals.sgst, locale)}</dd>
+            </>
+          ) : null}
+          {showGst && totals.igst > 0 ? (
+            <>
+              <dt className="text-neutral-600">{tForm('igstLabel')}</dt>
+              <dd className="text-right text-neutral-900">{formatRupees(totals.igst, locale)}</dd>
+            </>
+          ) : null}
+          {totals.packing > 0 ? (
+            <>
+              <dt className="text-neutral-600">{tForm('packingChargesLabel')}</dt>
+              <dd className="text-right text-neutral-900">
+                + {formatRupees(totals.packing, locale)}
+              </dd>
+            </>
+          ) : null}
+          {totals.delivery > 0 ? (
+            <>
+              <dt className="text-neutral-600">{tForm('deliveryChargesLabel')}</dt>
+              <dd className="text-right text-neutral-900">
+                + {formatRupees(totals.delivery, locale)}
+              </dd>
+            </>
+          ) : null}
+          {totals.round !== 0 ? (
+            <>
+              <dt className="text-neutral-600">{tForm('roundOffLabel')}</dt>
+              <dd className="text-right text-neutral-900">
+                {totals.round > 0 ? '+ ' : '− '}
+                {formatRupees(Math.abs(totals.round), locale)}
+              </dd>
+            </>
+          ) : null}
+          <dt className="border-t border-neutral-200 pt-1 text-base font-semibold text-neutral-900">
+            {tForm('grandTotalLabel')}
+          </dt>
+          <dd className="border-t border-neutral-200 pt-1 text-right text-base font-semibold text-neutral-900">
+            {formatRupees(totals.grand, locale)}
+          </dd>
+        </dl>
+      </section>
+
+      {state && state.ok === false ? <ServerError messageKey={state.messageKey} /> : null}
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" name="and_issue" value="0" className="btn-primary !w-auto px-4">
+          {tForm('saveDraftButton')}
+        </button>
+        <button
+          type="submit"
+          name="and_issue"
+          value="1"
+          className="btn-primary !w-auto bg-brand-700 px-4"
+        >
+          {tForm('saveAndIssueButton')}
+        </button>
+        <Link href="/billing/invoices" className="btn-ghost border border-neutral-300">
+          {tForm('cancelButton')}
+        </Link>
+      </div>
+    </form>
+  );
+}
