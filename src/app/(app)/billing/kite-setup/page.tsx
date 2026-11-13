@@ -18,7 +18,7 @@ export default async function KiteSetupPage() {
       .order('name', { ascending: true }),
     supabase
       .from('product_groups')
-      .select('id, name, company_id, is_active')
+        .select('id, name, company_id, is_active, hsn_code, gst_pct')
       .is('deleted_at', null)
       .order('name', { ascending: true }),
     supabase
@@ -37,6 +37,8 @@ export default async function KiteSetupPage() {
 
   const groups: GroupRow[] = (groupRows ?? []).map((g) => ({
     ...g,
+    hsn_code: g.hsn_code ?? '',
+    gst_pct: Number(g.gst_pct ?? 0),
     sku_count: skuCount.get(g.id) ?? 0,
   }));
 
