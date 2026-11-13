@@ -8,11 +8,17 @@ import type { Locale } from '@/lib/i18n/config';
 import { PageHeader } from '@/components/page-header';
 import type { KitePricing } from '@/lib/billing/kite-pricing';
 import type { CustomerOption, SkuOption } from '@/app/(app)/billing/invoices/invoice-form';
-import { loadOrderFormData, ORDER_ROLES, type OrderStatus } from '@/lib/orders/load';
+import {
+  loadOrderFormData,
+  ORDER_BILL_ROLES,
+  ORDER_ROLES,
+  type OrderStatus,
+} from '@/lib/orders/load';
 import { OrderForm, type OrderFormValues } from '../order-form';
 import { OrderStatusBadge } from '../status-badge';
 import { CancelOrderButton } from './cancel-order-button';
 import { PackingPanel } from './packing-panel';
+import { MakeBillButton } from './make-bill-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +31,7 @@ interface OrderRow {
   notes: string | null;
   estimated_total: number;
   created_at: string;
+  parent: { id: string; order_number: string } | null;
   customer: { full_name: string; business_name: string | null; city: string | null } | null;
   creator: { full_name: string } | null;
 }
@@ -48,6 +55,13 @@ interface LineRow {
   qty_ordered: number;
   qty_packed: number;
   qty_billed: number;
+  qty_moved: number;
+}
+
+interface LinkedOrder {
+  id: string;
+  order_number: string;
+  status: OrderStatus;
 }
 
 interface BillRow {
@@ -61,14 +75,15 @@ export default async function OrderDetailPage({
   params: { id: string };
   searchParams: { edit?: string };
 }) {
-  await requireRole(ORDER_ROLES);
+  const me = await requireRole(ORDER_ROLES);
+  const canBill = (ORDER_BILL_ROLES as readonly string[]).includes(me.role);
   const locale = getServerLocale();
   const supabase = createClient();
 
   const { data: o } = await supabase
     .from('orders')
     .select(
-      'id, order_number, business_line, customer_id, status, notes, estimated_total, created_at, customer:billing_customers(full_name, business_name, city), creator:app_users(full_name)',
+      'id, order_number, business_line, customer_id, status, notes, estimated_total, created_at, parent:orders!orders_parent_order_id_fkey(id, order_number), customer:billing_customers(full_name, business_name, city), creator:app_users(full_name)',
     )
     .eq('id', params.id)
     .is('deleted_at', null)
@@ -76,11 +91,11 @@ export default async function OrderDetailPage({
   if (!o) notFound();
   const order = o as unknown as OrderRow;
 
-  const [{ data: ls }, { data: bs }] = await Promise.all([
+  const [{ data: ls }, { data: bs }, { data: cs }] = await Promise.all([
     supabase
       .from('order_lines')
       .select(
-        'id, line_no, sku_id, sku_snapshot, description, hsn_code, uom, rate, discount_pct, gst_pct, qty_ordered, qty_packed, qty_billed',
+        'id, line_no, sku_id, sku_snapshot, description, hsn_code, uom, rate, discount_pct, gst_pct, qty_ordered, qty_packed, qty_billed, qty_moved',
       )
       .eq('order_id', order.id)
       .order('line_no', { ascending: true }),
@@ -88,7 +103,14 @@ export default async function OrderDetailPage({
       .from('order_invoices')
       .select('invoice:invoices(id, invoice_number, status)')
       .eq('order_id', order.id),
+    supabase
+      .from('orders')
+      .select('id, order_number, status')
+      .eq('parent_order_id', order.id)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: true }),
   ]);
+  const pendingOrders = (cs ?? []) as unknown as LinkedOrder[];
   const lines = (ls ?? []) as unknown as LineRow[];
   const bills = ((bs ?? []) as unknown as BillRow[]).flatMap((b) => (b.invoice ? [b.invoice] : []));
 
@@ -122,7 +144,16 @@ export default async function OrderDetailPage({
     );
   }
 
-  return <DetailView order={order} lines={lines} bills={bills} locale={locale} />;
+  return (
+    <DetailView
+      order={order}
+      lines={lines}
+      bills={bills}
+      pendingOrders={pendingOrders}
+      canBill={canBill}
+      locale={locale}
+    />
+  );
 }
 
 function EditView({
@@ -159,11 +190,15 @@ function DetailView({
   order,
   lines,
   bills,
+  pendingOrders,
+  canBill,
   locale,
 }: {
   order: OrderRow;
   lines: LineRow[];
   bills: Array<{ id: string; invoice_number: string | null; status: string }>;
+  pendingOrders: LinkedOrder[];
+  canBill: boolean;
   locale: Locale;
 }) {
   const t = useTranslations('orders');
@@ -175,8 +210,12 @@ function DetailView({
       : order.customer.full_name
     : '—';
   const canEdit = order.status === 'new';
-  // Packing is open until the order is fully billed or cancelled.
-  const canPack = ['new', 'packing', 'ready', 'partial'].includes(order.status);
+  // Packing is open until the order is billed or cancelled.
+  const canPack = ['new', 'packing', 'ready'].includes(order.status);
+  const hasShort = lines.some(
+    (l) =>
+      Number(l.qty_ordered) - Number(l.qty_billed) - Number(l.qty_moved) - Number(l.qty_packed) > 0,
+  );
   const showPacked = ['packing', 'ready'].includes(order.status);
   const canCancel =
     ['new', 'packing', 'ready'].includes(order.status) &&
@@ -210,7 +249,32 @@ function DetailView({
         </span>
       </div>
 
-      {order.status === 'ready' ? (
+      {order.parent ? (
+        <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {tD('fromOrder')}{' '}
+          <Link href={`/orders/${order.parent.id}`} className="font-mono font-semibold underline">
+            {order.parent.order_number}
+          </Link>
+        </div>
+      ) : null}
+
+      {pendingOrders.length > 0 ? (
+        <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {tD('movedTo')}{' '}
+          {pendingOrders.map((p, i) => (
+            <span key={p.id}>
+              {i > 0 ? ', ' : ''}
+              <Link href={`/orders/${p.id}`} className="font-mono font-semibold underline">
+                {p.order_number}
+              </Link>
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {order.status === 'ready' && canBill ? (
+        <MakeBillButton id={order.id} hasShort={hasShort} />
+      ) : order.status === 'ready' ? (
         <div className="mb-4 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
           {tD('readyBanner')}
         </div>
@@ -223,7 +287,8 @@ function DetailView({
             id: l.id,
             description: l.description,
             uom: l.uom,
-            qty_ordered: Number(l.qty_ordered),
+            // Qty already moved to a pending order isn't packed here.
+            qty_ordered: Number(l.qty_ordered) - Number(l.qty_moved),
             qty_billed: Number(l.qty_billed),
             qty_packed: Number(l.qty_packed),
           }))}
@@ -243,11 +308,14 @@ function DetailView({
               {showPacked ? <th className="px-3 py-2 text-right">{tD('packed')}</th> : null}
               <th className="px-3 py-2 text-right">{tD('billed')}</th>
               <th className="px-3 py-2 text-right">{tD('pending')}</th>
+              {pendingOrders.length > 0 ? (
+                <th className="px-3 py-2 text-right">{tD('moved')}</th>
+              ) : null}
             </tr>
           </thead>
           <tbody>
             {lines.map((l) => {
-              const pending = Number(l.qty_ordered) - Number(l.qty_billed);
+              const pending = Number(l.qty_ordered) - Number(l.qty_billed) - Number(l.qty_moved);
               return (
                 <tr key={l.id} className="border-t border-neutral-100">
                   <td className="px-3 py-2 text-neutral-500">{l.line_no}</td>
@@ -277,6 +345,11 @@ function DetailView({
                   >
                     {pending}
                   </td>
+                  {pendingOrders.length > 0 ? (
+                    <td className="px-3 py-2 text-right tabular-nums text-neutral-600">
+                      {Number(l.qty_moved)}
+                    </td>
+                  ) : null}
                 </tr>
               );
             })}

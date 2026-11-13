@@ -898,7 +898,10 @@
       "keepOrder": "Keep order",
       "cancelConfirm": "Cancel this order? It can't be packed or billed after this.",
       "packed": "Packed",
-      "readyBanner": "Packed and Ready — waiting for billing."
+      "readyBanner": "Packed and Ready — waiting for billing.",
+      "fromOrder": "Pending items from order",
+      "movedTo": "Items not packed moved to new order",
+      "moved": "Moved"
     },
     "errors": {
       "partyRequired": "Select a party.",
@@ -918,6 +921,12 @@
       "summary": "{packed} of {total} items packed",
       "save": "Save packing",
       "markReady": "Mark Ready"
+    },
+    "bill": {
+      "hint": "Packed and Ready. Make the bill for the packed qty — you can check it before issuing.",
+      "shortHint": "Items not packed will move to a new order at the same rates.",
+      "makeBill": "Make bill (B)",
+      "making": "Making bill…"
     }
   },
   "accounting": {

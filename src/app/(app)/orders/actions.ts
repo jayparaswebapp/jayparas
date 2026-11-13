@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireRole } from '@/lib/users/current';
 import { rpcErrorMessageKey } from '@/lib/rpc/errors';
 import type { ActionResult } from '@/lib/rpc/action-result';
-import { ORDER_ROLES } from '@/lib/orders/load';
+import { ORDER_BILL_ROLES, ORDER_ROLES } from '@/lib/orders/load';
 
 const LineSchema = z.object({
   sku_id: z.string().uuid().nullable(),
@@ -125,4 +125,27 @@ export async function saveOrderPackingAction(
   revalidatePath('/orders');
   revalidatePath(`/orders/${parsed.data.id}`);
   return { ok: true };
+}
+
+/** Ready order → draft bill (packed qty); unpacked qty → new pending order. */
+export async function makeBillFromOrderAction(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  await requireRole(ORDER_BILL_ROLES);
+  const id = z.string().uuid().safeParse(formData.get('id'));
+  if (!id.success) return { ok: false, messageKey: 'common.errors.invalidInput' };
+
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc('create_invoice_from_order', { p_id: id.data });
+  if (error) return { ok: false, messageKey: rpcErrorMessageKey(error) };
+
+  const invoiceId = (data as { id?: string } | null)?.id;
+  revalidatePath('/orders');
+  revalidatePath(`/orders/${id.data}`);
+  revalidatePath('/billing/invoices');
+  return {
+    ok: true,
+    redirectTo: invoiceId ? `/billing/invoices/${invoiceId}` : `/orders/${id.data}`,
+  };
 }
