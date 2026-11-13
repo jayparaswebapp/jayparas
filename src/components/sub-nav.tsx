@@ -12,7 +12,7 @@ export function SubNav({ items }: { items: SubNavItem[] }) {
   const pathname = usePathname();
   return (
     <nav className="border-b border-neutral-200 bg-white">
-      <div className="mx-auto flex max-w-screen-md items-center gap-1 overflow-x-auto px-2 py-1">
+        <div className="mx-auto flex max-w-screen-md xl:max-w-screen-xl items-center gap-1 overflow-x-auto px-2 py-1">
         {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
