@@ -61,8 +61,13 @@ export async function saveKiteCompanyAction(
 const GroupSchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(1, 'billing.kiteSetup.errors.nameRequired'),
-  company_id: z.string().uuid('billing.kiteSetup.errors.companyRequired'),
+   company_id: z.string().uuid('billing.kiteSetup.errors.companyRequired'),
   is_active: z.boolean(),
+  hsn_code: z.string().trim().max(10, 'billing.kiteSetup.errors.hsnInvalid'),
+  gst_pct: z.coerce
+    .number({ invalid_type_error: 'billing.kiteSetup.errors.gstInvalid' })
+    .min(0, 'billing.kiteSetup.errors.gstInvalid')
+    .max(28, 'billing.kiteSetup.errors.gstInvalid'),
 });
 
 export async function saveProductGroupAction(
@@ -73,8 +78,10 @@ export async function saveProductGroupAction(
   const parsed = GroupSchema.safeParse({
     id: formData.get('id') || undefined,
     name: formData.get('name') ?? '',
-    company_id: formData.get('company_id') ?? '',
+      company_id: formData.get('company_id') ?? '',
     is_active: formData.get('is_active') === 'on',
+    hsn_code: formData.get('hsn_code') ?? '',
+    gst_pct: formData.get('gst_pct') || 0,
   });
   if (!parsed.success) {
     return {
@@ -87,9 +94,11 @@ export async function saveProductGroupAction(
   const { error } = await supabase.rpc('save_product_group', {
     p_id: parsed.data.id ?? null,
     p_name: parsed.data.name,
-    p_company_id: parsed.data.company_id,
+      p_company_id: parsed.data.company_id,
     p_is_active: parsed.data.is_active,
     p_reason: '',
+    p_hsn_code: parsed.data.hsn_code,
+    p_gst_pct: parsed.data.gst_pct,
   });
   if (error) return { ok: false, messageKey: errorKey(error) };
 
