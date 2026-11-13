@@ -726,7 +726,7 @@ export function InvoiceForm({
           ref={linesContainerRef}
           className="max-h-[60vh] overflow-auto rounded-md border border-neutral-200 bg-white"
         >
-          <table className="w-full text-sm">
+           <table className="invoice-lines w-full text-sm">
             <thead className="sticky top-0 z-10 bg-neutral-50 text-[10px] uppercase tracking-wide text-neutral-500">
               <tr>
                 <th className="w-8 px-2 py-2">{tForm('snoColumn')}</th>
