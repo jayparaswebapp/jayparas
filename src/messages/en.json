@@ -172,6 +172,11 @@
       "masterDataHint": "Locations, designs, lead ladies.",
       "admin": "Admin",
       "adminHint": "Users and settings."
+    },
+    "orderSummary": {
+      "title": "Orders waiting",
+      "viewAll": "All orders",
+      "openTotal": "{count} open orders · estimated value"
     }
   },
   "roles": {

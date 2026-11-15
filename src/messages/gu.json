@@ -172,6 +172,11 @@
       "masterDataHint": "લોકેશન, ડિઝાઇન, ગ્રુપ લીડર.",
       "admin": "એડમિન",
       "adminHint": "યુઝર અને સેટિંગ."
+    },
+    "orderSummary": {
+      "title": "Orders waiting",
+      "viewAll": "All orders",
+      "openTotal": "{count} open orders · estimated value"
     }
   },
   "roles": {

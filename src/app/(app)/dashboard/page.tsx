@@ -3,6 +3,8 @@ import { useTranslations } from 'next-intl';
 import { createClient } from '@/lib/supabase/server';
 import { Header } from '@/components/header';
 import { signOutAction } from '@/lib/auth/login';
+import { formatRupees, getServerLocale } from '@/lib/format/locale';
+import type { Locale } from '@/lib/i18n/config';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,7 +58,85 @@ export default async function DashboardPage() {
     );
   }
 
-  return <DashboardView name={appUser.full_name} role={appUser.role} />;
+  // Orders waiting for work (New / Packing / Ready) with estimated value.
+  let orderSummary: OrderSummary | null = null;
+  if (['super_admin', 'supervisor', 'order_staff'].includes(appUser.role)) {
+    const { data: os } = await supabase
+      .from('orders')
+      .select('status, estimated_total')
+      .in('status', ['new', 'packing', 'ready'])
+      .is('deleted_at', null)
+      .limit(5000);
+    orderSummary = {
+      new: { count: 0, total: 0 },
+      packing: { count: 0, total: 0 },
+      ready: { count: 0, total: 0 },
+    };
+    for (const o of (os ?? []) as { status: OrderStage; estimated_total: number }[]) {
+      const s = orderSummary[o.status];
+      if (!s) continue;
+      s.count += 1;
+      s.total += Number(o.estimated_total) || 0;
+    }
+  }
+
+  return (
+    <DashboardView
+      name={appUser.full_name}
+      role={appUser.role}
+      orderSummary={orderSummary}
+      locale={getServerLocale()}
+    />
+  );
+}
+
+type OrderStage = 'new' | 'packing' | 'ready';
+type OrderSummary = Record<OrderStage, { count: number; total: number }>;
+
+function OrderSummaryCard({ summary, locale }: { summary: OrderSummary; locale: Locale }) {
+  const t = useTranslations('dashboard.orderSummary');
+  const tStatus = useTranslations('orders.status');
+  const stages: OrderStage[] = ['new', 'packing', 'ready'];
+  const count = stages.reduce((a, s) => a + summary[s].count, 0);
+  const total = stages.reduce((a, s) => a + summary[s].total, 0);
+  const tone: Record<OrderStage, string> = {
+    new: 'border-sky-200 bg-sky-50 text-sky-900',
+    packing: 'border-amber-200 bg-amber-50 text-amber-900',
+    ready: 'border-emerald-300 bg-emerald-50 text-emerald-900',
+  };
+  return (
+    <section className="mt-8">
+      <div className="flex items-baseline justify-between">
+        <h2 className="text-sm font-medium uppercase tracking-wide text-neutral-500">
+          {t('title')}
+        </h2>
+        <Link href="/orders" className="text-brand-800 text-sm underline">
+          {t('viewAll')}
+        </Link>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-3">
+        {stages.map((s) => (
+          <Link
+            key={s}
+            href={`/orders?tab=${s}`}
+            className={`block rounded-lg border p-3 transition hover:shadow-sm ${tone[s]}`}
+          >
+            <div className="text-xs font-medium uppercase tracking-wide">{tStatus(s)}</div>
+            <div className="mt-1 text-2xl font-semibold tabular-nums">{summary[s].count}</div>
+            <div className="text-xs tabular-nums opacity-80">
+              {formatRupees(summary[s].total, locale)}
+            </div>
+          </Link>
+        ))}
+      </div>
+      <div className="mt-2 flex items-baseline justify-between rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm">
+        <span className="text-neutral-700">{t('openTotal', { count })}</span>
+        <span className="font-semibold tabular-nums text-neutral-900">
+          {formatRupees(total, locale)}
+        </span>
+      </div>
+    </section>
+  );
 }
 
 function DebugCard({ title, details }: { title: string; details: Record<string, unknown> }) {
@@ -72,7 +152,17 @@ function DebugCard({ title, details }: { title: string; details: Record<string, 
   );
 }
 
-function DashboardView({ name, role }: { name: string; role: string }) {
+function DashboardView({
+  name,
+  role,
+  orderSummary,
+  locale,
+}: {
+  name: string;
+  role: string;
+  orderSummary: OrderSummary | null;
+  locale: Locale;
+}) {
   const t = useTranslations('dashboard');
   const tDept = useTranslations('departments');
   const tShortcuts = useTranslations('dashboard.shortcuts');
@@ -90,6 +180,8 @@ function DashboardView({ name, role }: { name: string; role: string }) {
           <span className="font-medium">{t('roleLabel')}:</span>
           <span>{tRoles(role)}</span>
         </div>
+
+        {orderSummary ? <OrderSummaryCard summary={orderSummary} locale={locale} /> : null}
 
         <h2 className="mt-8 text-sm font-medium uppercase tracking-wide text-neutral-500">
           {tDept('sectionTitle')}
