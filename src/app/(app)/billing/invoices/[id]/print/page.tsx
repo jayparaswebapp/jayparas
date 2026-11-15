@@ -84,18 +84,29 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
   // Fallback map: some lines saved a snapshot without is_discountable. Look up
   // the live flag for those SKUs so grouping stays correct. This is read-only
   // and never changes stored data.
-  const skuIds = Array.from(
-    new Set(lines.map((l) => l.sku_id).filter((v): v is string => !!v)),
-  );
+  const skuIds = Array.from(new Set(lines.map((l) => l.sku_id).filter((v): v is string => !!v)));
   const liveDiscountable = new Map<string, boolean>();
+  const skuGroupName = new Map<string, string>();
   if (skuIds.length > 0) {
     const { data: skuRows } = await supabase
       .from('skus')
-      .select('id, is_discountable')
+      .select('id, is_discountable, product_group:product_groups(name)')
       .in('id', skuIds);
-    for (const r of (skuRows ?? []) as { id: string; is_discountable: boolean | null }[]) {
+    for (const r of (skuRows ?? []) as unknown as {
+      id: string;
+      is_discountable: boolean | null;
+      product_group: { name: string } | null;
+    }[]) {
       liveDiscountable.set(r.id, r.is_discountable === true);
+      if (r.product_group?.name) skuGroupName.set(r.id, r.product_group.name);
     }
+  }
+
+  // Kite: product group name under each item (line id → group name).
+  const groupNameByLine: Record<string, string> = {};
+  for (const l of lines) {
+    const name = l.sku_id ? skuGroupName.get(l.sku_id) : undefined;
+    if (name) groupNameByLine[l.id] = name;
   }
 
   // A line is discountable if its snapshot says so; if the snapshot has no
@@ -128,6 +139,7 @@ export default async function InvoicePrintPage({ params }: { params: { id: strin
       invoice={invoice}
       lines={lines}
       discountableLineIds={discountableLineIds}
+      groupNameByLine={groupNameByLine}
       terms={terms}
       locale={locale}
     />
@@ -149,12 +161,14 @@ function PrintView({
   invoice,
   lines,
   discountableLineIds,
+  groupNameByLine,
   terms,
   locale,
 }: {
   invoice: InvoiceRow;
   lines: LineRow[];
   discountableLineIds: Set<string>;
+  groupNameByLine: Record<string, string>;
   terms: string | null;
   locale: Locale;
 }) {
@@ -324,7 +338,14 @@ function PrintView({
                     <td className="border border-black p-1 text-center" style={numericFont}>
                       {displayIdx}
                     </td>
-                    <td className="border border-black p-1">{l.description}</td>
+                    <td className="border border-black p-1">
+                      {l.description}
+                      {groupNameByLine[l.id] ? (
+                        <div className="text-[0.85em] text-neutral-700">
+                          {groupNameByLine[l.id]}
+                        </div>
+                      ) : null}
+                    </td>
                     {showHsn ? (
                       <td
                         className="border border-black p-1 text-center font-mono"

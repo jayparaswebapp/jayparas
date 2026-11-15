@@ -848,7 +848,6 @@
       "new": "New",
       "packing": "Packing",
       "ready": "Ready",
-      "partial": "Partly billed",
       "billed": "Billed",
       "cancelled": "Cancelled"
     },
@@ -926,7 +925,8 @@
       "shortHint": "Items not packed will move to a new order at the same rates.",
       "makeBill": "Make bill (B)",
       "making": "Making bill…"
-    }
+    },
+    "fromOrder": "Pending from {order}"
   },
   "accounting": {
     "newJournalEntryButton": "નવી જર્નલ એન્ટ્રી",

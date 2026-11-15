@@ -11,9 +11,9 @@ import { OrderStatusBadge } from './status-badge';
 export const dynamic = 'force-dynamic';
 
 /** 'open' = everything still needing work. */
-const TABS = ['open', 'new', 'packing', 'ready', 'partial', 'billed', 'cancelled'] as const;
+const TABS = ['open', 'new', 'packing', 'ready', 'billed', 'cancelled'] as const;
 type Tab = (typeof TABS)[number];
-const OPEN: OrderStatus[] = ['new', 'packing', 'ready', 'partial'];
+const OPEN: OrderStatus[] = ['new', 'packing', 'ready'];
 
 interface Row {
   id: string;
@@ -22,6 +22,7 @@ interface Row {
   status: OrderStatus;
   estimated_total: number;
   created_at: string;
+  parent_order_id: string | null;
   customer: { full_name: string; business_name: string | null; city: string | null } | null;
 }
 
@@ -36,7 +37,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: { tab
   let query = supabase
     .from('orders')
     .select(
-      'id, order_number, business_line, status, estimated_total, created_at, customer:billing_customers(full_name, business_name, city)',
+      'id, order_number, business_line, status, estimated_total, created_at, parent_order_id, customer:billing_customers(full_name, business_name, city)',
     )
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
@@ -46,10 +47,35 @@ export default async function OrdersPage({ searchParams }: { searchParams: { tab
   const { data } = await query;
   const rows = (data ?? []) as unknown as Row[];
 
-  return <OrdersView rows={rows} tab={tab} locale={locale} />;
+  // "from ORD-xxxx" for pending orders.
+  const parentIds = Array.from(
+    new Set(rows.map((r) => r.parent_order_id).filter((v): v is string => !!v)),
+  );
+  const parentNumbers: Record<string, string> = {};
+  if (parentIds.length > 0) {
+    const { data: ps } = await supabase
+      .from('orders')
+      .select('id, order_number')
+      .in('id', parentIds);
+    for (const p of (ps ?? []) as { id: string; order_number: string }[]) {
+      parentNumbers[p.id] = p.order_number;
+    }
+  }
+
+  return <OrdersView rows={rows} tab={tab} locale={locale} parentNumbers={parentNumbers} />;
 }
 
-function OrdersView({ rows, tab, locale }: { rows: Row[]; tab: Tab; locale: Locale }) {
+function OrdersView({
+  rows,
+  tab,
+  locale,
+  parentNumbers,
+}: {
+  rows: Row[];
+  tab: Tab;
+  locale: Locale;
+  parentNumbers: Record<string, string>;
+}) {
   const t = useTranslations('orders');
   return (
     <>
@@ -98,6 +124,11 @@ function OrdersView({ rows, tab, locale }: { rows: Row[]; tab: Tab; locale: Loca
                       {r.order_number}
                     </span>
                     <OrderStatusBadge status={r.status} />
+                    {r.parent_order_id && parentNumbers[r.parent_order_id] ? (
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-900">
+                        {t('fromOrder', { order: parentNumbers[r.parent_order_id] })}
+                      </span>
+                    ) : null}
                     <span className="text-xs uppercase text-neutral-500">
                       {r.business_line === 'kite' ? t('form.kite') : t('form.rakhi')}
                     </span>
