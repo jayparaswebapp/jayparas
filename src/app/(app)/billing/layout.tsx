@@ -12,7 +12,7 @@ export default function BillingLayout({ children }: { children: ReactNode }) {
         items={[
           { href: '/billing/invoices', label: t('invoicesTitle') },
           { href: '/billing/customers', label: t('customersTitle') },
-                { href: '/billing/groups', label: t('groupsTitle') },
+          { href: '/billing/groups', label: t('groupsTitle') },
           { href: '/billing/kite-setup', label: t('kiteSetupTitle') },
           { href: '/billing/payments', label: t('paymentsTitle') },
           { href: '/billing/returns', label: t('returnsTitle') },
@@ -20,7 +20,9 @@ export default function BillingLayout({ children }: { children: ReactNode }) {
           { href: '/billing/company', label: t('companyTitle') },
         ]}
       />
-          <main className="mx-auto w-full max-w-screen-md flex-1 xl:max-w-screen-xl px-4 py-6">{children}</main>
+      <main className="mx-auto w-full max-w-screen-md flex-1 px-4 py-6 xl:max-w-screen-xl">
+        {children}
+      </main>
     </div>
   );
 }

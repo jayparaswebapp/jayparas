@@ -14,6 +14,8 @@ import { NewCustomerShortcut } from '../customers/new-customer-shortcut';
 import { ScanButton } from './scan-button';
 import { EMPTY_KITE_PRICING, type KitePricing } from '@/lib/billing/kite-pricing';
 import { useInvoiceDraft } from './use-invoice-draft';
+import { StateSelect } from '@/components/state-select';
+import { canonicalState, normalizeState } from '@/lib/billing/states';
 
 export type BusinessLine = 'rakhi' | 'kite';
 
@@ -293,7 +295,8 @@ export function InvoiceForm({
     setCustomerId(id);
     if (id) {
       const c = customers.find((x) => x.id === id);
-      if (c && c.state && !placeOfSupply) setPlaceOfSupply(c.state);
+      // Place of supply follows the party's state (GST split depends on it).
+      if (c) setPlaceOfSupply(canonicalState(c.state));
     }
     // Kite: re-price every kite line with the NEW party's company-wise %.
     if (businessLine === 'kite') {
@@ -372,8 +375,10 @@ export function InvoiceForm({
   }
 
   const intraState = useMemo(() => {
-    if (!sellerState || !placeOfSupply) return null;
-    return sellerState.trim().toLowerCase() === placeOfSupply.trim().toLowerCase();
+    const seller = normalizeState(sellerState);
+    const pos = normalizeState(placeOfSupply);
+    if (!seller || !pos) return null;
+    return seller === pos;
   }, [sellerState, placeOfSupply]);
 
   const showGst = businessLine === 'kite';
@@ -388,7 +393,7 @@ export function InvoiceForm({
       const qty = num(l.qty);
       const rate = num(l.rate);
       const disc = num(l.discount_pct);
-       const lineSubtotal = round2(qty * rate * (1 - disc / 100));
+      const lineSubtotal = round2(qty * rate * (1 - disc / 100));
       const lineDiscount = round2(qty * rate * (disc / 100));
       subtotal += lineSubtotal;
       discount += lineDiscount;
@@ -622,13 +627,23 @@ export function InvoiceForm({
             <label htmlFor="place_of_supply" className="label-base">
               {tForm('placeOfSupplyLabel')}
             </label>
-            <input
+            <StateSelect
               id="place_of_supply"
               value={placeOfSupply}
-              onChange={(e) => setPlaceOfSupply(e.target.value)}
-              className="input-base"
+              onChange={setPlaceOfSupply}
+              required={businessLine === 'kite'}
             />
-            <p className="mt-1 text-xs text-neutral-500">{tForm('placeOfSupplyHint')}</p>
+            {businessLine === 'kite' && !placeOfSupply ? (
+              <p className="mt-1 text-xs font-medium text-red-700">
+                {tForm('placeOfSupplyRequired')}
+              </p>
+            ) : businessLine === 'kite' && intraState !== null ? (
+              <p className="mt-1 text-xs font-medium text-emerald-800">
+                {intraState ? tForm('gstIntra') : tForm('gstInter')}
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-neutral-500">{tForm('placeOfSupplyHint')}</p>
+            )}
           </div>
         </div>
       </section>
@@ -726,7 +741,7 @@ export function InvoiceForm({
           ref={linesContainerRef}
           className="max-h-[60vh] overflow-auto rounded-md border border-neutral-200 bg-white"
         >
-           <table className="invoice-lines w-full text-sm">
+          <table className="invoice-lines w-full text-sm">
             <thead className="sticky top-0 z-10 bg-neutral-50 text-[10px] uppercase tracking-wide text-neutral-500">
               <tr>
                 <th className="w-8 px-2 py-2">{tForm('snoColumn')}</th>

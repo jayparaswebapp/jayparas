@@ -54,10 +54,7 @@ function readDraft(invoiceId: string | undefined): InvoiceDraft | null {
 //   Every other outcome — a failed save, a reload, a dropped connection, the
 //   phone sleeping — keeps the draft. "Keep unless we are certain it saved" is
 //   the only safe default for data the shop cannot afford to re-enter.
-export function useInvoiceDraft(
-  invoiceId: string | undefined,
-  snapshot: InvoiceDraftSnapshot,
-) {
+export function useInvoiceDraft(invoiceId: string | undefined, snapshot: InvoiceDraftSnapshot) {
   // The draft found on first mount (if any). Held in state so the banner is
   // stable even as the user starts editing.
   const [recovered] = useState<InvoiceDraft | null>(() => readDraft(invoiceId));

@@ -30,8 +30,7 @@ interface BarcodeDetectorCtor {
 }
 
 function getNativeCtor(): BarcodeDetectorCtor | undefined {
-  return (globalThis as unknown as { BarcodeDetector?: BarcodeDetectorCtor })
-    .BarcodeDetector;
+  return (globalThis as unknown as { BarcodeDetector?: BarcodeDetectorCtor }).BarcodeDetector;
 }
 
 async function nativeUsable(): Promise<boolean> {
@@ -81,9 +80,7 @@ export function ScanButton({
     (async () => {
       try {
         if (!(await nativeUsable())) {
-          setError(
-            "This phone's browser can't scan. Use Chrome on Android, or type the code.",
-          );
+          setError("This phone's browser can't scan. Use Chrome on Android, or type the code.");
           return;
         }
 
@@ -113,9 +110,7 @@ export function ScanButton({
       } catch (e) {
         // Most common causes: no HTTPS, permission denied, no camera.
         if (!cancelled) {
-          setError(
-            e instanceof Error ? e.message : 'Camera could not be started',
-          );
+          setError(e instanceof Error ? e.message : 'Camera could not be started');
         }
       }
     })();
@@ -157,21 +152,14 @@ export function ScanButton({
           <div className="relative flex-1">
             {/* playsInline keeps the stream inline instead of opening a native
                 fullscreen player; muted allows autoplay after the click */}
-            <video
-              ref={videoRef}
-              className="h-full w-full object-cover"
-              muted
-              playsInline
-            />
+            <video ref={videoRef} className="h-full w-full object-cover" muted playsInline />
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="h-48 w-48 rounded-lg border-2 border-white/80" />
             </div>
           </div>
 
           {error ? (
-            <p className="bg-red-600 p-3 text-center text-sm text-white">
-              {error}
-            </p>
+            <p className="bg-red-600 p-3 text-center text-sm text-white">{error}</p>
           ) : (
             <p className="p-3 text-center text-xs text-white/70">
               Point the camera at the label barcode or QR code

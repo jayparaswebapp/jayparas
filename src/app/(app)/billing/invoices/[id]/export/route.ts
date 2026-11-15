@@ -82,7 +82,12 @@ export async function GET(_request: Request, { params }: { params: { id: string 
 
   const isKite = invoice.business_line === 'kite';
   const snap = invoice.customer_snapshot;
-  const custName = snap?.business_name || invoice.customer?.business_name || snap?.full_name || invoice.customer?.full_name || '—';
+  const custName =
+    snap?.business_name ||
+    invoice.customer?.business_name ||
+    snap?.full_name ||
+    invoice.customer?.full_name ||
+    '—';
   const custGstin = snap?.gstin || invoice.customer?.gstin || '';
 
   // --- Sheet 1: Bill (label / value pairs) ---
@@ -94,13 +99,19 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     kv('Business line', txt(isKite ? 'Kite (GST)' : 'Rakhi (no GST)')),
     kv('Status', txt(invoice.status)),
     kv('Customer', txt(custName)),
-    ...(isKite ? [kv('GSTIN', txt(custGstin)), kv('Place of supply', txt(invoice.place_of_supply ?? ''))] : []),
+    ...(isKite
+      ? [kv('GSTIN', txt(custGstin)), kv('Place of supply', txt(invoice.place_of_supply ?? ''))]
+      : []),
     [txt(''), txt('')],
     kv('Subtotal', num(invoice.subtotal)),
     kv('Discount', num(invoice.discount_total)),
     kv('Taxable', num(invoice.taxable_total)),
     ...(isKite
-      ? [kv('CGST', num(invoice.cgst_total)), kv('SGST', num(invoice.sgst_total)), kv('IGST', num(invoice.igst_total))]
+      ? [
+          kv('CGST', num(invoice.cgst_total)),
+          kv('SGST', num(invoice.sgst_total)),
+          kv('IGST', num(invoice.igst_total)),
+        ]
       : []),
     kv('Packing', num(invoice.packing_charges)),
     kv('Delivery', num(invoice.delivery_charges)),
@@ -110,9 +121,10 @@ export async function GET(_request: Request, { params }: { params: { id: string 
 
   // --- Sheet 2: Items ---
   const itemHeaderBase = ['#', 'Description', 'HSN', 'Qty', 'Unit', 'Rate', 'Disc %'];
-  const itemHeader = (isKite
-    ? [...itemHeaderBase, 'GST %', 'Subtotal', 'CGST', 'SGST', 'IGST', 'Total']
-    : [...itemHeaderBase, 'Subtotal', 'Total']
+  const itemHeader = (
+    isKite
+      ? [...itemHeaderBase, 'GST %', 'Subtotal', 'CGST', 'SGST', 'IGST', 'Total']
+      : [...itemHeaderBase, 'Subtotal', 'Total']
   ).map((h) => txt(h, true));
 
   const itemRows = lines.map((l) => {
@@ -126,7 +138,15 @@ export async function GET(_request: Request, { params }: { params: { id: string 
       num(l.discount_pct),
     ];
     return isKite
-      ? [...base, num(l.gst_pct), num(l.line_subtotal), num(l.line_cgst), num(l.line_sgst), num(l.line_igst), num(l.line_total)]
+      ? [
+          ...base,
+          num(l.gst_pct),
+          num(l.line_subtotal),
+          num(l.line_cgst),
+          num(l.line_sgst),
+          num(l.line_igst),
+          num(l.line_total),
+        ]
       : [...base, num(l.line_subtotal), num(l.line_total)];
   });
 
@@ -134,7 +154,9 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     { name: 'Bill', colWidths: [18, 28], rows: billRows },
     {
       name: 'Items',
-      colWidths: isKite ? [5, 34, 10, 8, 8, 10, 8, 8, 12, 10, 10, 10, 12] : [5, 40, 10, 8, 8, 10, 8, 12, 12],
+      colWidths: isKite
+        ? [5, 34, 10, 8, 8, 10, 8, 8, 12, 10, 10, 10, 12]
+        : [5, 40, 10, 8, 8, 10, 8, 12, 12],
       rows: [itemHeader, ...itemRows],
     },
   ];

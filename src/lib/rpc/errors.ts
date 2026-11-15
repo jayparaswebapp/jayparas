@@ -84,6 +84,8 @@ export const RPC_ERROR_KEYS = [
   'order_locked',
   'order_not_ready',
   'order_nothing_packed',
+  'place_of_supply_required',
+  'party_state_required',
   'invalid_input',
 ] as const;
 
@@ -164,6 +166,8 @@ const RPC_TO_I18N: Record<RpcErrorKey, string> = {
   order_locked: 'orders.errors.orderLocked',
   order_not_ready: 'orders.errors.notReady',
   order_nothing_packed: 'orders.errors.nothingPacked',
+  place_of_supply_required: 'billing.invoices.errors.placeOfSupplyRequired',
+  party_state_required: 'orders.errors.partyStateRequired',
   invalid_input: 'common.errors.invalidInput',
 };
 

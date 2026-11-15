@@ -59,7 +59,8 @@
       "notFound": "આ રેકોર્ડ હવે અસ્તિત્વમાં નથી.",
       "invalidInput": "દાખલ કરેલા કેટલાક મૂલ્યો યોગ્ય નથી.",
       "unknownError": "કઈક ખોટું થયું. ફરી પ્રયત્ન કરો."
-    }
+    },
+    "selectState": "— Select state —"
   },
   "nav": {
     "home": "હોમ",
@@ -406,7 +407,10 @@
         "cancelButton": "રદ",
         "switchLineConfirm": "{count} line(s) on this bill are the other type and will be removed. Continue?",
         "scanIsKiteProduct": "This is a Kite product — switch the bill to Kite.",
-        "scanIsRakhiProduct": "This is a Rakhi product — switch the bill to Rakhi."
+        "scanIsRakhiProduct": "This is a Rakhi product — switch the bill to Rakhi.",
+        "placeOfSupplyRequired": "Required for kite bills: pick the state.",
+        "gstIntra": "Gujarat: GST split as CGST + SGST.",
+        "gstInter": "Other state: full GST as IGST."
       },
       "detail": {
         "issueButton": "ઇશ્યૂ કરો",
@@ -498,7 +502,8 @@
         "customerMissing": "ઇશ્યૂ કરતા પહેલા ગ્રાહક પસંદ કરો.",
         "notAmendable": "ફક્ત ઇશ્યુ થયેલું બિલ જ સુધારી શકાય.",
         "amendGstBlocked": "GST (પતંગ) બિલ સુધારી શકાતું નથી. તેના બદલે અલગ બિલ બનાવો.",
-        "totalBelowPaid": "સુધારેલી રકમ આ બિલ સામે મળેલી રકમ કરતાં ઓછી છે. પહેલાં પેમેન્ટ ગોઠવો."
+        "totalBelowPaid": "સુધારેલી રકમ આ બિલ સામે મળેલી રકમ કરતાં ઓછી છે. પહેલાં પેમેન્ટ ગોઠવો.",
+        "placeOfSupplyRequired": "Pick the place of supply (state) — GST depends on it."
       }
     },
     "payments": {
@@ -906,7 +911,8 @@
       "linesRequired": "Add at least one item.",
       "orderLocked": "This order can't be changed at this stage.",
       "notReady": "This order isn't marked Ready yet.",
-      "nothingPacked": "Nothing is packed on this order yet."
+      "nothingPacked": "Nothing is packed on this order yet.",
+      "partyStateRequired": "Set the party's state first (Parties → edit) — GST depends on it."
     },
     "packing": {
       "title": "Packing",

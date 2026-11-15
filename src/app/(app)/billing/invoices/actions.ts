@@ -69,6 +69,10 @@ function parsePayload(
       messageKey: parsed.error.issues[0]?.message ?? 'common.errors.invalidInput',
     };
   }
+  // Kite (GST) bill: place of supply decides CGST+SGST vs IGST — required.
+  if (parsed.data.header.business_line === 'kite' && !parsed.data.header.place_of_supply) {
+    return { ok: false, messageKey: 'billing.invoices.errors.placeOfSupplyRequired' };
+  }
   return { ok: true, data: parsed.data };
 }
 

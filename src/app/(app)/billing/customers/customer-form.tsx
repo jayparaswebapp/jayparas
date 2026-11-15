@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { ServerError, SubmitButton } from '@/components/form-status';
 import type { ActionResult } from '@/lib/rpc/action-result';
 import { saveBillingCustomerAction } from './actions';
+import { StateSelect } from '@/components/state-select';
 
 export interface CustomerFormValues {
   id?: string;
@@ -179,12 +180,7 @@ export function CustomerForm({
           <label htmlFor="state" className="label-base">
             {t('stateLabel')}
           </label>
-          <input
-            id="state"
-            name="state"
-            defaultValue={initial?.state ?? ''}
-            className="input-base"
-          />
+          <StateSelect id="state" name="state" defaultValue={initial?.state ?? ''} />
         </div>
         <div>
           <label htmlFor="pincode" className="label-base">

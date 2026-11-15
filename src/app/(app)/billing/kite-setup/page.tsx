@@ -18,7 +18,7 @@ export default async function KiteSetupPage() {
       .order('name', { ascending: true }),
     supabase
       .from('product_groups')
-        .select('id, name, company_id, is_active, hsn_code, gst_pct')
+      .select('id, name, company_id, is_active, hsn_code, gst_pct')
       .is('deleted_at', null)
       .order('name', { ascending: true }),
     supabase

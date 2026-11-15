@@ -59,7 +59,8 @@
       "notFound": "That record no longer exists.",
       "invalidInput": "Some of the values you entered are not valid.",
       "unknownError": "Something went wrong. Please try again."
-    }
+    },
+    "selectState": "— Select state —"
   },
   "nav": {
     "home": "Home",
@@ -407,7 +408,10 @@
         "cancelButton": "Cancel",
         "switchLineConfirm": "{count} line(s) on this bill are the other type and will be removed. Continue?",
         "scanIsKiteProduct": "This is a Kite product — switch the bill to Kite.",
-        "scanIsRakhiProduct": "This is a Rakhi product — switch the bill to Rakhi."
+        "scanIsRakhiProduct": "This is a Rakhi product — switch the bill to Rakhi.",
+        "placeOfSupplyRequired": "Required for kite bills: pick the state.",
+        "gstIntra": "Gujarat: GST split as CGST + SGST.",
+        "gstInter": "Other state: full GST as IGST."
       },
       "detail": {
         "issueButton": "Issue",
@@ -499,7 +503,8 @@
         "customerMissing": "Pick a customer before issuing.",
         "notAmendable": "Only an issued bill can be amended.",
         "amendGstBlocked": "GST (kite) invoices cannot be amended. Raise a separate bill instead.",
-        "totalBelowPaid": "The revised total is less than the amount already received against this bill. Adjust the payment first."
+        "totalBelowPaid": "The revised total is less than the amount already received against this bill. Adjust the payment first.",
+        "placeOfSupplyRequired": "Pick the place of supply (state) — GST depends on it."
       }
     },
     "payments": {
@@ -907,7 +912,8 @@
       "linesRequired": "Add at least one item.",
       "orderLocked": "This order can't be changed at this stage.",
       "notReady": "This order isn't marked Ready yet.",
-      "nothingPacked": "Nothing is packed on this order yet."
+      "nothingPacked": "Nothing is packed on this order yet.",
+      "partyStateRequired": "Set the party's state first (Parties → edit) — GST depends on it."
     },
     "packing": {
       "title": "Packing",
