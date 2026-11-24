@@ -12,7 +12,7 @@ import type { ActionResult } from '@/lib/rpc/action-result';
 import { saveInvoiceDraftAction } from './actions';
 import { NewCustomerShortcut } from '../customers/new-customer-shortcut';
 import { ScanButton } from './scan-button';
-import { EMPTY_KITE_PRICING, type KitePricing } from '@/lib/billing/kite-pricing';
+import { EMPTY_KITE_PRICING, kiteDiscountFor, type KitePricing } from '@/lib/billing/kite-pricing';
 import { useInvoiceDraft } from './use-invoice-draft';
 import { StateSelect } from '@/components/state-select';
 import { canonicalState, normalizeState } from '@/lib/billing/states';
@@ -249,7 +249,7 @@ export function InvoiceForm({
   function kitePricingFor(sku: SkuOption, custId: string): LinePricing | undefined {
     if (lineOf(sku) !== 'kite') return undefined;
     const group = sku.product_group_id ? kitePricing.groups[sku.product_group_id] : undefined;
-    const pct = group ? (kitePricing.discounts[custId]?.[group.company_id] ?? 0) : 0;
+    const pct = group ? kiteDiscountFor(kitePricing, custId, group.company_id) : 0;
     return { discount_pct: pct, hsn_code: group?.hsn_code ?? '', gst_pct: group?.gst_pct ?? 0 };
   }
 

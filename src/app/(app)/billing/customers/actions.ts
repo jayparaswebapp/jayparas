@@ -76,7 +76,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 /**
  * Reads the per-company kite discount boxes (`kite_disc_<companyId>`).
- * Blank / 0 boxes are dropped (missing = 0%). Returns null if any box is
+ * Blank boxes are dropped (party uses its type's %); a typed % — even 0 —
+ * is kept as the party's own %. Returns null if any box is
  * not a number between 0 and 100.
  */
 function readKiteDiscounts(
@@ -91,7 +92,7 @@ function readKiteDiscounts(
     if (text === '') continue;
     const pct = Number(text);
     if (!Number.isFinite(pct) || pct < 0 || pct > 100) return null;
-    if (pct > 0) out.push({ company_id: companyId, discount_pct: Math.round(pct * 100) / 100 });
+    out.push({ company_id: companyId, discount_pct: Math.round(pct * 100) / 100 });
   }
   return out;
 }

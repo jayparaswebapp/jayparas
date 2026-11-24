@@ -9,7 +9,7 @@ import { ServerError, SubmitButton } from '@/components/form-status';
 import { formatRupees } from '@/lib/format/locale-shared';
 import type { Locale } from '@/lib/i18n/config';
 import type { ActionResult } from '@/lib/rpc/action-result';
-import type { KitePricing } from '@/lib/billing/kite-pricing';
+import { kiteDiscountFor, type KitePricing } from '@/lib/billing/kite-pricing';
 import type {
   BusinessLine,
   CustomerOption,
@@ -111,7 +111,7 @@ export function OrderForm({
     }
     const g = sku.product_group_id ? kitePricing.groups[sku.product_group_id] : undefined;
     return {
-      discount_pct: g ? (kitePricing.discounts[custId]?.[g.company_id] ?? 0) : 0,
+      discount_pct: g ? kiteDiscountFor(kitePricing, custId, g.company_id) : 0,
       hsn_code: g?.hsn_code ?? '',
       gst_pct: g?.gst_pct ?? 0,
     };

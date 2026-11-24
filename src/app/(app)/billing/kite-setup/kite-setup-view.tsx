@@ -16,6 +16,45 @@ export interface CompanyRow {
   name: string;
   is_active: boolean;
   group_count: number;
+  disc_a: number;
+  disc_b: number;
+  disc_c: number;
+}
+
+/** Three % boxes: discount for party type A / B / C on this company. */
+function TierDiscountInputs({ row }: { row?: CompanyRow }) {
+  const t = useTranslations('billing.kiteSetup');
+  const boxes = [
+    { name: 'disc_a', label: t('tierA'), value: row?.disc_a },
+    { name: 'disc_b', label: t('tierB'), value: row?.disc_b },
+    { name: 'disc_c', label: t('tierC'), value: row?.disc_c },
+  ];
+  return (
+    <div>
+      <div className="mb-1 text-xs font-medium text-neutral-700">{t('tierDiscountsLabel')}</div>
+      <div className="grid grid-cols-3 gap-2">
+        {boxes.map((b) => (
+          <label key={b.name} className="block">
+            <span className="block text-xs text-neutral-600">{b.label}</span>
+            <span className="flex items-center gap-1">
+              <input
+                name={b.name}
+                type="number"
+                inputMode="decimal"
+                min={0}
+                max={100}
+                step="0.01"
+                defaultValue={b.value ? String(Number(b.value)) : ''}
+                placeholder="0"
+                className="input-base text-right"
+              />
+              <span className="text-sm text-neutral-600">%</span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export interface GroupRow {
@@ -113,6 +152,7 @@ function AddCompanyForm() {
         />
         <SubmitButton label={t('addButton')} className="btn-primary !w-auto px-4" />
       </div>
+      <TierDiscountInputs />
       {state && state.ok === false ? <ServerError messageKey={state.messageKey} /> : null}
     </form>
   );
@@ -141,6 +181,13 @@ function CompanyItem({ row }: { row: CompanyRow }) {
           <div className="text-xs text-neutral-500">
             {t('groupsInCompany', { count: row.group_count })}
           </div>
+          <div className="mt-0.5 text-xs font-medium text-neutral-700">
+            {t('tierSummary', {
+              a: Number(row.disc_a),
+              b: Number(row.disc_b),
+              c: Number(row.disc_c),
+            })}
+          </div>
         </div>
         <button
           type="button"
@@ -158,6 +205,7 @@ function CompanyItem({ row }: { row: CompanyRow }) {
       <form action={formAction} className="space-y-2">
         <input type="hidden" name="id" value={row.id} />
         <input name="name" required defaultValue={row.name} className="input-base" />
+        <TierDiscountInputs row={row} />
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"

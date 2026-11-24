@@ -22,10 +22,22 @@ function errorKey(error: unknown): string {
   return rpcErrorMessageKey(error);
 }
 
+// Blank box = 0%.
+const DiscPct = z.preprocess(
+  (v) => (v === null || v === undefined || String(v).trim() === '' ? 0 : v),
+  z.coerce
+    .number({ invalid_type_error: 'billing.kiteSetup.errors.discInvalid' })
+    .min(0, 'billing.kiteSetup.errors.discInvalid')
+    .max(100, 'billing.kiteSetup.errors.discInvalid'),
+);
+
 const CompanySchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().trim().min(1, 'billing.kiteSetup.errors.nameRequired'),
   is_active: z.boolean(),
+  disc_a: DiscPct,
+  disc_b: DiscPct,
+  disc_c: DiscPct,
 });
 
 export async function saveKiteCompanyAction(
@@ -37,6 +49,9 @@ export async function saveKiteCompanyAction(
     id: formData.get('id') || undefined,
     name: formData.get('name') ?? '',
     is_active: formData.get('is_active') === 'on',
+    disc_a: formData.get('disc_a'),
+    disc_b: formData.get('disc_b'),
+    disc_c: formData.get('disc_c'),
   });
   if (!parsed.success) {
     return {
@@ -51,6 +66,9 @@ export async function saveKiteCompanyAction(
     p_name: parsed.data.name,
     p_is_active: parsed.data.is_active,
     p_reason: '',
+    p_disc_a: parsed.data.disc_a,
+    p_disc_b: parsed.data.disc_b,
+    p_disc_c: parsed.data.disc_c,
   });
   if (error) return { ok: false, messageKey: errorKey(error) };
 

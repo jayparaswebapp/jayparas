@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { useFormState } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { ServerError, SubmitButton } from '@/components/form-status';
@@ -39,6 +40,10 @@ export interface KiteCompanyOption {
   id: string;
   name: string;
   is_active: boolean;
+  /** % for party type A / B / C on this company (Kite setup). */
+  disc_a: number;
+  disc_b: number;
+  disc_c: number;
 }
 
 export function CustomerForm({
@@ -52,6 +57,8 @@ export function CustomerForm({
 }) {
   const t = useTranslations('billing.customers.form');
   const tCommon = useTranslations('common.actions');
+  // Party type decides the default kite % per company (shown as placeholder).
+  const [tier, setTier] = useState<'A' | 'B' | 'C'>(initial?.price_tier ?? 'C');
   const [state, formAction] = useFormState<ActionResult | null, FormData>(
     saveBillingCustomerAction,
     null,
@@ -244,7 +251,8 @@ export function CustomerForm({
           <select
             id="price_tier"
             name="price_tier"
-            defaultValue={initial?.price_tier ?? 'C'}
+            value={tier}
+            onChange={(e) => setTier(e.target.value as 'A' | 'B' | 'C')}
             className="input-base"
           >
             <option value="A">{t('priceTierA')}</option>
@@ -262,6 +270,9 @@ export function CustomerForm({
             <ul className="divide-y divide-neutral-100 rounded-md border border-neutral-200">
               {kiteCompanies.map((c) => {
                 const pct = initial?.kite_discounts?.[c.id];
+                const typeRate = Number(
+                  tier === 'A' ? c.disc_a : tier === 'B' ? c.disc_b : c.disc_c,
+                );
                 return (
                   <li key={c.id} className="flex items-center gap-3 px-3 py-2">
                     <label htmlFor={`kite_disc_${c.id}`} className="min-w-0 flex-1 text-sm">
@@ -271,6 +282,9 @@ export function CustomerForm({
                           ({t('kiteCompanyInactive')})
                         </span>
                       ) : null}
+                      <span className="block text-xs text-neutral-500">
+                        {t('kiteTypeRate', { tier, pct: typeRate })}
+                      </span>
                     </label>
                     <div className="flex items-center gap-1">
                       <input
@@ -281,8 +295,8 @@ export function CustomerForm({
                         min={0}
                         max={100}
                         step="0.01"
-                        defaultValue={pct ? String(pct) : ''}
-                        placeholder="0"
+                        defaultValue={pct !== undefined ? String(pct) : ''}
+                        placeholder={String(typeRate)}
                         className="input-base !w-24 text-right"
                       />
                       <span className="text-sm text-neutral-600">%</span>

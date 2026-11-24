@@ -13,7 +13,7 @@ export default async function KiteSetupPage() {
   const [{ data: companyRows }, { data: groupRows }, { data: skuRows }] = await Promise.all([
     supabase
       .from('kite_companies')
-      .select('id, name, is_active')
+      .select('id, name, is_active, disc_a, disc_b, disc_c')
       .is('deleted_at', null)
       .order('name', { ascending: true }),
     supabase

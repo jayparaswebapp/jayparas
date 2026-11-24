@@ -230,10 +230,11 @@
         "priceTierB": "B — Semi-wholesaler",
         "priceTierC": "C — General retailer",
         "kiteDiscountsLabel": "Kite discount by company",
-        "kiteDiscountsHint": "Applied automatically on kite bills. Leave blank for 0%.",
+        "kiteDiscountsHint": "Blank = uses the party type's % from Kite setup. Type a % only if this party gets a different rate.",
         "noKiteCompanies": "No companies yet. Add them in Billing → Kite setup.",
         "kiteCompanyInactive": "inactive",
-        "kitePricingSaveFailed": "The party was saved, but the kite pricing was not. Check the % values and save again."
+        "kitePricingSaveFailed": "The party was saved, but the kite pricing was not. Check the % values and save again.",
+        "kiteTypeRate": "Type {tier}: {pct}%"
       },
       "errors": {
         "fullNameRequired": "સંપર્કનું નામ જરૂરી છે",
@@ -296,7 +297,8 @@
         "companyInUse": "This company still has product groups. Move or delete them first.",
         "groupInUse": "This product group still has products. Move them to another group first.",
         "hsnInvalid": "HSN can be at most 10 characters.",
-        "gstInvalid": "GST % must be between 0 and 28."
+        "gstInvalid": "GST % must be between 0 and 28.",
+        "discInvalid": "Discount must be between 0 and 100%."
       },
       "hsnLabel": "Default HSN",
       "hsnPlaceholder": "Default HSN (e.g. 9503)",
@@ -304,7 +306,12 @@
       "gstPlaceholder": "GST",
       "hsnGstHint": "Filled in automatically on kite bill lines. Changing these later never changes bills already made.",
       "noHsn": "no HSN",
-      "gstShort": "GST {pct}%"
+      "gstShort": "GST {pct}%",
+      "tierDiscountsLabel": "Discount by party type",
+      "tierA": "A — Wholesaler",
+      "tierB": "B — Semi-wholesaler",
+      "tierC": "C — Retailer",
+      "tierSummary": "A {a}% · B {b}% · C {c}%"
     },
     "company": {
       "title": "કંપની ડિટેલ",
