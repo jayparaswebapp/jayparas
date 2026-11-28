@@ -86,7 +86,8 @@
       "title": "Orders",
       "hint": "Take orders, pack them, then turn them into bills.",
       "listTitle": "Orders",
-      "newTitle": "New order"
+      "newTitle": "New order",
+      "padTitle": "Order pad"
     },
     "jobWork": {
       "title": "Job Work Management",
@@ -945,7 +946,31 @@
       "makeBill": "Make bill (B)",
       "making": "Making bill…"
     },
-    "fromOrder": "Pending from {order}"
+    "fromOrder": "Pending from {order}",
+    "pad": {
+      "title": "Kite order pad",
+      "intro": "Same as the paper order sheet: type the qty in each box. Grey boxes = not made.",
+      "party": "Party",
+      "partyPlaceholder": "— Select party —",
+      "partyFirst": "Pick the party first — discounts depend on it.",
+      "countIn": "Customer counts in",
+      "pieces": "Pieces",
+      "boxes": "Boxes",
+      "boxHint": "Type pieces per box for each size (yellow row). The order is saved in pieces.",
+      "filterPlaceholder": "Find product (e.g. Bear, Panda)…",
+      "product": "Product",
+      "cord": "{n} cord",
+      "perBox": "pcs/box",
+      "perBoxShort": "/box",
+      "perBoxFor": "Pieces per box for {size}",
+      "otherItems": "Other kite items",
+      "notes": "Notes",
+      "boxNotePrefix": "Box size:",
+      "summary": "{items} items · {pieces} pcs",
+      "needBoxSize": "Type pieces per box for the red boxes.",
+      "save": "Save order",
+      "saving": "Saving…"
+    }
   },
   "accounting": {
     "newJournalEntryButton": "New journal entry",

@@ -11,6 +11,7 @@ export default function OrdersLayout({ children }: { children: ReactNode }) {
       <SubNav
         items={[
           { href: '/orders', label: t('listTitle') },
+          { href: '/orders/pad', label: t('padTitle') },
           { href: '/orders/new', label: t('newTitle') },
         ]}
       />
