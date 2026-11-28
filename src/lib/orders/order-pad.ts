@@ -12,6 +12,55 @@ import type { SkuOption } from '@/app/(app)/billing/invoices/invoice-form';
 
 const NAME_RE = /^(.*?)\s*(\d+)\s*\/\s*(\d+)\s*(mtr|mts|mt|gms|gm)\b\.*\s*(.*)$/i;
 
+/**
+ * Row order of the paper order sheet (brand names as the grid shows them,
+ * matched case-insensitively). Brands not listed follow, A–Z.
+ */
+const SHEET_ROWS = [
+  'Griffin',
+  'Bear',
+  'Sankal',
+  'Super Sankal',
+  'Maha Sankal',
+  '24 Carat',
+  'Challenge',
+  'Agni',
+  'AK-56 Marvel',
+  'Supreme Panda',
+  'AK-56 Platinum Plus',
+  'Gun',
+  'Panda',
+  'Panda (2)',
+  'Panda (5)',
+  'Rocket',
+  'Krishna',
+  'Kalachand',
+  'NSG AK-56',
+  'AK-56 Gold',
+  'Tejas',
+  'Chain',
+  'Mashaal',
+  'Tez',
+  'Ninja',
+  'Falcon',
+  'AK-56',
+  'King Panda',
+  'AK-56 Diamond',
+  'Rangeela Panda',
+  'Yuva',
+  'Organica Panda',
+  'Titanium Panda',
+  'Palladium',
+  'Panda Gold',
+  'Platinum Panda',
+  'Vardhman',
+].map((b) => b.toUpperCase());
+
+function rowRank(key: string): number {
+  const i = SHEET_ROWS.indexOf(key);
+  return i >= 0 ? i : SHEET_ROWS.length;
+}
+
 /** Sheet order first; then other lengths, then other weights. */
 const FIRST_SIZES = ['900 Mtr', '250 Gms', '500 Gms'];
 
@@ -120,7 +169,9 @@ export function buildPadLayout(skus: SkuOption[], groupName: (s: SkuOption) => s
 
   return {
     sizeGroups,
-    rows: Array.from(rows.values()).sort((a, b) => a.brand.localeCompare(b.brand)),
+    rows: Array.from(rows.values()).sort(
+      (a, b) => rowRank(a.key) - rowRank(b.key) || a.brand.localeCompare(b.brand),
+    ),
     others: Array.from(others.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([group, list]) => ({
